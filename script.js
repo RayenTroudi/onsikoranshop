@@ -289,40 +289,130 @@ function applyTranslations() {
 	if (toggle) toggle.textContent = state.language === 'ar' ? 'EN' : 'AR';
 }
 
-// Language selector
-const langSelect = document.getElementById('lang-select');
-console.log('Language selector found:', langSelect);
-console.log('Current language:', state.language);
+// Language switcher functionality - will be initialized after DOM is ready
+let langToggle, langDropdown, currentFlag, currentLang, langOptions;
 
-if (langSelect) {
-	// sync dropdown with saved language
-	langSelect.value = state.language;
-	console.log('Set dropdown value to:', state.language);
+// Language data
+const languageData = {
+	en: { flag: '🇺🇸', code: 'EN', name: 'English' },
+	ar: { flag: '🇸🇦', code: 'AR', name: 'العربية' }
+};
+
+// Update current language display
+function updateLanguageDisplay(lang) {
+	const data = languageData[lang];
+	if (currentFlag) currentFlag.textContent = data.flag;
+	if (currentLang) currentLang.textContent = data.code;
 	
-	const handleLangChange = async () => {
-		console.log('Language change triggered, new value:', langSelect.value);
-		state.language = langSelect.value;
-		localStorage.setItem('lang', state.language);
-		console.log('Loading locale for:', state.language);
-		try {
-			await loadLocale(state.language);
-			console.log('Locale loaded, applying translations');
-			applyTranslations();
-			console.log('Translations applied successfully');
-		} catch (error) {
-			console.error('Error during language change:', error);
-		}
-	};
-	langSelect.addEventListener('change', handleLangChange);
-	langSelect.addEventListener('input', handleLangChange);
-	console.log('Event listeners added to language selector');
-} else {
-	console.error('Language selector not found!');
+	// Update active state in dropdown
+	langOptions.forEach(option => {
+		option.classList.toggle('active', option.dataset.lang === lang);
+	});
+}
+
+// Handle language change
+async function handleLanguageChange(newLang) {
+	console.log('Language change triggered, new language:', newLang);
+	state.language = newLang;
+	localStorage.setItem('lang', state.language);
+	updateLanguageDisplay(newLang);
+	
+	console.log('Loading locale for:', state.language);
+	try {
+		await loadLocale(state.language);
+		console.log('Locale loaded, applying translations');
+		applyTranslations();
+		console.log('Translations applied successfully');
+	} catch (error) {
+		console.error('Error during language change:', error);
+	}
+	
+	// Close dropdown
+	if (langDropdown) {
+		langDropdown.classList.remove('show');
+	}
+}
+
+// Toggle dropdown visibility
+function toggleLanguageDropdown() {
+	if (langDropdown) {
+		const isShowing = langDropdown.classList.contains('show');
+		console.log('Toggling dropdown. Currently showing:', isShowing);
+		langDropdown.classList.toggle('show');
+		console.log('Dropdown now showing:', langDropdown.classList.contains('show'));
+	} else {
+		console.error('langDropdown element not found in toggle function');
+	}
+}
+
+// Close dropdown when clicking outside
+function closeDropdownOnClickOutside(event) {
+	if (langDropdown && !langToggle.contains(event.target) && !langDropdown.contains(event.target)) {
+		langDropdown.classList.remove('show');
+	}
+}
+
+
+
+// Initialize language switcher elements
+function initializeLanguageSwitcher() {
+	// Get elements after DOM is ready
+	langToggle = document.getElementById('lang-toggle');
+	langDropdown = document.getElementById('lang-dropdown');
+	currentFlag = document.getElementById('current-flag');
+	currentLang = document.getElementById('current-lang');
+	langOptions = document.querySelectorAll('.lang-option');
+
+	console.log('Language switcher elements found:', { langToggle, langDropdown, currentFlag, currentLang });
+	console.log('Current language:', state.language);
+
+	// Initialize language switcher only if elements exist
+	if (langToggle && langDropdown) {
+		// Set initial display
+		updateLanguageDisplay(state.language);
+		
+		// Toggle dropdown on button click
+		langToggle.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			console.log('Language toggle clicked');
+			toggleLanguageDropdown();
+		});
+		
+		// Handle language option clicks
+		langOptions.forEach(option => {
+			option.addEventListener('click', (e) => {
+				e.preventDefault();
+				const newLang = option.dataset.lang;
+				console.log('Language option clicked:', newLang);
+				handleLanguageChange(newLang);
+			});
+		});
+		
+		// Close dropdown when clicking outside
+		document.addEventListener('click', closeDropdownOnClickOutside);
+		
+		// Close dropdown on Escape key
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && langDropdown.classList.contains('show')) {
+				langDropdown.classList.remove('show');
+			}
+		});
+		
+		console.log('Language switcher initialized successfully');
+	} else {
+		console.error('Language switcher elements not found!');
+	}
 }
 
 // Initialize the app when DOM is ready
 function initializeApp() {
 	console.log('Initializing app...');
+	
+	// Initialize language switcher
+	initializeLanguageSwitcher();
+	
+	// Load translations
 	loadLocale(state.language).then(() => {
 		console.log('Initial locale loaded');
 		applyTranslations();

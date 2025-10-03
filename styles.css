@@ -80,4 +80,59 @@ button.qty {
 	transition: text-align 0.3s ease, direction 0.3s ease;
 }
 
+/* Language Switcher Styles */
+#lang-dropdown {
+	display: none;
+	opacity: 0;
+	transform: translateY(-10px) scale(0.95);
+	transition: all 0.2s ease;
+}
+
+#lang-dropdown.show {
+	display: block !important;
+	opacity: 1 !important;
+	transform: translateY(0) scale(1) !important;
+}
+
+.lang-option {
+	text-align: left;
+	direction: ltr;
+}
+
+.lang-option:hover {
+	background-color: #f8fafc;
+}
+
+.lang-option.active {
+	background-color: #fef2f2;
+	color: #dc2626;
+}
+
+/* RTL adjustments for language switcher */
+[dir="rtl"] #lang-dropdown {
+	right: auto;
+	left: 0;
+}
+
+[dir="rtl"] .lang-option {
+	text-align: right;
+	direction: rtl;
+	flex-direction: row-reverse;
+}
+
+/* Responsive language switcher */
+@media (max-width: 640px) {
+	#lang-toggle span {
+		display: none;
+	}
+	
+	#lang-toggle {
+		padding: 8px;
+	}
+	
+	#current-flag {
+		display: block !important;
+	}
+}
+
 
