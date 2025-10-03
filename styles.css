@@ -1,0 +1,83 @@
+/* Minimal custom tweaks atop Tailwind */
+button.qty {
+	@apply w-7 h-7 grid place-items-center rounded border border-neutral-300 text-sm hover:bg-neutral-100;
+}
+
+.gallery { transition: transform .2s ease, box-shadow .2s ease; }
+.gallery:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgb(0 0 0 / 0.08); }
+
+/* RTL Support for Arabic */
+[dir="rtl"] {
+	text-align: right;
+}
+
+[dir="rtl"] .flex {
+	flex-direction: row-reverse;
+}
+
+[dir="rtl"] .grid.md\:grid-cols-2,
+[dir="rtl"] .grid.md\:grid-cols-3 {
+	direction: rtl;
+}
+
+[dir="rtl"] .prose {
+	text-align: right;
+	direction: rtl;
+}
+
+[dir="rtl"] nav.hidden.sm\:flex {
+	flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex.items-center.gap-2,
+[dir="rtl"] .flex.items-center.gap-6 {
+	flex-direction: row-reverse;
+}
+
+[dir="rtl"] .space-y-2 > * {
+	text-align: right;
+}
+
+[dir="rtl"] .list-disc {
+	padding-right: 1.25rem;
+	padding-left: 0;
+}
+
+[dir="rtl"] .sticky {
+	right: auto;
+	left: 0;
+}
+
+/* Arabic font improvements */
+[dir="rtl"] body {
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+[dir="rtl"] .text-2xl,
+[dir="rtl"] .text-3xl,
+[dir="rtl"] .text-5xl {
+	font-weight: 600;
+}
+
+/* Cart drawer RTL fixes */
+[dir="rtl"] #cart aside {
+	right: auto;
+	left: 0;
+}
+
+[dir="rtl"] .justify-between {
+	flex-direction: row-reverse;
+}
+
+/* Language selector positioning for RTL */
+[dir="rtl"] .flex.items-center.gap-2 select {
+	margin-left: 0.5rem;
+	margin-right: 0;
+}
+
+/* Smooth transitions for layout changes */
+* {
+	transition: text-align 0.3s ease, direction 0.3s ease;
+}
+
+
