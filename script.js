@@ -1,6 +1,10 @@
+// Import Firebase authentication (loaded after DOM)
+let firebaseAuth = null;
+
 const state = {
 	items: [], // {id, name, price, qty}
 	language: localStorage.getItem('lang') || 'en',
+	user: null, // Current authenticated user
 };
 
 const PRODUCT = {
@@ -167,6 +171,23 @@ const translations = {
 		'footer.privacy': 'Privacy & Terms',
 		'image.product': 'ONSi Quranic Verses Box',
 		'image.gallery': 'Product gallery image',
+		'auth.login': 'Login',
+		'auth.sign_in': 'Sign In',
+		'auth.sign_up': 'Sign Up',
+		'auth.logout': 'Logout',
+		'auth.email': 'Email',
+		'auth.password': 'Password',
+		'auth.full_name': 'Full Name',
+		'auth.create_account': 'Create Account',
+		'auth.forgot_password': 'Forgot Password?',
+		'auth.or': 'Or',
+		'auth.continue_google': 'Continue with Google',
+		'auth.no_account': "Don't have an account?",
+		'auth.have_account': 'Already have an account?',
+		'auth.subtitle': 'Access your account to manage orders',
+		'auth.password_requirements': 'At least 6 characters',
+		'profile.orders': 'My Orders',
+		'profile.settings': 'Settings',
 	},
 	ar: {
 		'document.title': 'أونسي | علبة آيات قرآنية',
@@ -209,6 +230,23 @@ const translations = {
 		'footer.privacy': 'الخصوصية والشروط',
 		'image.product': 'علبة آيات قرآنية أونسي',
 		'image.gallery': 'صورة من معرض المنتج',
+		'auth.login': 'تسجيل الدخول',
+		'auth.sign_in': 'تسجيل الدخول',
+		'auth.sign_up': 'إنشاء حساب',
+		'auth.logout': 'تسجيل الخروج',
+		'auth.email': 'البريد الإلكتروني',
+		'auth.password': 'كلمة المرور',
+		'auth.full_name': 'الاسم الكامل',
+		'auth.create_account': 'إنشاء حساب',
+		'auth.forgot_password': 'نسيت كلمة المرور؟',
+		'auth.or': 'أو',
+		'auth.continue_google': 'المتابعة مع جوجل',
+		'auth.no_account': 'ليس لديك حساب؟',
+		'auth.have_account': 'لديك حساب بالفعل؟',
+		'auth.subtitle': 'ادخل إلى حسابك لإدارة الطلبات',
+		'auth.password_requirements': 'على الأقل 6 أحرف',
+		'profile.orders': 'طلباتي',
+		'profile.settings': 'الإعدادات',
 	}
 
 };
@@ -412,6 +450,9 @@ function initializeApp() {
 	// Initialize language switcher
 	initializeLanguageSwitcher();
 	
+	// Load Firebase authentication
+	loadFirebaseAuth();
+	
 	// Load translations
 	loadLocale(state.language).then(() => {
 		console.log('Initial locale loaded');
@@ -420,6 +461,128 @@ function initializeApp() {
 	}).catch(error => {
 		console.error('Failed to initialize app:', error);
 	});
+}
+
+// Load Firebase authentication module
+function loadFirebaseAuth() {
+	const script = document.createElement('script');
+	script.type = 'module';
+	script.src = './firebase-auth.js';
+	script.onload = () => {
+		console.log('Firebase auth loaded');
+		setupAuthEventHandlers();
+	};
+	script.onerror = () => {
+		console.error('Failed to load Firebase auth');
+	};
+	document.head.appendChild(script);
+}
+
+// Authentication Event Handlers
+function setupAuthEventHandlers() {
+	// Login form submission
+	const loginSubmit = document.getElementById('login-submit');
+	if (loginSubmit) {
+		loginSubmit.addEventListener('click', async (e) => {
+			e.preventDefault();
+			const email = document.getElementById('login-email').value;
+			const password = document.getElementById('login-password').value;
+			
+			if (!email || !password) {
+				showAuthError('Please fill in all fields');
+				return;
+			}
+			
+			const result = await window.firebaseAuth.loginUser(email, password);
+			if (!result.success) {
+				showAuthError(result.error);
+			}
+		});
+	}
+	
+	// Register form submission
+	const registerSubmit = document.getElementById('register-submit');
+	if (registerSubmit) {
+		registerSubmit.addEventListener('click', async (e) => {
+			e.preventDefault();
+			const fullName = document.getElementById('register-name').value;
+			const email = document.getElementById('register-email').value;
+			const password = document.getElementById('register-password').value;
+			
+			if (!fullName || !email || !password) {
+				showAuthError('Please fill in all fields');
+				return;
+			}
+			
+			if (password.length < 6) {
+				showAuthError('Password must be at least 6 characters');
+				return;
+			}
+			
+			const result = await window.firebaseAuth.registerUser(email, password, fullName);
+			if (!result.success) {
+				showAuthError(result.error);
+			}
+		});
+	}
+	
+	// Google Sign-In buttons
+	const googleSignin = document.getElementById('google-signin');
+	const googleSignup = document.getElementById('google-signup');
+	
+	if (googleSignin) {
+		googleSignin.addEventListener('click', async (e) => {
+			e.preventDefault();
+			const result = await window.firebaseAuth.signInWithGoogle();
+			if (!result.success) {
+				showAuthError(result.error);
+			}
+		});
+	}
+	
+	if (googleSignup) {
+		googleSignup.addEventListener('click', async (e) => {
+			e.preventDefault();
+			const result = await window.firebaseAuth.signInWithGoogle();
+			if (!result.success) {
+				showAuthError(result.error);
+			}
+		});
+	}
+}
+
+function showAuthError(message) {
+	const errorDiv = document.getElementById('auth-error');
+	if (errorDiv) {
+		errorDiv.textContent = message;
+		errorDiv.classList.remove('hidden');
+		setTimeout(() => {
+			errorDiv.classList.add('hidden');
+		}, 5000);
+	}
+}
+
+function resetPasswordPrompt() {
+	const email = prompt('Enter your email address for password reset:');
+	if (email) {
+		window.firebaseAuth.resetPassword(email).then((result) => {
+			if (result.success) {
+				alert('Password reset email sent! Check your inbox.');
+			} else {
+				showAuthError(result.error);
+			}
+		});
+	}
+}
+
+// Enhanced cart functions with user persistence
+const originalUpsertItem = upsertItem;
+function upsertItem(id, deltaQty = 1) {
+	originalUpsertItem(id, deltaQty);
+	// Save cart for authenticated users
+	if (window.firebaseAuth && window.firebaseAuth.getCurrentUser()) {
+		window.firebaseAuth.saveUserCart();
+	}
 }
 
 // Ensure translations after DOM is fully ready

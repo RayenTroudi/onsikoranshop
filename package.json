@@ -7,10 +7,19 @@
     "start": "serve .",
     "build": "echo 'Static site - no build needed'"
   },
-  "keywords": ["quranic", "verses", "box", "islamic", "cards"],
+  "keywords": [
+    "quranic",
+    "verses",
+    "box",
+    "islamic",
+    "cards"
+  ],
   "author": "ONSi",
   "license": "MIT",
   "devDependencies": {
     "serve": "^14.0.0"
+  },
+  "dependencies": {
+    "firebase": "^12.3.0"
   }
 }
