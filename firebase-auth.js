@@ -20,6 +20,35 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
+// Check if Firebase is properly configured
+function checkFirebaseConfig() {
+  if (!firebaseConfig.apiKey || !firebaseConfig.authDomain) {
+    console.error('Firebase configuration is incomplete');
+    return false;
+  }
+  return true;
+}
+
+// Enhanced error handling
+function handleFirebaseError(error) {
+  console.error('Firebase error:', error);
+  
+  const errorMessages = {
+    'auth/configuration-not-found': 'Firebase Authentication is not configured. Please enable Authentication in Firebase Console.',
+    'auth/api-key-not-valid': 'Invalid Firebase API key. Please check your configuration.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/weak-password': 'Password should be at least 6 characters.',
+    'auth/email-already-in-use': 'An account with this email already exists.',
+    'auth/user-not-found': 'No account found with this email.',
+    'auth/wrong-password': 'Incorrect password.',
+    'auth/network-request-failed': 'Network error. Please check your connection.',
+    'auth/popup-blocked': 'Popup was blocked. Please allow popups and try again.',
+    'auth/popup-closed-by-user': 'Sign-in was cancelled.'
+  };
+  
+  return errorMessages[error.code] || error.message || 'An unexpected error occurred.';
+}
+
 // Authentication State Management
 let currentUser = null;
 
@@ -43,28 +72,46 @@ function updateAuthUI(user) {
   const authModal = document.getElementById('auth-modal');
   
   if (user) {
-    // User is signed in
+    // User is signed in - show user profile
     if (authButton) {
-      authButton.innerHTML = `
-        <div class="flex items-center gap-2">
-          <img src="${user.photoURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'}" 
-               alt="Profile" class="w-6 h-6 rounded-full">
-          <span class="hidden sm:inline">${user.displayName || user.email}</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </div>
-      `;
+      // Hide the auth button and show user profile
+      authButton.style.display = 'none';
+    }
+    if (userProfile) {
+      userProfile.style.display = 'block';
+      userProfile.classList.remove('hidden');
+      
+      // Update user profile content
+      const profileToggle = document.getElementById('profile-toggle');
+      if (profileToggle) {
+        profileToggle.innerHTML = `
+          <div class="flex items-center gap-2">
+            <img src="${user.photoURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'}" 
+                 alt="Profile" class="w-6 h-6 rounded-full">
+            <span class="hidden sm:inline">${user.displayName || user.email}</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+        `;
+      }
     }
   } else {
-    // User is signed out
+    // User is signed out - show login button
     if (authButton) {
+      authButton.style.display = 'flex';
       authButton.innerHTML = `
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
         </svg>
         <span data-i18n="auth.login">Login</span>
       `;
+      // Reset the onclick handler for login
+      authButton.onclick = () => openAuthModal('login');
+    }
+    if (userProfile) {
+      userProfile.style.display = 'none';
+      userProfile.classList.add('hidden');
     }
   }
   
@@ -76,6 +123,10 @@ function updateAuthUI(user) {
 
 // Register function
 async function registerUser(email, password, fullName) {
+  if (!checkFirebaseConfig()) {
+    return { success: false, error: 'Firebase is not properly configured. Please contact support.' };
+  }
+  
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -93,12 +144,16 @@ async function registerUser(email, password, fullName) {
     return { success: true, user };
   } catch (error) {
     console.error('Registration error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: handleFirebaseError(error) };
   }
 }
 
 // Login function
 async function loginUser(email, password) {
+  if (!checkFirebaseConfig()) {
+    return { success: false, error: 'Firebase is not properly configured. Please contact support.' };
+  }
+  
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     console.log('User logged in successfully');
@@ -106,12 +161,16 @@ async function loginUser(email, password) {
     return { success: true, user: userCredential.user };
   } catch (error) {
     console.error('Login error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: handleFirebaseError(error) };
   }
 }
 
 // Google Sign-In
 async function signInWithGoogle() {
+  if (!checkFirebaseConfig()) {
+    return { success: false, error: 'Firebase is not properly configured. Please contact support.' };
+  }
+  
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
@@ -132,7 +191,7 @@ async function signInWithGoogle() {
     return { success: true, user };
   } catch (error) {
     console.error('Google sign-in error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: handleFirebaseError(error) };
   }
 }
 
@@ -223,6 +282,23 @@ function switchAuthMode(mode) {
   openAuthModal(mode);
 }
 
+// Toggle user profile dropdown
+function toggleUserDropdown() {
+  const dropdown = document.getElementById('profile-dropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('hidden');
+  }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const userProfile = document.getElementById('user-profile');
+  const dropdown = document.getElementById('profile-dropdown');
+  if (userProfile && dropdown && !userProfile.contains(event.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
+
 // Export functions for global use
 window.firebaseAuth = {
   registerUser,
@@ -233,6 +309,7 @@ window.firebaseAuth = {
   openAuthModal,
   closeAuthModal,
   switchAuthMode,
+  toggleUserDropdown,
   saveUserCart,
   getCurrentUser: () => currentUser
 };

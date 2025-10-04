@@ -7,9 +7,11 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Users can read and write their own orders
+    // Orders - allow authenticated users to create, read, and update their own orders
     match /orders/{orderId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow read, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow delete: if false; // Don't allow deleting orders
     }
     
     // Public product information (if you add products collection later)
@@ -18,9 +20,9 @@ service cloud.firestore {
       allow write: if request.auth != null; // Only authenticated users can modify products
     }
     
-    // Allow authenticated users to create orders
-    match /orders/{orderId} {
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    // Cart data - allow authenticated users to manage their cart
+    match /carts/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
