@@ -117,8 +117,8 @@ button.qty:hover {
 }
 
 .lang-option.active {
-	background-color: #fef2f2;
-	color: #dc2626;
+	background-color: #f8fafc;
+	color: #475569;
 }
 
 /* RTL adjustments for language switcher */
