@@ -40,11 +40,11 @@ function removeItem(id) {
 }
 
 function clearCart() {
-	console.log('🧹 Clearing cart...');
+	
 	state.items = [];
 	localStorage.removeItem('cart');
 	renderCart();
-	console.log('✅ Cart cleared');
+	
 }
 
 function subtotal() {
@@ -331,7 +331,7 @@ async function saveOrderToFirebase(orderData) {
 	const orderRef = doc(collection(db, 'orders'), orderData.orderNumber);
 	await setDoc(orderRef, orderData);
 	
-	console.log('Order saved to Firebase:', orderData.orderNumber);
+	
 }
 
 // Save order to localStorage for guest users or as backup
@@ -344,7 +344,7 @@ function saveOrderToLocalStorage(orderData) {
 			orders = orders.slice(-10);
 		}
 		localStorage.setItem('orders', JSON.stringify(orders));
-		console.log('Order saved to localStorage:', orderData.orderNumber);
+		
 	} catch (error) {
 		console.error('Failed to save order to localStorage:', error);
 	}
@@ -384,7 +384,7 @@ async function sendOrderNotificationsEmailJS(orderData) {
 			customerEmailParams
 		);
 		
-		console.log('Customer confirmation email sent to:', orderData.customerInfo.email);
+		
 		
 		// Admin notification email parameters
 		const adminEmailParams = {
@@ -414,8 +414,8 @@ async function sendOrderNotificationsEmailJS(orderData) {
 			adminEmailParams
 		);
 		
-		console.log('Admin notification email sent');
-		console.log('All email notifications sent successfully via EmailJS');
+		
+		
 		
 	} catch (error) {
 		console.error('EmailJS notification error:', error);
@@ -777,23 +777,23 @@ const translations = {
 const loadedLocales = {};
 
 async function loadLocale(lang) {
-	console.log('Loading locale for:', lang);
+	
 	if (loadedLocales[lang]) {
-		console.log('Locale already loaded from cache');
+		
 		return loadedLocales[lang];
 	}
 	try {
-		console.log('Fetching locale file:', `locales/${lang}.json`);
+		
 		const res = await fetch(`locales/${lang}.json`, { cache: 'no-store' });
 		if (!res.ok) throw new Error(`Failed to load locale: ${res.status}`);
 		loadedLocales[lang] = await res.json();
-		console.log('Locale loaded from file:', loadedLocales[lang]);
+		
 		return loadedLocales[lang];
 	} catch (e) {
-		console.log('Failed to load locale file, using inline fallback:', e.message);
+		
 		// Fallback to inline translations
 		loadedLocales[lang] = translations[lang];
-		console.log('Using inline translations:', loadedLocales[lang]);
+		
 		return loadedLocales[lang];
 	}
 }
@@ -808,18 +808,18 @@ function t(key) {
 }
 
 function applyTranslations() {
-	console.log('Applying translations for language:', state.language);
+	
 	const dict = currentDict();
-	console.log('Using dictionary:', dict);
+	
 	
 	// text nodes
 	const i18nElements = document.querySelectorAll('[data-i18n]');
-	console.log('Found', i18nElements.length, 'elements with data-i18n');
+	
 	i18nElements.forEach(el => {
 		const key = el.getAttribute('data-i18n');
 		const translation = t(key);
 		el.textContent = translation;
-		console.log(`Translated '${key}' to '${translation}'`);
+		
 	});
 	// placeholders
 	document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
@@ -873,17 +873,17 @@ function updateLanguageDisplay(lang) {
 
 // Handle language change
 async function handleLanguageChange(newLang) {
-	console.log('Language change triggered, new language:', newLang);
+	
 	state.language = newLang;
 	localStorage.setItem('lang', state.language);
 	updateLanguageDisplay(newLang);
 	
-	console.log('Loading locale for:', state.language);
+	
 	try {
 		await loadLocale(state.language);
-		console.log('Locale loaded, applying translations');
+		
 		applyTranslations();
-		console.log('Translations applied successfully');
+		
 	} catch (error) {
 		console.error('Error during language change:', error);
 	}
@@ -898,9 +898,9 @@ async function handleLanguageChange(newLang) {
 function toggleLanguageDropdown() {
 	if (langDropdown) {
 		const isShowing = langDropdown.classList.contains('show');
-		console.log('Toggling dropdown. Currently showing:', isShowing);
+		
 		langDropdown.classList.toggle('show');
-		console.log('Dropdown now showing:', langDropdown.classList.contains('show'));
+		
 	} else {
 		console.error('langDropdown element not found in toggle function');
 	}
@@ -924,8 +924,8 @@ function initializeLanguageSwitcher() {
 	currentLang = document.getElementById('current-lang');
 	langOptions = document.querySelectorAll('.lang-option');
 
-	console.log('Language switcher elements found:', { langToggle, langDropdown, currentFlag, currentLang });
-	console.log('Current language:', state.language);
+	
+	
 
 	// Initialize language switcher only if elements exist
 	if (langToggle && langDropdown) {
@@ -936,7 +936,7 @@ function initializeLanguageSwitcher() {
 		langToggle.addEventListener('click', (e) => {
 			e.preventDefault();
 			e.stopPropagation();
-			console.log('Language toggle clicked');
+			
 			toggleLanguageDropdown();
 		});
 		
@@ -945,7 +945,7 @@ function initializeLanguageSwitcher() {
 			option.addEventListener('click', (e) => {
 				e.preventDefault();
 				const newLang = option.dataset.lang;
-				console.log('Language option clicked:', newLang);
+				
 				handleLanguageChange(newLang);
 			});
 		});
@@ -960,7 +960,7 @@ function initializeLanguageSwitcher() {
 			}
 		});
 		
-		console.log('Language switcher initialized successfully');
+		
 	} else {
 		console.error('Language switcher elements not found!');
 	}
@@ -968,7 +968,7 @@ function initializeLanguageSwitcher() {
 
 // Initialize the app when DOM is ready
 function initializeApp() {
-	console.log('Initializing app...');
+	
 	
 	// Initialize EmailJS (free email service)
 	initializeEmailJS();
@@ -990,7 +990,7 @@ function initializeApp() {
 	
 	// Load translations
 	loadLocale(state.language).then(() => {
-		console.log('Initial locale loaded');
+		
 		applyTranslations();
 		renderCart();
 	}).catch(error => {
@@ -1005,7 +1005,7 @@ function initializeEmailJS() {
 		const publicKey = window.ENV?.VITE_EMAILJS_PUBLIC_KEY || 'ryB3eYn0HP-iAfl2E';
 		
 		emailjs.init(publicKey);
-		console.log('EmailJS initialized with service:', window.ENV?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we');
+		
 	} else {
 		console.warn('EmailJS not loaded - email notifications will be disabled');
 	}
@@ -1017,7 +1017,7 @@ function loadFirebaseAuth() {
 	script.type = 'module';
 	script.src = './firebase-auth.js';
 	script.onload = () => {
-		console.log('Firebase auth loaded');
+		
 		setupAuthEventHandlers();
 	};
 	script.onerror = () => {
@@ -1125,7 +1125,7 @@ function resetPasswordPrompt() {
 
 // Handle user authentication state changes
 function handleUserAuthChange(user) {
-	console.log('User auth state changed:', user ? user.email : 'signed out');
+	
 	state.user = user;
 	
 	if (user) {
@@ -1185,7 +1185,7 @@ function testEmailJS() {
 		return;
 	}
 	
-	console.log('Testing EmailJS connection...');
+	
 	
 	// Test customer email
 	const testCustomerParams = {
@@ -1209,7 +1209,7 @@ function testEmailJS() {
 		testCustomerParams
 	)
 		.then(response => {
-			console.log('✅ Customer email test SUCCESS:', response);
+			
 			alert('Customer email test sent successfully! Check ' + (window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com'));
 		})
 		.catch(error => {
@@ -1249,7 +1249,7 @@ function testAdminEmail() {
 		testAdminParams
 	)
 		.then(response => {
-			console.log('✅ Admin email test SUCCESS:', response);
+			
 			alert('Admin email test sent successfully! Check ' + (window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com'));
 		})
 		.catch(error => {
