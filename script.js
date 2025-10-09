@@ -360,6 +360,7 @@ async function sendOrderNotificationsEmailJS(orderData) {
 	
 	try {
 		// Customer confirmation email parameters (matching template variables)
+		// Note: In EmailJS templates, use {{customer_name}}, {{order_number}}, etc.
 		const customerEmailParams = {
 			to_email: orderData.customerInfo.email,
 			customer_name: orderData.customerInfo.name,
@@ -387,6 +388,7 @@ async function sendOrderNotificationsEmailJS(orderData) {
 		
 		
 		// Admin notification email parameters
+		// Note: In EmailJS templates, use {{customer_email}}, {{customer_name}}, {{order_number}}, etc.
 		const adminEmailParams = {
 			to_email: window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com', // Your admin email for notifications
 			order_number: orderData.orderNumber,
