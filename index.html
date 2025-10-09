@@ -283,9 +283,9 @@
           <!-- Submit Buttons -->
           <div class="space-y-3 pt-6 border-t">
             <button id="place-order-btn" type="submit" class="w-full rounded-lg bg-slate-700 text-white px-6 py-3 text-sm font-medium hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-colors">
-              <span class="flex items-center justify-center gap-2">
+              <span class="flex items-center justify-center relative">
                 <span id="place-order-text" data-i18n="checkout.place_order">Place Order</span>
-                <div id="place-order-loading" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <div id="place-order-loading" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent absolute"></div>
               </span>
             </button>
             <button type="button" data-close-checkout="btn" class="w-full rounded-lg border border-neutral-300 px-6 py-3 text-sm font-medium hover:bg-neutral-50 transition-colors" data-i18n="actions.cancel">Cancel</button>
