@@ -5,13 +5,13 @@ import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/fireb
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDZw3QJBDlsn10pBbtQmBU61Nfa9bMUFx4",
-  authDomain: "onsi-de85f.firebaseapp.com",
-  projectId: "onsi-de85f",
-  storageBucket: "onsi-de85f.firebasestorage.app",
-  messagingSenderId: "304484751803",
-  appId: "1:304484751803:web:4031fad794705c0bac8c9e",
-  measurementId: "G-5MF3MSH2J5"
+  apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || "AIzaSyDZw3QJBDlsn10pBbtQmBU61Nfa9bMUFx4",
+  authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || "onsi-de85f.firebaseapp.com",
+  projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || "onsi-de85f",
+  storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || "onsi-de85f.firebasestorage.app",
+  messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "304484751803",
+  appId: import.meta.env?.VITE_FIREBASE_APP_ID || "1:304484751803:web:4031fad794705c0bac8c9e",
+  measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || "G-5MF3MSH2J5"
 };
 
 // Initialize Firebase

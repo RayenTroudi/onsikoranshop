@@ -353,8 +353,8 @@ async function sendOrderNotificationsEmailJS(orderData) {
 		
 		// Send customer confirmation email
 		await emailjs.send(
-			'service_j4hv4we', // Your actual EmailJS service ID
-			'template_3m8gczh', // Your customer order confirmation template ID
+			import.meta.env?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we', // Your actual EmailJS service ID
+			import.meta.env?.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || 'template_3m8gczh', // Your customer order confirmation template ID
 			customerEmailParams
 		);
 		
@@ -362,7 +362,7 @@ async function sendOrderNotificationsEmailJS(orderData) {
 		
 		// Admin notification email parameters
 		const adminEmailParams = {
-			to_email: 'rayentroudi00@gmail.com', // Your admin email for notifications
+			to_email: import.meta.env?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com', // Your admin email for notifications
 			order_number: orderData.orderNumber,
 			customer_name: orderData.customerInfo.name,
 			customer_email: orderData.customerInfo.email,
@@ -383,8 +383,8 @@ async function sendOrderNotificationsEmailJS(orderData) {
 		
 		// Send admin notification email
 		await emailjs.send(
-			'service_j4hv4we', // Your actual EmailJS service ID
-			'template_lkl5yxm', // Your admin order notification template ID
+			import.meta.env?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we', // Your actual EmailJS service ID
+			import.meta.env?.VITE_EMAILJS_ADMIN_TEMPLATE_ID || 'template_lkl5yxm', // Your admin order notification template ID
 			adminEmailParams
 		);
 		
@@ -940,10 +940,10 @@ function initializeApp() {
 function initializeEmailJS() {
 	if (typeof emailjs !== 'undefined') {
 		// EmailJS Public Key configured
-		const publicKey = 'ryB3eYn0HP-iAfl2E';
+		const publicKey = import.meta.env?.VITE_EMAILJS_PUBLIC_KEY || 'ryB3eYn0HP-iAfl2E';
 		
 		emailjs.init(publicKey);
-		console.log('EmailJS initialized with service: service_j4hv4we');
+		console.log('EmailJS initialized with service:', import.meta.env?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we');
 	} else {
 		console.warn('EmailJS not loaded - email notifications will be disabled');
 	}
@@ -1127,7 +1127,7 @@ function testEmailJS() {
 	
 	// Test customer email
 	const testCustomerParams = {
-		to_email: 'rayentroudi00@gmail.com', // Your email for testing
+		to_email: import.meta.env?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com', // Your email for testing
 		customer_name: 'Test Customer',
 		order_number: 'TEST-' + Date.now(),
 		order_date: new Date().toLocaleDateString('en-US', {
@@ -1141,10 +1141,14 @@ function testEmailJS() {
 		customer_phone: '+1234567890'
 	};
 	
-	emailjs.send('service_j4hv4we', 'template_3m8gczh', testCustomerParams)
+	emailjs.send(
+		import.meta.env?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we', 
+		import.meta.env?.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || 'template_3m8gczh', 
+		testCustomerParams
+	)
 		.then(response => {
 			console.log('✅ Customer email test SUCCESS:', response);
-			alert('Customer email test sent successfully! Check rayentroudi00@gmail.com');
+			alert('Customer email test sent successfully! Check ' + (import.meta.env?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com'));
 		})
 		.catch(error => {
 			console.error('❌ Customer email test FAILED:', error);
@@ -1160,10 +1164,10 @@ function testAdminEmail() {
 	}
 	
 	const testAdminParams = {
-		to_email: 'rayentroudi00@gmail.com',
+		to_email: import.meta.env?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com',
 		order_number: 'TEST-ADMIN-' + Date.now(),
 		customer_name: 'Test Customer',
-		customer_email: 'rayentroudi00@gmail.com',
+		customer_email: import.meta.env?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com',
 		customer_phone: '+1234567890',
 		order_date: new Date().toLocaleDateString('en-US', {
 			year: 'numeric',
@@ -1177,10 +1181,14 @@ function testAdminEmail() {
 		shipping_address: 'Test Customer\n123 Test Street\nTest City, 12345\nUnited States'
 	};
 	
-	emailjs.send('service_j4hv4we', 'template_lkl5yxm', testAdminParams)
+	emailjs.send(
+		import.meta.env?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we', 
+		import.meta.env?.VITE_EMAILJS_ADMIN_TEMPLATE_ID || 'template_lkl5yxm', 
+		testAdminParams
+	)
 		.then(response => {
 			console.log('✅ Admin email test SUCCESS:', response);
-			alert('Admin email test sent successfully! Check rayentroudi00@gmail.com');
+			alert('Admin email test sent successfully! Check ' + (import.meta.env?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com'));
 		})
 		.catch(error => {
 			console.error('❌ Admin email test FAILED:', error);

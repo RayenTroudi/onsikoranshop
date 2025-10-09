@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "onsi-koran-shop",
   "builds": [
     {
       "src": "./**",
