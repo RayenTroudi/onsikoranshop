@@ -34,20 +34,16 @@ VITE_TAX_RATE=0.00
 
 ## How to Deploy to Vercel
 
-### Method 1: Vercel CLI
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run `vercel` in your project directory
-3. Follow the prompts
-4. Add environment variables via dashboard
+### Quick Deploy (Recommended)
+The application is now configured to work directly on Vercel without environment variables setup. All configuration is embedded in the HTML file.
 
-### Method 2: GitHub Integration
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Import your GitHub repository
-4. Add environment variables in the deployment settings
-5. Deploy
+1. **Push your code to GitHub**
+2. **Go to [vercel.com](https://vercel.com)**
+3. **Import your GitHub repository**
+4. **Deploy** - it should work immediately!
 
-## Adding Environment Variables in Vercel Dashboard
+### Advanced: Environment Variables (Optional)
+If you want to use different configurations for different environments:
 
 1. Go to your project in Vercel dashboard
 2. Click on "Settings" tab
@@ -56,6 +52,8 @@ VITE_TAX_RATE=0.00
    - **Name**: Variable name (e.g., `VITE_FIREBASE_API_KEY`)
    - **Value**: Variable value (e.g., `AIzaSyDZw3QJBDlsn10pBbtQmBU61Nfa9bMUFx4`)
    - **Environment**: Select "Production", "Preview", and "Development"
+
+**Note**: Environment variables will automatically override the default values in the HTML file.
 
 ## Important Notes
 

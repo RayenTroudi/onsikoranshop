@@ -5,13 +5,13 @@ import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/fireb
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || "AIzaSyDZw3QJBDlsn10pBbtQmBU61Nfa9bMUFx4",
-  authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || "onsi-de85f.firebaseapp.com",
-  projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || "onsi-de85f",
-  storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || "onsi-de85f.firebasestorage.app",
-  messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "304484751803",
-  appId: import.meta.env?.VITE_FIREBASE_APP_ID || "1:304484751803:web:4031fad794705c0bac8c9e",
-  measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || "G-5MF3MSH2J5"
+  apiKey: window.ENV?.VITE_FIREBASE_API_KEY || "AIzaSyDZw3QJBDlsn10pBbtQmBU61Nfa9bMUFx4",
+  authDomain: window.ENV?.VITE_FIREBASE_AUTH_DOMAIN || "onsi-de85f.firebaseapp.com",
+  projectId: window.ENV?.VITE_FIREBASE_PROJECT_ID || "onsi-de85f",
+  storageBucket: window.ENV?.VITE_FIREBASE_STORAGE_BUCKET || "onsi-de85f.firebasestorage.app",
+  messagingSenderId: window.ENV?.VITE_FIREBASE_MESSAGING_SENDER_ID || "304484751803",
+  appId: window.ENV?.VITE_FIREBASE_APP_ID || "1:304484751803:web:4031fad794705c0bac8c9e",
+  measurementId: window.ENV?.VITE_FIREBASE_MEASUREMENT_ID || "G-5MF3MSH2J5"
 };
 
 // Initialize Firebase
