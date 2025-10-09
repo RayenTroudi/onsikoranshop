@@ -10,11 +10,11 @@ const state = {
 const PRODUCT = {
 	id: 'default',
 	name: 'Quranic Verses Box',
-	price: 39,
+	price: 120,
 };
 
 function formatCurrency(value) {
-	return `$${value.toFixed(2)}`;
+	return `${value.toFixed(0)} TND`;
 }
 
 function findItem(id) {
