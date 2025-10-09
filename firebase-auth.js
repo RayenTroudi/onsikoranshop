@@ -19,6 +19,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
+// Configure Google provider to reduce CORS warnings
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 // Check if Firebase is properly configured
 function checkFirebaseConfig() {
@@ -56,10 +60,14 @@ let currentUser = null;
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   updateAuthUI(user);
+  
+  // Notify main app about user state change
+  if (window.handleUserAuthChange) {
+    window.handleUserAuthChange(user);
+  }
+  
   if (user) {
     console.log('User signed in:', user.email);
-    // Load user's saved cart if any
-    loadUserCart();
   } else {
     console.log('User signed out');
   }
@@ -217,34 +225,35 @@ async function resetPassword(email) {
 }
 
 // Load user's saved cart
-async function loadUserCart() {
+// Save user's cart
+async function saveUserCart(cartItems) {
   if (!currentUser) return;
+  
+  try {
+    await setDoc(doc(db, 'users', currentUser.uid), {
+      savedCart: cartItems || [],
+      lastCartUpdate: new Date().toISOString()
+    }, { merge: true });
+    console.log('Cart saved to Firebase');
+  } catch (error) {
+    console.error('Error saving user cart:', error);
+  }
+}
+
+// Get user's saved cart
+async function getUserCart() {
+  if (!currentUser) return [];
   
   try {
     const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
     if (userDoc.exists()) {
       const userData = userDoc.data();
-      if (userData.savedCart) {
-        // Restore saved cart items
-        state.items = userData.savedCart;
-        renderCart();
-      }
+      return userData.savedCart || [];
     }
+    return [];
   } catch (error) {
-    console.error('Error loading user cart:', error);
-  }
-}
-
-// Save user's cart
-async function saveUserCart() {
-  if (!currentUser) return;
-  
-  try {
-    await setDoc(doc(db, 'users', currentUser.uid), {
-      savedCart: state.items
-    }, { merge: true });
-  } catch (error) {
-    console.error('Error saving user cart:', error);
+    console.error('Error getting user cart:', error);
+    return [];
   }
 }
 
@@ -311,6 +320,7 @@ window.firebaseAuth = {
   switchAuthMode,
   toggleUserDropdown,
   saveUserCart,
+  getUserCart,
   getCurrentUser: () => currentUser
 };
 
@@ -324,5 +334,6 @@ export {
   closeAuthModal, 
   switchAuthMode,
   saveUserCart,
+  getUserCart,
   currentUser 
 };

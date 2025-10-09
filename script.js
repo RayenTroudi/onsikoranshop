@@ -63,13 +63,77 @@ function renderCart() {
 					<button class="qty" data-id="${i.id}" data-delta="-1" aria-label="${t('cart.decrease')}">−</button>
 					<span class="w-6 text-center">${i.qty}</span>
 					<button class="qty" data-id="${i.id}" data-delta="1" aria-label="${t('cart.increase')}">+</button>
-					<button class="remove text-xs text-rose-700" data-id="${i.id}">${t('actions.remove')}</button>
+					<button class="remove text-xs text-slate-700" data-id="${i.id}">${t('actions.remove')}</button>
 				</div>
 			</div>
 		`).join('');
 	}
 
 	subtotalEl.textContent = formatCurrency(subtotal());
+	
+	// Save cart after rendering
+	saveCart();
+}
+
+// Cart persistence functions
+function saveCart() {
+	try {
+		// Save to localStorage for guest users
+		localStorage.setItem('cart', JSON.stringify(state.items));
+		
+		// Save to Firebase for authenticated users
+		if (state.user && window.firebaseAuth) {
+			window.firebaseAuth.saveUserCart(state.items);
+		}
+	} catch (error) {
+		console.error('Failed to save cart:', error);
+	}
+}
+
+function loadCart() {
+	try {
+		// Load from localStorage first (for guest users or as fallback)
+		const savedCart = localStorage.getItem('cart');
+		if (savedCart) {
+			state.items = JSON.parse(savedCart);
+			renderCart();
+		}
+	} catch (error) {
+		console.error('Failed to load cart from localStorage:', error);
+		state.items = [];
+	}
+}
+
+async function loadUserCart() {
+	if (!state.user || !window.firebaseAuth) return;
+	
+	try {
+		// Load cart from Firebase for authenticated users
+		const userCart = await window.firebaseAuth.getUserCart();
+		if (userCart && userCart.length > 0) {
+			// Merge with local cart (in case user had items before login)
+			const localItems = [...state.items];
+			state.items = [...userCart];
+			
+			// Add any local items that aren't already in user cart
+			localItems.forEach(localItem => {
+				const existingItem = state.items.find(item => item.id === localItem.id);
+				if (!existingItem) {
+					state.items.push(localItem);
+				} else {
+					// Merge quantities
+					existingItem.qty += localItem.qty;
+				}
+			});
+			
+			renderCart();
+			
+			// Clear localStorage cart after successful merge
+			localStorage.removeItem('cart');
+		}
+	} catch (error) {
+		console.error('Failed to load user cart:', error);
+	}
 }
 
 function openCart() {
@@ -81,11 +145,293 @@ function closeCart() {
 }
 
 function openCheckout() {
+	// Pre-fill email if user is logged in
+	if (state.user && state.user.email) {
+		document.getElementById('checkout-email').value = state.user.email;
+	}
+	
+	// Populate checkout summary
+	updateCheckoutSummary();
+	
 	document.getElementById('checkout-modal').classList.remove('hidden');
 }
 
 function closeCheckout() {
 	document.getElementById('checkout-modal').classList.add('hidden');
+	// Reset form
+	document.getElementById('checkout-form').reset();
+}
+
+function updateCheckoutSummary() {
+	const itemsEl = document.getElementById('checkout-items');
+	const totalEl = document.getElementById('checkout-total');
+	
+	// Render items
+	itemsEl.innerHTML = state.items.map(item => `
+		<div class="flex justify-between items-center py-2">
+			<div>
+				<span class="font-medium">${item.name}</span>
+				<span class="text-sm text-neutral-600 ml-2">× ${item.qty}</span>
+			</div>
+			<span class="font-medium">${formatCurrency(item.price * item.qty)}</span>
+		</div>
+	`).join('');
+	
+	// Update total
+	totalEl.textContent = formatCurrency(subtotal());
+}
+
+function validateCheckoutForm(formData) {
+	const errors = [];
+	
+	// Validate required fields
+	if (!formData.name) errors.push(t('validation.name_required'));
+	if (!formData.email) errors.push(t('validation.email_required'));
+	if (!formData.phone) errors.push(t('validation.phone_required'));
+	if (!formData.address) errors.push(t('validation.address_required'));
+	if (!formData.city) errors.push(t('validation.city_required'));
+	if (!formData.postalCode) errors.push(t('validation.postal_required'));
+	if (!formData.country) errors.push(t('validation.country_required'));
+	
+	// Validate email format
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (formData.email && !emailRegex.test(formData.email)) {
+		errors.push(t('validation.email_invalid'));
+	}
+	
+	// Show errors if any
+	if (errors.length > 0) {
+		showNotification(errors.join('<br>'), 'error');
+		return false;
+	}
+	
+	return true;
+}
+
+function setCheckoutLoading(loading) {
+	const btn = document.getElementById('place-order-btn');
+	const text = document.getElementById('place-order-text');
+	const spinner = document.getElementById('place-order-loading');
+	
+	if (loading) {
+		btn.disabled = true;
+		btn.classList.add('opacity-50', 'cursor-not-allowed');
+		text.classList.add('opacity-0');
+		spinner.classList.remove('hidden');
+	} else {
+		btn.disabled = false;
+		btn.classList.remove('opacity-50', 'cursor-not-allowed');
+		text.classList.remove('opacity-0');
+		spinner.classList.add('hidden');
+	}
+}
+
+async function processOrder(formData) {
+	try {
+		// Generate order number
+		const orderNumber = generateOrderNumber();
+		
+		// Prepare order data
+		const orderData = {
+			orderNumber,
+			userId: state.user ? state.user.uid : null,
+			customerInfo: formData,
+			items: state.items.map(item => ({
+				id: item.id,
+				name: item.name,
+				price: item.price,
+				quantity: item.qty,
+				total: item.price * item.qty
+			})),
+			subtotal: subtotal(),
+			total: subtotal(), // For now, no tax or shipping
+			status: 'pending',
+			createdAt: new Date().toISOString(),
+			timestamp: Date.now()
+		};
+		
+		// Save order to Firebase if user is authenticated (free tier)
+		if (state.user && window.firebaseAuth) {
+			try {
+				await saveOrderToFirebase(orderData);
+			} catch (error) {
+				console.error('Failed to save order to Firebase:', error);
+				// Continue with local processing even if Firebase fails
+			}
+		} else {
+			// For guest users, save to localStorage as backup
+			saveOrderToLocalStorage(orderData);
+		}
+		
+		// Send email notifications using EmailJS (free tier)
+		try {
+			await sendOrderNotificationsEmailJS(orderData);
+		} catch (error) {
+			console.error('Failed to send email notifications:', error);
+			// Don't fail the order if email fails
+		}
+		
+		return {
+			success: true,
+			orderNumber,
+			orderData
+		};
+	} catch (error) {
+		console.error('Order processing error:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to process order'
+		};
+	}
+}
+
+function generateOrderNumber() {
+	const timestamp = Date.now().toString().slice(-6);
+	const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+	return `ONS-${timestamp}-${random}`;
+}
+
+async function saveOrderToFirebase(orderData) {
+	// This function will use Firebase Firestore to save the order
+	if (!window.firebaseAuth || !window.firebaseAuth.getCurrentUser()) {
+		throw new Error('User not authenticated');
+	}
+	
+	// Import Firebase Firestore functions
+	const { doc, setDoc, collection, getFirestore } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js');
+	const db = getFirestore();
+	
+	// Save order to Firestore
+	const orderRef = doc(collection(db, 'orders'), orderData.orderNumber);
+	await setDoc(orderRef, orderData);
+	
+	console.log('Order saved to Firebase:', orderData.orderNumber);
+}
+
+// Save order to localStorage for guest users or as backup
+function saveOrderToLocalStorage(orderData) {
+	try {
+		let orders = JSON.parse(localStorage.getItem('orders') || '[]');
+		orders.push(orderData);
+		// Keep only last 10 orders to avoid storage issues
+		if (orders.length > 10) {
+			orders = orders.slice(-10);
+		}
+		localStorage.setItem('orders', JSON.stringify(orders));
+		console.log('Order saved to localStorage:', orderData.orderNumber);
+	} catch (error) {
+		console.error('Failed to save order to localStorage:', error);
+	}
+}
+
+// Send email notifications using EmailJS (free service)
+async function sendOrderNotificationsEmailJS(orderData) {
+	// Check if EmailJS is loaded
+	if (typeof emailjs === 'undefined') {
+		console.warn('EmailJS not loaded, skipping email notifications');
+		return;
+	}
+	
+	try {
+		// Customer confirmation email parameters (matching template variables)
+		const customerEmailParams = {
+			to_email: orderData.customerInfo.email,
+			customer_name: orderData.customerInfo.name,
+			order_number: orderData.orderNumber,
+			order_date: new Date(orderData.createdAt).toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			}),
+			items_list: orderData.items.map(item => 
+				`${item.name} (Qty: ${item.quantity})`
+			).join(', '),
+			total_amount: orderData.total.toFixed(2),
+			shipping_address: `${orderData.customerInfo.address}\n${orderData.customerInfo.city}, ${orderData.customerInfo.postalCode}\n${orderData.customerInfo.country}`,
+			customer_phone: orderData.customerInfo.phone
+		};
+		
+		// Send customer confirmation email
+		await emailjs.send(
+			'service_j4hv4we', // Your actual EmailJS service ID
+			'template_3m8gczh', // Your customer order confirmation template ID
+			customerEmailParams
+		);
+		
+		console.log('Customer confirmation email sent to:', orderData.customerInfo.email);
+		
+		// Admin notification email parameters
+		const adminEmailParams = {
+			to_email: 'rayentroudi00@gmail.com', // Your admin email for notifications
+			order_number: orderData.orderNumber,
+			customer_name: orderData.customerInfo.name,
+			customer_email: orderData.customerInfo.email,
+			customer_phone: orderData.customerInfo.phone,
+			order_date: new Date(orderData.createdAt).toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit'
+			}),
+			items_list: orderData.items.map(item => 
+				`• ${item.name} x ${item.quantity} = $${item.total.toFixed(2)}`
+			).join('\n'),
+			total_amount: orderData.total.toFixed(2),
+			shipping_address: `${orderData.customerInfo.name}\n${orderData.customerInfo.address}\n${orderData.customerInfo.city}, ${orderData.customerInfo.postalCode}\n${orderData.customerInfo.country}`
+		};
+		
+		// Send admin notification email
+		await emailjs.send(
+			'service_j4hv4we', // Your actual EmailJS service ID
+			'template_lkl5yxm', // Your admin order notification template ID
+			adminEmailParams
+		);
+		
+		console.log('Admin notification email sent');
+		console.log('All email notifications sent successfully via EmailJS');
+		
+	} catch (error) {
+		console.error('EmailJS notification error:', error);
+		// Don't throw error to prevent order failure if email fails
+		console.warn('Order completed but email notification failed');
+	}
+}
+
+function showOrderConfirmation(orderNumber) {
+	document.getElementById('order-number').textContent = orderNumber;
+	document.getElementById('order-confirmation-modal').classList.remove('hidden');
+}
+
+function showNotification(message, type = 'info') {
+	// Create notification element if it doesn't exist
+	let notification = document.getElementById('notification');
+	if (!notification) {
+		notification = document.createElement('div');
+		notification.id = 'notification';
+		notification.className = 'fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full opacity-0';
+		document.body.appendChild(notification);
+	}
+	
+	// Set notification style based on type
+	const styles = {
+		success: 'bg-green-100 text-green-800 border border-green-200',
+		error: 'bg-red-100 text-red-800 border border-red-200',
+		info: 'bg-blue-100 text-blue-800 border border-blue-200'
+	};
+	
+	notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 ${styles[type] || styles.info}`;
+	notification.innerHTML = message;
+	
+	// Show notification
+	setTimeout(() => {
+		notification.classList.remove('translate-x-full', 'opacity-0');
+	}, 100);
+	
+	// Hide notification after 5 seconds
+	setTimeout(() => {
+		notification.classList.add('translate-x-full', 'opacity-0');
+	}, 5000);
 }
 
 // Event bindings
@@ -113,17 +459,78 @@ document.addEventListener('click', (e) => {
 
 document.getElementById('checkout').addEventListener('click', () => {
 	if (state.items.length === 0) return;
+	
+	// Check if user is authenticated
+	if (!state.user) {
+		// Open authentication modal if not logged in
+		if (window.firebaseAuth) {
+			window.firebaseAuth.openAuthModal('login');
+		}
+		return;
+	}
+	
 	openCheckout();
 });
 
-document.getElementById('checkout-form').addEventListener('submit', (e) => {
+// Handle order confirmation modal close
+document.getElementById('close-confirmation').addEventListener('click', () => {
+	document.getElementById('order-confirmation-modal').classList.add('hidden');
+});
+
+document.getElementById('checkout-form').addEventListener('submit', async (e) => {
 	e.preventDefault();
-	// Fake success, clear cart
-	state.items = [];
-	renderCart();
-	closeCheckout();
-	closeCart();
-	alert(t('checkout.success'));
+	
+	if (state.items.length === 0) {
+		showNotification(t('checkout.empty_cart'), 'error');
+		return;
+	}
+	
+	// Get form data
+	const formData = {
+		name: document.getElementById('checkout-name').value.trim(),
+		email: document.getElementById('checkout-email').value.trim(),
+		phone: document.getElementById('checkout-phone').value.trim(),
+		address: document.getElementById('checkout-address').value.trim(),
+		city: document.getElementById('checkout-city').value.trim(),
+		postalCode: document.getElementById('checkout-postal').value.trim(),
+		country: document.getElementById('checkout-country').value
+	};
+	
+	// Validate form data
+	if (!validateCheckoutForm(formData)) {
+		return;
+	}
+	
+	// Show loading state
+	setCheckoutLoading(true);
+	
+	try {
+		// Process the order
+		const orderResult = await processOrder(formData);
+		
+		if (orderResult.success) {
+			// Clear cart
+			state.items = [];
+			renderCart();
+			
+			// Close checkout modal
+			closeCheckout();
+			closeCart();
+			
+			// Show order confirmation
+			showOrderConfirmation(orderResult.orderNumber);
+			
+			// Show success notification
+			showNotification(t('checkout.success'), 'success');
+		} else {
+			throw new Error(orderResult.error || 'Order processing failed');
+		}
+	} catch (error) {
+		console.error('Checkout error:', error);
+		showNotification(error.message || t('checkout.error'), 'error');
+	} finally {
+		setCheckoutLoading(false);
+	}
 });
 
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -188,6 +595,36 @@ const translations = {
 		'auth.password_requirements': 'At least 6 characters',
 		'profile.orders': 'My Orders',
 		'profile.settings': 'Settings',
+		// Extended checkout translations
+		'checkout.order_summary': 'Order Summary',
+		'checkout.total': 'Total',
+		'checkout.personal_info': 'Personal Information',
+		'checkout.full_name': 'Full Name',
+		'checkout.email': 'Email Address',
+		'checkout.phone': 'Phone Number',
+		'checkout.shipping_address': 'Shipping Address',
+		'checkout.address': 'Street Address',
+		'checkout.city': 'City',
+		'checkout.postal_code': 'Postal Code',
+		'checkout.country': 'Country',
+		'checkout.place_order': 'Place Order',
+		'checkout.success': 'Order placed successfully!',
+		'checkout.error': 'Failed to process order. Please try again.',
+		'checkout.empty_cart': 'Your cart is empty.',
+		// Validation messages
+		'validation.name_required': 'Full name is required',
+		'validation.email_required': 'Email address is required',
+		'validation.email_invalid': 'Please enter a valid email address',
+		'validation.phone_required': 'Phone number is required',
+		'validation.address_required': 'Street address is required',
+		'validation.city_required': 'City is required',
+		'validation.postal_required': 'Postal code is required',
+		'validation.country_required': 'Please select a country',
+		// Order confirmation
+		'order.confirmation_title': 'Order Confirmed!',
+		'order.confirmation_message': 'Thank you for your order. You will receive a confirmation email shortly.',
+		'order.order_number': 'Order Number',
+		'actions.continue_shopping': 'Continue Shopping',
 	},
 	ar: {
 		'document.title': 'أونسي | علبة آيات قرآنية',
@@ -247,6 +684,36 @@ const translations = {
 		'auth.password_requirements': 'على الأقل 6 أحرف',
 		'profile.orders': 'طلباتي',
 		'profile.settings': 'الإعدادات',
+		// Extended checkout translations
+		'checkout.order_summary': 'ملخص الطلب',
+		'checkout.total': 'الإجمالي',
+		'checkout.personal_info': 'المعلومات الشخصية',
+		'checkout.full_name': 'الاسم الكامل',
+		'checkout.email': 'البريد الإلكتروني',
+		'checkout.phone': 'رقم الهاتف',
+		'checkout.shipping_address': 'عنوان الشحن',
+		'checkout.address': 'عنوان الشارع',
+		'checkout.city': 'المدينة',
+		'checkout.postal_code': 'الرمز البريدي',
+		'checkout.country': 'البلد',
+		'checkout.place_order': 'إرسال الطلب',
+		'checkout.success': 'تم إرسال الطلب بنجاح!',
+		'checkout.error': 'فشل في معالجة الطلب. يرجى المحاولة مرة أخرى.',
+		'checkout.empty_cart': 'سلتك فارغة.',
+		// Validation messages
+		'validation.name_required': 'الاسم الكامل مطلوب',
+		'validation.email_required': 'البريد الإلكتروني مطلوب',
+		'validation.email_invalid': 'يرجى إدخال بريد إلكتروني صحيح',
+		'validation.phone_required': 'رقم الهاتف مطلوب',
+		'validation.address_required': 'عنوان الشارع مطلوب',
+		'validation.city_required': 'المدينة مطلوبة',
+		'validation.postal_required': 'الرمز البريدي مطلوب',
+		'validation.country_required': 'يرجى اختيار البلد',
+		// Order confirmation
+		'order.confirmation_title': 'تم تأكيد الطلب!',
+		'order.confirmation_message': 'شكرًا لك على طلبك. ستتلقى رسالة تأكيد قريبًا.',
+		'order.order_number': 'رقم الطلب',
+		'actions.continue_shopping': 'متابعة التسوق',
 	}
 
 };
@@ -447,8 +914,14 @@ function initializeLanguageSwitcher() {
 function initializeApp() {
 	console.log('Initializing app...');
 	
+	// Initialize EmailJS (free email service)
+	initializeEmailJS();
+	
 	// Initialize language switcher
 	initializeLanguageSwitcher();
+	
+	// Load cart from localStorage (for guest users)
+	loadCart();
 	
 	// Load Firebase authentication
 	loadFirebaseAuth();
@@ -461,6 +934,19 @@ function initializeApp() {
 	}).catch(error => {
 		console.error('Failed to initialize app:', error);
 	});
+}
+
+// Initialize EmailJS with your actual configuration
+function initializeEmailJS() {
+	if (typeof emailjs !== 'undefined') {
+		// EmailJS Public Key configured
+		const publicKey = 'ryB3eYn0HP-iAfl2E';
+		
+		emailjs.init(publicKey);
+		console.log('EmailJS initialized with service: service_j4hv4we');
+	} else {
+		console.warn('EmailJS not loaded - email notifications will be disabled');
+	}
 }
 
 // Load Firebase authentication module
@@ -575,15 +1061,136 @@ function resetPasswordPrompt() {
 	}
 }
 
-// Enhanced cart functions with user persistence
-const originalUpsertItem = upsertItem;
-function upsertItem(id, deltaQty = 1) {
-	originalUpsertItem(id, deltaQty);
-	// Save cart for authenticated users
-	if (window.firebaseAuth && window.firebaseAuth.getCurrentUser()) {
-		window.firebaseAuth.saveUserCart();
+// Handle user authentication state changes
+function handleUserAuthChange(user) {
+	console.log('User auth state changed:', user ? user.email : 'signed out');
+	state.user = user;
+	
+	if (user) {
+		// User signed in - load their cart
+		loadUserCart();
+	} else {
+		// User signed out - keep current cart in localStorage only
+		// Don't clear the cart, just save to localStorage
+		saveCart();
 	}
 }
+
+// Make the function globally available for Firebase auth module
+window.handleUserAuthChange = handleUserAuthChange;
+
+// Enhanced cart functions with user persistence
+const originalUpsertItem = function(id, deltaQty = 1) {
+	const existing = findItem(id);
+	if (existing) {
+		existing.qty += deltaQty;
+		if (existing.qty <= 0) {
+			state.items = state.items.filter(i => i.id !== id);
+		}
+	} else if (deltaQty > 0) {
+		state.items.push({ id, name: PRODUCT.name, price: PRODUCT.price, qty: deltaQty });
+	}
+	renderCart();
+};
+
+function upsertItem(id, deltaQty = 1) {
+	try {
+		originalUpsertItem(id, deltaQty);
+		// Save cart for authenticated users
+		if (window.firebaseAuth && window.firebaseAuth.getCurrentUser()) {
+			window.firebaseAuth.saveUserCart();
+		}
+	} catch (error) {
+		console.error('Error in upsertItem:', error);
+		// Fallback to basic cart functionality
+		const existing = findItem(id);
+		if (existing) {
+			existing.qty += deltaQty;
+			if (existing.qty <= 0) {
+				state.items = state.items.filter(i => i.id !== id);
+			}
+		} else if (deltaQty > 0) {
+			state.items.push({ id, name: PRODUCT.name, price: PRODUCT.price, qty: deltaQty });
+		}
+		renderCart();
+	}
+}
+
+// Test EmailJS connection (for development testing)
+function testEmailJS() {
+	if (typeof emailjs === 'undefined') {
+		console.error('EmailJS not loaded');
+		return;
+	}
+	
+	console.log('Testing EmailJS connection...');
+	
+	// Test customer email
+	const testCustomerParams = {
+		to_email: 'rayentroudi00@gmail.com', // Your email for testing
+		customer_name: 'Test Customer',
+		order_number: 'TEST-' + Date.now(),
+		order_date: new Date().toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		}),
+		items_list: 'Quranic Verses Box (Qty: 1)',
+		total_amount: '39.00',
+		shipping_address: '123 Test Street\nTest City, 12345\nUnited States',
+		customer_phone: '+1234567890'
+	};
+	
+	emailjs.send('service_j4hv4we', 'template_3m8gczh', testCustomerParams)
+		.then(response => {
+			console.log('✅ Customer email test SUCCESS:', response);
+			alert('Customer email test sent successfully! Check rayentroudi00@gmail.com');
+		})
+		.catch(error => {
+			console.error('❌ Customer email test FAILED:', error);
+			alert('Customer email test failed: ' + error.text);
+		});
+}
+
+// Test admin email function
+function testAdminEmail() {
+	if (typeof emailjs === 'undefined') {
+		console.error('EmailJS not loaded');
+		return;
+	}
+	
+	const testAdminParams = {
+		to_email: 'rayentroudi00@gmail.com',
+		order_number: 'TEST-ADMIN-' + Date.now(),
+		customer_name: 'Test Customer',
+		customer_email: 'rayentroudi00@gmail.com',
+		customer_phone: '+1234567890',
+		order_date: new Date().toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		}),
+		items_list: '• Quranic Verses Box x 1 = $39.00',
+		total_amount: '39.00',
+		shipping_address: 'Test Customer\n123 Test Street\nTest City, 12345\nUnited States'
+	};
+	
+	emailjs.send('service_j4hv4we', 'template_lkl5yxm', testAdminParams)
+		.then(response => {
+			console.log('✅ Admin email test SUCCESS:', response);
+			alert('Admin email test sent successfully! Check rayentroudi00@gmail.com');
+		})
+		.catch(error => {
+			console.error('❌ Admin email test FAILED:', error);
+			alert('Admin email test failed: ' + error.text);
+		});
+}
+
+// Make test functions globally available for console testing
+window.testEmailJS = testEmailJS;
+window.testAdminEmail = testAdminEmail;
 
 // Ensure translations after DOM is fully ready
 if (document.readyState === 'loading') {

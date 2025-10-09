@@ -179,17 +179,125 @@
   </div>
 
   <!-- Checkout Modal -->
-  <div id="checkout-modal" class="fixed inset-0 hidden">
+  <div id="checkout-modal" class="fixed inset-0 hidden z-50">
     <div class="absolute inset-0 bg-black/40" data-close-checkout="overlay"></div>
+    <div class="absolute inset-0 grid place-items-center p-4 overflow-y-auto">
+      <div class="w-full max-w-2xl bg-white rounded-lg shadow-xl p-6 my-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-semibold" data-i18n="checkout.title">Checkout</h2>
+          <button type="button" data-close-checkout="btn" class="text-neutral-400 hover:text-neutral-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-neutral-50 rounded-lg p-4 mb-6">
+          <h3 class="font-semibold mb-3" data-i18n="checkout.order_summary">Order Summary</h3>
+          <div id="checkout-items"></div>
+          <div class="border-t pt-3 mt-3">
+            <div class="flex justify-between items-center text-lg font-semibold">
+              <span data-i18n="checkout.total">Total:</span>
+              <span id="checkout-total">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <form id="checkout-form" class="space-y-6">
+          <!-- Personal Information -->
+          <div>
+            <h3 class="text-lg font-semibold mb-4" data-i18n="checkout.personal_info">Personal Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1" data-i18n="checkout.full_name">Full Name</label>
+                <input id="checkout-name" type="text" class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1" data-i18n="checkout.email">Email Address</label>
+                <input id="checkout-email" type="email" class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400" required>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-neutral-700 mb-1" data-i18n="checkout.phone">Phone Number</label>
+                <input id="checkout-phone" type="tel" class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Address -->
+          <div>
+            <h3 class="text-lg font-semibold mb-4" data-i18n="checkout.shipping_address">Shipping Address</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-1" data-i18n="checkout.address">Street Address</label>
+                <input id="checkout-address" type="text" class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400" required>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-neutral-700 mb-1" data-i18n="checkout.city">City</label>
+                  <input id="checkout-city" type="text" class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-neutral-700 mb-1" data-i18n="checkout.postal_code">Postal Code</label>
+                  <input id="checkout-postal" type="text" class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-neutral-700 mb-1" data-i18n="checkout.country">Country</label>
+                  <select id="checkout-country" class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400" required>
+                    <option value="">Select Country</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="AU">Australia</option>
+                    <option value="NZ">New Zealand</option>
+                    <option value="TN">Tunisia</option>
+                    <option value="MA">Morocco</option>
+                    <option value="AE">UAE</option>
+                    <option value="SA">Saudi Arabia</option>
+                    <option value="EG">Egypt</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="space-y-3 pt-6 border-t">
+            <button id="place-order-btn" type="submit" class="w-full rounded-lg bg-slate-700 text-white px-6 py-3 text-sm font-medium hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-colors">
+              <span class="flex items-center justify-center gap-2">
+                <span id="place-order-text" data-i18n="checkout.place_order">Place Order</span>
+                <div id="place-order-loading" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              </span>
+            </button>
+            <button type="button" data-close-checkout="btn" class="w-full rounded-lg border border-neutral-300 px-6 py-3 text-sm font-medium hover:bg-neutral-50 transition-colors" data-i18n="actions.cancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Confirmation Modal -->
+  <div id="order-confirmation-modal" class="fixed inset-0 hidden z-50">
+    <div class="absolute inset-0 bg-black/40"></div>
     <div class="absolute inset-0 grid place-items-center p-4">
-      <form id="checkout-form" class="w-full max-w-md bg-white rounded-lg shadow p-6 space-y-4">
-        <div class="text-lg font-semibold" data-i18n="checkout.title">Checkout</div>
-        <input class="w-full border border-neutral-300 rounded px-3 py-2" data-i18n-placeholder="checkout.full_name" placeholder="Full name" required>
-        <input class="w-full border border-neutral-300 rounded px-3 py-2" data-i18n-placeholder="checkout.email" placeholder="Email" type="email" required>
-        <input class="w-full border border-neutral-300 rounded px-3 py-2" data-i18n-placeholder="checkout.address" placeholder="Shipping address" required>
-        <button class="w-full rounded-md bg-slate-700 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800" data-i18n="checkout.place_order">Place order</button>
-        <button type="button" data-close-checkout="btn" class="w-full rounded-md border border-neutral-300 px-4 py-2 text-sm" data-i18n="actions.cancel">Cancel</button>
-      </form>
+      <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6 text-center">
+        <div class="mb-4">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold text-neutral-900 mb-2" data-i18n="order.confirmation_title">Order Confirmed!</h2>
+          <p class="text-neutral-600 mb-4" data-i18n="order.confirmation_message">Thank you for your order. You will receive a confirmation email shortly.</p>
+          <div class="bg-neutral-50 rounded-lg p-4 mb-4">
+            <p class="text-sm text-neutral-600 mb-1" data-i18n="order.order_number">Order Number:</p>
+            <p id="order-number" class="font-mono text-lg font-semibold">#12345</p>
+          </div>
+        </div>
+        <button id="close-confirmation" class="w-full rounded-lg bg-slate-700 text-white px-6 py-3 text-sm font-medium hover:bg-slate-800 transition-colors" data-i18n="actions.continue_shopping">Continue Shopping</button>
+      </div>
     </div>
   </div>
 
@@ -295,6 +403,9 @@
     </div>
   </footer>
 
+  <!-- EmailJS for email notifications (free tier) -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  
   <script src="script.js"></script>
 </body>
 </html>
