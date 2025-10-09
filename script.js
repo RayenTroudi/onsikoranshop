@@ -388,7 +388,7 @@ async function sendOrderNotificationsEmailJS(orderData) {
 		
 		// Admin notification email parameters
 		const adminEmailParams = {
-			to_email: window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com', // Your admin email for notifications
+			to_email: window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com', // Your admin email for notifications
 			order_number: orderData.orderNumber,
 			customer_name: orderData.customerInfo.name,
 			customer_email: orderData.customerInfo.email,
@@ -1189,7 +1189,7 @@ function testEmailJS() {
 	
 	// Test customer email
 	const testCustomerParams = {
-		to_email: window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com', // Your email for testing
+		to_email: window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com', // Your email for testing
 		customer_name: 'Test Customer',
 		order_number: 'TEST-' + Date.now(),
 		order_date: new Date().toLocaleDateString('en-US', {
@@ -1210,7 +1210,7 @@ function testEmailJS() {
 	)
 		.then(response => {
 			
-			alert('Customer email test sent successfully! Check ' + (window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com'));
+			alert('Customer email test sent successfully! Check ' + (window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com'));
 		})
 		.catch(error => {
 			console.error('❌ Customer email test FAILED:', error);
@@ -1226,10 +1226,10 @@ function testAdminEmail() {
 	}
 	
 	const testAdminParams = {
-		to_email: window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com',
+		to_email: window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com',
 		order_number: 'TEST-ADMIN-' + Date.now(),
 		customer_name: 'Test Customer',
-		customer_email: window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com',
+		customer_email: window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com',
 		customer_phone: '+1234567890',
 		order_date: new Date().toLocaleDateString('en-US', {
 			year: 'numeric',
@@ -1250,7 +1250,7 @@ function testAdminEmail() {
 	)
 		.then(response => {
 			
-			alert('Admin email test sent successfully! Check ' + (window.ENV?.VITE_ADMIN_EMAIL || 'rayentroudi00@gmail.com'));
+			alert('Admin email test sent successfully! Check ' + (window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com'));
 		})
 		.catch(error => {
 			console.error('❌ Admin email test FAILED:', error);
