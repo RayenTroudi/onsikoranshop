@@ -39,6 +39,14 @@ function removeItem(id) {
 	renderCart();
 }
 
+function clearCart() {
+	console.log('🧹 Clearing cart...');
+	state.items = [];
+	localStorage.removeItem('cart');
+	renderCart();
+	console.log('✅ Cart cleared');
+}
+
 function subtotal() {
 	return state.items.reduce((sum, i) => sum + i.price * i.qty, 0);
 }
@@ -137,11 +145,29 @@ async function loadUserCart() {
 }
 
 function openCart() {
-	document.getElementById('cart').classList.remove('hidden');
+	try {
+		const cartEl = document.getElementById('cart');
+		if (cartEl) {
+			cartEl.classList.remove('hidden');
+		} else {
+			console.error('Cart element not found');
+		}
+	} catch (error) {
+		console.error('Error opening cart:', error);
+	}
 }
 
 function closeCart() {
-	document.getElementById('cart').classList.add('hidden');
+	try {
+		const cartEl = document.getElementById('cart');
+		if (cartEl) {
+			cartEl.classList.add('hidden');
+		} else {
+			console.error('Cart element not found');
+		}
+	} catch (error) {
+		console.error('Error closing cart:', error);
+	}
 }
 
 function openCheckout() {
@@ -435,30 +461,51 @@ function showNotification(message, type = 'info') {
 }
 
 // Event bindings
-document.addEventListener('click', (e) => {
-	const add = e.target.closest('.add-to-cart');
-	if (add) {
-		const id = add.getAttribute('data-add');
-		upsertItem(id, 1);
-		openCart();
+// Event listeners are now initialized in initializeEventListeners() function
+
+function initializeEventListeners() {
+	
+	// Main click event listener for various elements
+	document.addEventListener('click', (e) => {
+		const add = e.target.closest('.add-to-cart');
+		if (add) {
+			const id = add.getAttribute('data-add');
+			upsertItem(id, 1);
+			openCart();
+		}
+
+		if (e.target.matches('#open-cart')) {
+			openCart();
+		}
+		if (e.target.matches('[data-close="btn"], [data-close="overlay"]')) {
+			closeCart();
+		}
+		if (e.target.matches('[data-close-checkout="btn"], [data-close-checkout="overlay"]')) closeCheckout();
+
+		if (e.target.matches('.qty')) {
+			const id = e.target.getAttribute('data-id');
+			const delta = Number(e.target.getAttribute('data-delta'));
+			upsertItem(id, delta);
+		}
+		if (e.target.matches('.remove')) {
+			removeItem(e.target.getAttribute('data-id'));
+		}
+	});
+	
+	// Dedicated cart open button event listener (backup)
+	const openCartBtn = document.getElementById('open-cart');
+	if (openCartBtn) {
+		openCartBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			openCart();
+		});
 	}
 
-	if (e.target.matches('#open-cart')) openCart();
-	if (e.target.matches('[data-close="btn"], [data-close="overlay"]')) closeCart();
-	if (e.target.matches('[data-close-checkout="btn"], [data-close-checkout="overlay"]')) closeCheckout();
-
-	if (e.target.matches('.qty')) {
-		const id = e.target.getAttribute('data-id');
-		const delta = Number(e.target.getAttribute('data-delta'));
-		upsertItem(id, delta);
-	}
-	if (e.target.matches('.remove')) {
-		removeItem(e.target.getAttribute('data-id'));
-	}
-});
-
-document.getElementById('checkout').addEventListener('click', () => {
-	if (state.items.length === 0) return;
+	// Checkout button event listener
+	const checkoutBtn = document.getElementById('checkout');
+	if (checkoutBtn) {
+		checkoutBtn.addEventListener('click', () => {
+			if (state.items.length === 0) return;
 	
 	// Check if user is authenticated
 	if (!state.user) {
@@ -470,14 +517,21 @@ document.getElementById('checkout').addEventListener('click', () => {
 	}
 	
 	openCheckout();
-});
+		});
+	}
 
-// Handle order confirmation modal close
-document.getElementById('close-confirmation').addEventListener('click', () => {
-	document.getElementById('order-confirmation-modal').classList.add('hidden');
-});
+	// Handle order confirmation modal close
+	const closeConfirmationBtn = document.getElementById('close-confirmation');
+	if (closeConfirmationBtn) {
+		closeConfirmationBtn.addEventListener('click', () => {
+			document.getElementById('order-confirmation-modal').classList.add('hidden');
+		});
+	}
 
-document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+	// Checkout form submit listener
+	const checkoutForm = document.getElementById('checkout-form');
+	if (checkoutForm) {
+		checkoutForm.addEventListener('submit', async (e) => {
 	e.preventDefault();
 	
 	if (state.items.length === 0) {
@@ -531,7 +585,9 @@ document.getElementById('checkout-form').addEventListener('submit', async (e) =>
 	} finally {
 		setCheckoutLoading(false);
 	}
-});
+		});
+	}
+}
 
 document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -919,6 +975,9 @@ function initializeApp() {
 	
 	// Initialize language switcher
 	initializeLanguageSwitcher();
+	
+	// Initialize event listeners
+	initializeEventListeners();
 	
 	// Load cart from localStorage (for guest users)
 	loadCart();

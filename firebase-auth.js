@@ -14,6 +14,12 @@ const firebaseConfig = {
   measurementId: window.ENV?.VITE_FIREBASE_MEASUREMENT_ID || "G-5MF3MSH2J5"
 };
 
+// Debug information for domain authorization issues
+console.log('🔧 Firebase Debug Info:');
+console.log('Current domain:', window.location.hostname);
+console.log('Current origin:', window.location.origin);
+console.log('Firebase project:', firebaseConfig.projectId);
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -40,6 +46,7 @@ function handleFirebaseError(error) {
   const errorMessages = {
     'auth/configuration-not-found': 'Firebase Authentication is not configured. Please enable Authentication in Firebase Console.',
     'auth/api-key-not-valid': 'Invalid Firebase API key. Please check your configuration.',
+    'auth/unauthorized-domain': 'This domain is not authorized for Firebase Authentication. Please add this domain to your Firebase project\'s authorized domains list in the Firebase Console → Authentication → Settings → Authorized domains.',
     'auth/invalid-email': 'Please enter a valid email address.',
     'auth/weak-password': 'Password should be at least 6 characters.',
     'auth/email-already-in-use': 'An account with this email already exists.',
@@ -199,6 +206,15 @@ async function signInWithGoogle() {
     return { success: true, user };
   } catch (error) {
     console.error('Google sign-in error:', error);
+    
+    // Special handling for unauthorized domain error
+    if (error.code === 'auth/unauthorized-domain') {
+      console.error('🚨 DOMAIN AUTHORIZATION REQUIRED:');
+      console.error('Current domain:', window.location.hostname);
+      console.error('Add this domain to Firebase Console → Authentication → Settings → Authorized domains');
+      console.error('Firebase Console: https://console.firebase.google.com/project/' + firebaseConfig.projectId + '/authentication/settings');
+    }
+    
     return { success: false, error: handleFirebaseError(error) };
   }
 }
