@@ -81,7 +81,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // Update UI based on authentication state
-function updateAuthUI(user) {
+async function updateAuthUI(user) {
   const authButton = document.getElementById('auth-button');
   const userProfile = document.getElementById('user-profile');
   const authModal = document.getElementById('auth-modal');
@@ -110,6 +110,9 @@ function updateAuthUI(user) {
           </div>
         `;
       }
+      
+      // Check if user is admin and show/hide admin panel link
+      await checkAndShowAdminLink(user);
     }
   } else {
     // User is signed out - show login button
@@ -128,11 +131,57 @@ function updateAuthUI(user) {
       userProfile.style.display = 'none';
       userProfile.classList.add('hidden');
     }
+    
+    // Hide admin panel link
+    const adminLink = document.getElementById('admin-panel-link');
+    if (adminLink) {
+      adminLink.classList.add('hidden');
+    }
   }
   
   // Apply translations after updating UI
   if (window.applyTranslations) {
     window.applyTranslations();
+  }
+}
+
+// Check if user is admin and show admin panel link
+async function checkAndShowAdminLink(user) {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const adminLink = document.getElementById('admin-panel-link');
+    
+    if (adminLink && userDoc.exists()) {
+      const userData = userDoc.data();
+      
+      // Check if user has admin role in Firebase
+      const isAdmin = userData.role === 'admin';
+      
+      console.log('Admin check:', {
+        userId: user.uid,
+        email: user.email,
+        userRole: userData.role,
+        isAdmin: isAdmin
+      });
+      
+      if (isAdmin) {
+        adminLink.classList.remove('hidden');
+        console.log('Admin panel link shown for user:', user.email);
+      } else {
+        adminLink.classList.add('hidden');
+        console.log('Admin panel link hidden - user role:', userData.role);
+      }
+    } else if (adminLink) {
+      adminLink.classList.add('hidden');
+      console.log('Admin panel link hidden - no user document found');
+    }
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    // Hide admin link on error
+    const adminLink = document.getElementById('admin-panel-link');
+    if (adminLink) {
+      adminLink.classList.add('hidden');
+    }
   }
 }
 

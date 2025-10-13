@@ -1348,11 +1348,50 @@ function initializeLightbox() {
 // Make openLightbox globally available
 window.openLightbox = openLightbox;
 
+// Check for admin query parameter
+function checkAdminQueryParameter() {
+	const urlParams = new URLSearchParams(window.location.search);
+	if (urlParams.get('admin') === 'true') {
+		// Show a message about needing to sign in as admin
+		setTimeout(() => {
+			if (!window.firebaseAuth?.getCurrentUser()) {
+				// Open auth modal with admin message
+				if (window.firebaseAuth?.openAuthModal) {
+					window.firebaseAuth.openAuthModal('login');
+					// Add admin notice to auth modal
+					const authModal = document.getElementById('auth-modal');
+					if (authModal) {
+						const adminNotice = document.createElement('div');
+						adminNotice.className = 'bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4';
+						adminNotice.innerHTML = `
+							<div class="flex items-center">
+								<svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+								</svg>
+								<p class="text-sm text-blue-800">Please sign in with your admin account to access the admin panel.</p>
+							</div>
+						`;
+						
+						const modalContent = authModal.querySelector('.space-y-4');
+						if (modalContent) {
+							modalContent.insertBefore(adminNotice, modalContent.firstChild);
+						}
+					}
+				}
+			}
+		}, 1000);
+	}
+}
+
 // Ensure translations after DOM is fully ready
 if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', initializeApp);
+	document.addEventListener('DOMContentLoaded', () => {
+		initializeApp();
+		checkAdminQueryParameter();
+	});
 } else {
 	initializeApp();
+	checkAdminQueryParameter();
 }
 
 
