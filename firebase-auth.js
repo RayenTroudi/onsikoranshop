@@ -99,16 +99,105 @@ async function updateAuthUI(user) {
       // Update user profile content
       const profileToggle = document.getElementById('profile-toggle');
       if (profileToggle) {
-        profileToggle.innerHTML = `
-          <div class="flex items-center gap-2">
-            <img src="${user.photoURL || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'}" 
-                 alt="Profile" class="w-6 h-6 rounded-full">
-            <span class="hidden sm:inline">${user.displayName || user.email}</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </div>
-        `;
+        // Clear existing content
+        profileToggle.innerHTML = '';
+        
+        // Create container div
+        const container = document.createElement('div');
+        container.className = 'flex items-center gap-2';
+        
+        // Create default profile image SVG data URL
+        const defaultProfileImage = 'data:image/svg+xml;base64,' + btoa(`
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <circle cx="50" cy="35" r="18" fill="white" opacity="0.9"/>
+            <path d="M20 85 C20 65, 35 55, 50 55 C65 55, 80 65, 80 85 Z" fill="white" opacity="0.9"/>
+          </svg>
+        `);
+        
+        // Create profile image or fallback avatar
+        if (user.photoURL) {
+          const img = document.createElement('img');
+          img.src = user.photoURL;
+          img.alt = 'Profile';
+          img.className = 'w-6 h-6 rounded-full object-cover border border-gray-200';
+          
+          // Create default image fallback
+          const defaultImg = document.createElement('img');
+          defaultImg.src = defaultProfileImage;
+          defaultImg.alt = 'Default Profile';
+          defaultImg.className = 'w-6 h-6 rounded-full object-cover border border-gray-200';
+          defaultImg.style.display = 'none';
+          
+          // Create text fallback as final backup
+          const textFallback = document.createElement('div');
+          textFallback.className = 'w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center text-white text-xs font-medium border border-gray-200';
+          textFallback.style.display = 'none';
+          textFallback.textContent = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+          
+          // Handle image loading failures
+          img.onerror = function() {
+            console.log('📸 User profile image failed to load, using default image');
+            this.style.display = 'none';
+            defaultImg.style.display = 'block';
+          };
+          
+          // Handle default image failure too
+          defaultImg.onerror = function() {
+            console.log('📸 Default profile image failed to load, using text fallback');
+            this.style.display = 'none';
+            textFallback.style.display = 'flex';
+          };
+          
+          container.appendChild(img);
+          container.appendChild(defaultImg);
+          container.appendChild(textFallback);
+        } else {
+          // No photo URL, use default image first
+          const defaultImg = document.createElement('img');
+          defaultImg.src = defaultProfileImage;
+          defaultImg.alt = 'Default Profile';
+          defaultImg.className = 'w-6 h-6 rounded-full object-cover border border-gray-200';
+          
+          // Text fallback if default image fails
+          const textFallback = document.createElement('div');
+          textFallback.className = 'w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center text-white text-xs font-medium border border-gray-200';
+          textFallback.style.display = 'none';
+          textFallback.textContent = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+          
+          defaultImg.onerror = function() {
+            console.log('📸 Default profile image failed to load, using text fallback');
+            this.style.display = 'none';
+            textFallback.style.display = 'flex';
+          };
+          
+          container.appendChild(defaultImg);
+          container.appendChild(textFallback);
+        }
+        
+        // Create name span
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'hidden sm:inline';
+        nameSpan.textContent = user.displayName || user.email;
+        container.appendChild(nameSpan);
+        
+        // Create dropdown arrow
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'w-4 h-4');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('d', 'M19 9l-7 7-7-7');
+        
+        svg.appendChild(path);
+        container.appendChild(svg);
+        
+        // Add container to profile toggle
+        profileToggle.appendChild(container);
       }
       
       // Check if user is admin and show/hide admin panel link
