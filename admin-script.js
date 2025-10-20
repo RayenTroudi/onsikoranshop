@@ -297,8 +297,20 @@ class AdminPanel {
             window.firebaseAuth.logoutUser();
         }
         this.currentUser = null;
-        this.redirectToLogin();
+        this.redirectToHome();
         this.showNotification('Logged out successfully', 'info');
+    }
+
+    redirectToHome() {
+        console.log('🏠 Redirecting to home page after logout');
+        this.isRedirecting = true;
+        
+        // Show brief logout message then redirect to home
+        this.updateLoadingStatus('Logging out...');
+        
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1000);
     }
 
     redirectToLogin() {
