@@ -161,12 +161,6 @@ class AdminPanel {
         document.getElementById('filter-category').addEventListener('change', (e) => {
             this.filterProducts();
         });
-
-        // Settings form
-        document.getElementById('settings-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveSettings();
-        });
     }
 
     // Authentication with Firebase
@@ -420,8 +414,7 @@ class AdminPanel {
         const titles = {
             dashboard: { title: 'Dashboard', subtitle: 'Overview of your business' },
             products: { title: 'Products Management', subtitle: 'Manage your product catalog' },
-            orders: { title: 'Orders Management', subtitle: 'Track and manage customer orders' },
-            settings: { title: 'System Settings', subtitle: 'Configure your application' }
+            orders: { title: 'Orders Management', subtitle: 'Track and manage customer orders' }
         };
 
         const pageInfo = titles[section];
@@ -742,28 +735,7 @@ class AdminPanel {
         }
     }
 
-    // Settings Management
-    async saveSettings() {
-        try {
-            // Simulate API call
-            await this.delay(1000);
 
-            const settings = {
-                siteName: document.getElementById('site-name').value,
-                adminEmail: document.getElementById('admin-email-setting').value,
-                defaultCurrency: document.getElementById('default-currency').value,
-                taxRate: parseFloat(document.getElementById('tax-rate').value)
-            };
-
-            // In real implementation, save to database
-            localStorage.setItem('adminSettings', JSON.stringify(settings));
-            
-            this.showNotification('Settings saved successfully!', 'success');
-
-        } catch (error) {
-            this.showNotification('Error saving settings: ' + error.message, 'error');
-        }
-    }
 
     // Image Preview
     previewImage(file) {
