@@ -1,5 +1,18 @@
-// Import Firebase authentication (loaded after DOM)
-let firebaseAuth = null;
+// Import Appwrite authentication directly
+// Using dynamic import to ensure proper loading order
+let appwriteAuth = null;
+
+// Appwrite Storage Configuration
+const APPWRITE_STORAGE = {
+	endpoint: 'https://fra.cloud.appwrite.io/v1',
+	projectId: '68f8c1bc003e3d2c8f5c',
+	bucketId: 'onsiBucket'
+};
+
+// Helper function to get file URL from Appwrite Storage
+function getAppwriteFileUrl(fileName) {
+	return `${APPWRITE_STORAGE.endpoint}/storage/buckets/${APPWRITE_STORAGE.bucketId}/files/${fileName}/view?project=${APPWRITE_STORAGE.projectId}`;
+}
 
 const state = {
 	items: [], // {id, name, price, qty}
@@ -32,6 +45,15 @@ function upsertItem(id, deltaQty = 1) {
 		state.items.push({ id, name: PRODUCT.name, price: PRODUCT.price, qty: deltaQty });
 	}
 	renderCart();
+	
+	// Save cart for authenticated users
+	if (window.appwriteAuth && window.appwriteAuth.getCurrentUser()) {
+		try {
+			window.appwriteAuth.saveUserCart(state.items);
+		} catch (error) {
+			console.error('Error saving cart:', error);
+		}
+	}
 }
 
 function removeItem(id) {
@@ -90,8 +112,8 @@ function saveCart() {
 		localStorage.setItem('cart', JSON.stringify(state.items));
 		
 		// Save to Firebase for authenticated users
-		if (state.user && window.firebaseAuth) {
-			window.firebaseAuth.saveUserCart(state.items);
+		if (state.user && window.appwriteAuth) {
+			window.appwriteAuth.saveUserCart(state.items);
 		}
 	} catch (error) {
 		console.error('Failed to save cart:', error);
@@ -113,11 +135,11 @@ function loadCart() {
 }
 
 async function loadUserCart() {
-	if (!state.user || !window.firebaseAuth) return;
+	if (!state.user || !window.appwriteAuth) return;
 	
 	try {
-		// Load cart from Firebase for authenticated users
-		const userCart = await window.firebaseAuth.getUserCart();
+		// Load cart from Appwrite for authenticated users
+		const userCart = await window.appwriteAuth.getUserCart();
 		if (userCart && userCart.length > 0) {
 			// Merge with local cart (in case user had items before login)
 			const localItems = [...state.items];
@@ -277,7 +299,7 @@ async function processOrder(formData) {
 		};
 		
 		// Save order to Firebase if user is authenticated (free tier)
-		if (state.user && window.firebaseAuth) {
+		if (state.user && window.appwriteAuth) {
 			try {
 				await saveOrderToFirebase(orderData);
 			} catch (error) {
@@ -289,9 +311,9 @@ async function processOrder(formData) {
 			saveOrderToLocalStorage(orderData);
 		}
 		
-		// Send email notifications using EmailJS (free tier)
+		// Send email notifications using Appwrite Email Function
 		try {
-			await sendOrderNotificationsEmailJS(orderData);
+			await sendOrderNotificationsAppwrite(orderData);
 		} catch (error) {
 			console.error('Failed to send email notifications:', error);
 			// Don't fail the order if email fails
@@ -319,7 +341,7 @@ function generateOrderNumber() {
 
 async function saveOrderToFirebase(orderData) {
 	// This function will use Firebase Firestore to save the order
-	if (!window.firebaseAuth || !window.firebaseAuth.getCurrentUser()) {
+	if (!window.appwriteAuth || !window.appwriteAuth.getCurrentUser()) {
 		throw new Error('User not authenticated');
 	}
 	
@@ -350,7 +372,63 @@ function saveOrderToLocalStorage(orderData) {
 	}
 }
 
-// Send email notifications using EmailJS (free service)
+// Send email notifications using Appwrite Email Function
+async function sendOrderNotificationsAppwrite(orderData) {
+	try {
+		const functionId = '68fbb51700021c6f9655';
+		const functionDomain = '68fbb517001023f2105a.fra.appwrite.run';
+		
+		// Prepare email data
+		const emailData = {
+			to: orderData.customerInfo.email,
+			customerName: orderData.customerInfo.name,
+			orderNumber: orderData.orderNumber,
+			orderDate: new Date(orderData.createdAt).toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			}),
+			items: orderData.items,
+			totalAmount: orderData.total,
+			shippingAddress: {
+				name: orderData.customerInfo.name,
+				address: orderData.customerInfo.address,
+				city: orderData.customerInfo.city,
+				postalCode: orderData.customerInfo.postalCode,
+				country: orderData.customerInfo.country,
+				phone: orderData.customerInfo.phone
+			}
+		};
+		
+		console.log('📧 Sending order emails via Appwrite...', emailData);
+		
+		// Call the Appwrite function using fetch
+		const response = await fetch(`https://${functionDomain}`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c'
+			},
+			body: JSON.stringify(emailData)
+		});
+		
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(`Email function failed: ${response.status} - ${errorText}`);
+		}
+		
+		const result = await response.json();
+		console.log('✅ Order emails sent successfully:', result);
+		
+		return result;
+	} catch (error) {
+		console.error('❌ Appwrite email notification error:', error);
+		// Don't throw error to prevent order failure if email fails
+		console.warn('Order completed but email notification failed');
+	}
+}
+
+// Send email notifications using EmailJS (free service) - DEPRECATED
 async function sendOrderNotificationsEmailJS(orderData) {
 	// Check if EmailJS is loaded
 	if (typeof emailjs === 'undefined') {
@@ -462,6 +540,9 @@ function showNotification(message, type = 'info') {
 	}, 5000);
 }
 
+// Make showNotification globally available for appwrite-config.js
+window.showNotification = showNotification;
+
 // Event bindings
 // Event listeners are now initialized in initializeEventListeners() function
 
@@ -512,8 +593,8 @@ function initializeEventListeners() {
 	// Check if user is authenticated
 	if (!state.user) {
 		// Open authentication modal if not logged in
-		if (window.firebaseAuth) {
-			window.firebaseAuth.openAuthModal('login');
+		if (window.appwriteAuth) {
+			window.appwriteAuth.openAuthModal('login');
 		}
 		return;
 	}
@@ -647,7 +728,6 @@ const translations = {
 		'auth.create_account': 'Create Account',
 		'auth.forgot_password': 'Forgot Password?',
 		'auth.or': 'Or',
-		'auth.continue_google': 'Continue with Google',
 		'auth.no_account': "Don't have an account?",
 		'auth.have_account': 'Already have an account?',
 		'auth.subtitle': 'Access your account to manage orders',
@@ -737,7 +817,6 @@ const translations = {
 		'auth.create_account': 'إنشاء حساب',
 		'auth.forgot_password': 'نسيت كلمة المرور؟',
 		'auth.or': 'أو',
-		'auth.continue_google': 'المتابعة مع جوجل',
 		'auth.no_account': 'ليس لديك حساب؟',
 		'auth.have_account': 'لديك حساب بالفعل؟',
 		'auth.subtitle': 'ادخل إلى حسابك لإدارة الطلبات',
@@ -990,7 +1069,7 @@ function initializeApp() {
 	loadCart();
 	
 	// Load Firebase authentication
-	loadFirebaseAuth();
+	loadAppwriteAuth();
 	
 	// Load translations
 	loadLocale(state.language).then(() => {
@@ -1015,18 +1094,106 @@ function initializeEmailJS() {
 	}
 }
 
-// Load Firebase authentication module
-function loadFirebaseAuth() {
-	const script = document.createElement('script');
-	script.type = 'module';
-	script.src = './firebase-auth.js';
-	script.onload = () => {
+// Load Appwrite authentication module
+async function loadAppwriteAuth() {
+	try {
+		console.log('🚀 Loading Appwrite module...');
+		console.log('🔍 Environment variables:', window.ENV);
 		
+		// Import the Appwrite configuration module
+		await import('./appwrite-config.js');
+		
+		// Wait a moment for the module to initialize
+		await new Promise(resolve => setTimeout(resolve, 200));
+		
+		console.log('✅ Appwrite module imported');
+		console.log('🔍 window.appwriteAuth available:', !!window.appwriteAuth);
+		
+		if (window.appwriteAuth) {
+			console.log('✅ Appwrite auth available');
+			setupAuthEventHandlers();
+			// Subscribe to auth state changes
+			if (window.appwriteAuth.subscribeToAuthState) {
+				window.appwriteAuth.subscribeToAuthState((user) => {
+					console.log('Auth state changed:', user);
+					state.user = user;
+					if (user) {
+						loadUserCart();
+					} else {
+						// User logged out, clear cart or handle as needed
+						console.log('User logged out');
+					}
+				});
+			}
+			// Check current session immediately
+			if (window.appwriteAuth.checkCurrentSession) {
+				window.appwriteAuth.checkCurrentSession();
+			}
+		} else {
+			console.error('❌ window.appwriteAuth not available after import');
+			console.log('Available window properties:', Object.keys(window).filter(k => k.includes('app')));
+		}
+	} catch (error) {
+		console.error('❌ Failed to load Appwrite module:', error);
+		console.log('🔧 This might be due to CDN issues. Trying fallback approach...');
+		
+		// Try loading via script tag as fallback
+		loadAppwriteViaScriptTag();
+	}
+}
+
+// Fallback: Load via script tag
+function loadAppwriteViaScriptTag() {
+	console.log('🔄 Trying fallback script tag approach...');
+	
+	const script = document.createElement('script');
+	script.src = 'https://cdn.jsdelivr.net/npm/appwrite@15.0.0/dist/sdk.js';
+	script.onload = () => {
+		console.log('✅ Appwrite SDK loaded via script tag');
+		
+		// Initialize Appwrite manually
+		const { Client, Account, Databases, Storage, ID, Permission, Role, Query } = window.Appwrite;
+		
+		const client = new Client()
+			.setEndpoint(window.ENV?.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1')
+			.setProject(window.ENV?.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c');
+		
+		const account = new Account(client);
+		const databases = new Databases(client);
+		const storage = new Storage(client);
+		
+		// Set up basic auth functions
+		window.appwriteAuth = {
+			openAuthModal: (mode) => {
+				console.log('Opening auth modal:', mode);
+				const modal = document.getElementById('auth-modal');
+				if (modal) {
+					modal.classList.remove('hidden');
+					modal.classList.add('flex');
+				}
+			},
+			closeAuthModal: () => {
+				const modal = document.getElementById('auth-modal');
+				if (modal) {
+					modal.classList.add('hidden');
+					modal.classList.remove('flex');
+				}
+			},
+			switchAuthMode: (mode) => console.log('Switch auth mode:', mode),
+			toggleUserDropdown: () => console.log('Toggle dropdown'),
+			logoutUser: () => console.log('Logout user'),
+			getCurrentUser: () => null,
+			subscribeToAuthState: () => {},
+			checkCurrentSession: () => console.log('Check session')
+		};
+		
+		console.log('✅ Basic Appwrite auth functions set up');
 		setupAuthEventHandlers();
 	};
 	script.onerror = () => {
-		console.error('Failed to load Firebase auth');
+		console.error('❌ Failed to load Appwrite SDK via script tag');
 	};
+	
 	document.head.appendChild(script);
 }
 
@@ -1045,7 +1212,7 @@ function setupAuthEventHandlers() {
 				return;
 			}
 			
-			const result = await window.firebaseAuth.loginUser(email, password);
+			const result = await window.appwriteAuth.loginUser(email, password);
 			if (!result.success) {
 				showAuthError(result.error);
 			}
@@ -1071,31 +1238,7 @@ function setupAuthEventHandlers() {
 				return;
 			}
 			
-			const result = await window.firebaseAuth.registerUser(email, password, fullName);
-			if (!result.success) {
-				showAuthError(result.error);
-			}
-		});
-	}
-	
-	// Google Sign-In buttons
-	const googleSignin = document.getElementById('google-signin');
-	const googleSignup = document.getElementById('google-signup');
-	
-	if (googleSignin) {
-		googleSignin.addEventListener('click', async (e) => {
-			e.preventDefault();
-			const result = await window.firebaseAuth.signInWithGoogle();
-			if (!result.success) {
-				showAuthError(result.error);
-			}
-		});
-	}
-	
-	if (googleSignup) {
-		googleSignup.addEventListener('click', async (e) => {
-			e.preventDefault();
-			const result = await window.firebaseAuth.signInWithGoogle();
+			const result = await window.appwriteAuth.registerUser(email, password, fullName);
 			if (!result.success) {
 				showAuthError(result.error);
 			}
@@ -1117,7 +1260,7 @@ function showAuthError(message) {
 function resetPasswordPrompt() {
 	const email = prompt('Enter your email address for password reset:');
 	if (email) {
-		window.firebaseAuth.resetPassword(email).then((result) => {
+		window.appwriteAuth.resetPassword(email).then((result) => {
 			if (result.success) {
 				alert('Password reset email sent! Check your inbox.');
 			} else {
@@ -1142,45 +1285,56 @@ function handleUserAuthChange(user) {
 	}
 }
 
-// Make the function globally available for Firebase auth module
+// Make the function globally available for auth module
 window.handleUserAuthChange = handleUserAuthChange;
 
-// Enhanced cart functions with user persistence
-const originalUpsertItem = function(id, deltaQty = 1) {
-	const existing = findItem(id);
-	if (existing) {
-		existing.qty += deltaQty;
-		if (existing.qty <= 0) {
-			state.items = state.items.filter(i => i.id !== id);
-		}
-	} else if (deltaQty > 0) {
-		state.items.push({ id, name: PRODUCT.name, price: PRODUCT.price, qty: deltaQty });
-	}
-	renderCart();
-};
-
-function upsertItem(id, deltaQty = 1) {
-	try {
-		originalUpsertItem(id, deltaQty);
-		// Save cart for authenticated users
-		if (window.firebaseAuth && window.firebaseAuth.getCurrentUser()) {
-			window.firebaseAuth.saveUserCart();
-		}
-	} catch (error) {
-		console.error('Error in upsertItem:', error);
-		// Fallback to basic cart functionality
-		const existing = findItem(id);
-		if (existing) {
-			existing.qty += deltaQty;
-			if (existing.qty <= 0) {
-				state.items = state.items.filter(i => i.id !== id);
+// Safe auth button handler
+function handleAuthButtonClick() {
+	if (window.appwriteAuth && window.appwriteAuth.openAuthModal) {
+		window.appwriteAuth.openAuthModal('login');
+	} else {
+		console.log('Appwrite auth not ready yet, waiting...');
+		// Show a loading message
+		const button = document.getElementById('auth-button');
+		const originalText = button.innerHTML;
+		button.innerHTML = '<span>Loading...</span>';
+		button.disabled = true;
+		
+		// Wait and try again
+		setTimeout(() => {
+			if (window.appwriteAuth && window.appwriteAuth.openAuthModal) {
+				window.appwriteAuth.openAuthModal('login');
+				button.innerHTML = originalText;
+				button.disabled = false;
+			} else {
+				console.error('Appwrite auth failed to load');
+				button.innerHTML = originalText;
+				button.disabled = false;
+				alert('Authentication system is loading. Please refresh the page and try again.');
 			}
-		} else if (deltaQty > 0) {
-			state.items.push({ id, name: PRODUCT.name, price: PRODUCT.price, qty: deltaQty });
-		}
-		renderCart();
+		}, 1000);
 	}
 }
+
+// Safe wrapper for all Appwrite auth calls
+function safeAppwriteCall(methodName, ...args) {
+	if (window.appwriteAuth && window.appwriteAuth[methodName]) {
+		return window.appwriteAuth[methodName](...args);
+	} else {
+		console.log(`Appwrite auth not ready for ${methodName}, waiting...`);
+		setTimeout(() => {
+			if (window.appwriteAuth && window.appwriteAuth[methodName]) {
+				window.appwriteAuth[methodName](...args);
+			} else {
+				console.error(`Appwrite auth method ${methodName} not available after waiting`);
+			}
+		}, 1000);
+	}
+}
+
+// Make functions globally available
+window.handleAuthButtonClick = handleAuthButtonClick;
+window.safeAppwriteCall = safeAppwriteCall;
 
 // Test EmailJS connection (for development testing)
 function testEmailJS() {
@@ -1267,12 +1421,28 @@ window.testEmailJS = testEmailJS;
 window.testAdminEmail = testAdminEmail;
 
 // Gallery Lightbox Functionality
-const galleryImages = [
-	'gallery-3.jpg',
-	'gallery-4.jpg',
-	'gallery-5.jpg',
-	'gallery-8.jpg'
-];
+// Initialize with empty array - will be populated from window.fileIdMap
+let galleryImages = [];
+
+// Function to initialize gallery images from Appwrite
+function initializeGalleryImages() {
+	if (window.fileIdMap) {
+		const fileNames = ['gallery-3.jpg', 'gallery-4.jpg', 'gallery-5.jpg', 'gallery-8.jpg'];
+		galleryImages = fileNames.map(fileName => {
+			const fileId = window.fileIdMap[fileName];
+			return fileId ? getAppwriteFileUrl(fileId) : '';
+		}).filter(url => url !== '');
+		console.log('🖼️ Gallery images initialized:', galleryImages);
+	}
+}
+
+// Wait for file map to be ready, then initialize gallery
+window.addEventListener('appwriteFilesLoaded', initializeGalleryImages);
+
+// Also try to initialize if fileIdMap already exists
+if (window.fileIdMap && Object.keys(window.fileIdMap).length > 0) {
+	initializeGalleryImages();
+}
 
 let currentImageIndex = 0;
 
@@ -1350,10 +1520,10 @@ function checkAdminQueryParameter() {
 	if (urlParams.get('admin') === 'true') {
 		// Show a message about needing to sign in as admin
 		setTimeout(() => {
-			if (!window.firebaseAuth?.getCurrentUser()) {
+			if (!window.appwriteAuth?.getCurrentUser()) {
 				// Open auth modal with admin message
-				if (window.firebaseAuth?.openAuthModal) {
-					window.firebaseAuth.openAuthModal('login');
+				if (window.appwriteAuth?.openAuthModal) {
+					window.appwriteAuth.openAuthModal('login');
 					// Add admin notice to auth modal
 					const authModal = document.getElementById('auth-modal');
 					if (authModal) {

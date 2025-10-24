@@ -3,16 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.skypack.dev https://cdn.jsdelivr.net https://fra.cloud.appwrite.io; object-src 'none';">
   <title>ONSi | Quranic Verses Box</title>
   <meta name="description" content="Buy the ONSi Quranic Verses Box – a beautifully crafted set of cards with uplifting ayat in Arabic and English.">
-  <link rel="icon" href="logo.png">
+  <link rel="icon" href="" id="favicon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="product-main.jpg" as="image">
-  <link rel="preload" href="logo.png" as="image">
+  <link rel="preload" href="" as="image" id="preload-product">
+  <link rel="preload" href="" as="image" id="preload-logo">
+  
+  <script>
+    // Set logo favicon immediately using known file ID
+    (function() {
+      const endpoint = 'https://fra.cloud.appwrite.io/v1';
+      const projectId = '68f8c1bc003e3d2c8f5c';
+      const bucketId = 'onsiBucket';
+      const logoFileId = '68fb993a0009a2d89a0d';
+      
+      const logoUrl = `${endpoint}/storage/buckets/${bucketId}/files/${logoFileId}/view?project=${projectId}`;
+      document.getElementById('favicon').href = logoUrl;
+      document.getElementById('preload-logo').href = logoUrl;
+    })();
+  </script>
+  
+  <!-- Critical: Enhanced error suppression for browser extensions -->
+  <script>
+    (function() {
+      // Store original console methods
+      const originalConsoleError = console.error;
+      const originalConsoleWarn = console.warn;
+      const originalConsoleLog = console.log;
+      
+      // Enhanced error filtering patterns
+      const errorPatterns = [
+        'trust wallet',
+        'onetap.js', 
+        'content_script_bundle.js',
+        'metamask',
+        'wallet',
+        'extension',
+        'attempting initialization',
+        'not ready',
+        'generator.next',
+        'self-xss',
+        'attackers',
+        'impersonate',
+        'chrome-extension',
+        'moz-extension',
+        'script_bundle',
+        'coinbase',
+        'phantom',
+        'solflare'
+      ];
+      
+      function shouldSuppressMessage(message) {
+        const lowerMessage = String(message).toLowerCase();
+        return errorPatterns.some(pattern => lowerMessage.includes(pattern));
+      }
+      
+      // Override console.error
+      console.error = function(...args) {
+        const message = args.join(' ');
+        if (shouldSuppressMessage(message)) {
+          return; // Completely suppress these errors
+        }
+        originalConsoleError.apply(console, args);
+      };
+      
+      // Override console.warn  
+      console.warn = function(...args) {
+        const message = args.join(' ');
+        if (shouldSuppressMessage(message)) {
+          return; // Completely suppress these warnings
+        }
+        originalConsoleWarn.apply(console, args);
+      };
+      
+      // Override console.log to catch some extension logs
+      console.log = function(...args) {
+        const message = args.join(' ');
+        if (shouldSuppressMessage(message)) {
+          return; // Suppress extension logs
+        }
+        originalConsoleLog.apply(console, args);
+      };
+      
+      // Suppress unhandled promise rejections from extensions
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason) {
+          const message = String(event.reason.message || event.reason);
+          if (shouldSuppressMessage(message)) {
+            event.preventDefault();
+            return false;
+          }
+        }
+      });
+      
+      // Suppress script errors from extensions
+      window.addEventListener('error', function(event) {
+        if (event.filename && shouldSuppressMessage(event.filename)) {
+          event.preventDefault();
+          return false;
+        }
+        if (event.message && shouldSuppressMessage(event.message)) {
+          event.preventDefault();
+          return false;
+        }
+      });
+      
+      // Suppress errors from specific error sources
+      window.onerror = function(message, source, lineno, colno, error) {
+        if (source && shouldSuppressMessage(source)) {
+          return true; // Suppress the error
+        }
+        if (message && shouldSuppressMessage(message)) {
+          return true; // Suppress the error
+        }
+        return false; // Let other errors through
+      };
+      
+      // Block specific extension scripts from logging
+      const originalSetTimeout = window.setTimeout;
+      window.setTimeout = function(callback, delay, ...args) {
+        // Check if the callback contains extension-related code
+        const callbackStr = String(callback);
+        if (shouldSuppressMessage(callbackStr)) {
+          return; // Don't execute extension timeouts that cause errors
+        }
+        return originalSetTimeout.call(this, callback, delay, ...args);
+      };
+      
+      console.log('🧹 Enhanced console cleaning active - extension errors suppressed');
+    })();
+  </script>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -20,8 +147,8 @@
   <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-neutral-200">
     <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
       <a href="#" class="flex items-center">
-        <img src="logo.png" alt="ONSi Logo" class="h-16 w-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-        <span class="text-2xl font-semibold tracking-wide hidden">ONSi</span>
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="ONSi Logo" class="h-16 w-auto" id="header-logo">
+        <span class="text-2xl font-semibold tracking-wide hidden" id="logo-fallback">ONSi</span>
       </a>
 
       <div class="flex items-center gap-3">
@@ -49,7 +176,7 @@
         </div>
         
         <!-- Authentication Button -->
-        <button id="auth-button" class="flex items-center px-3 py-2 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 text-sm font-medium" onclick="window.firebaseAuth.openAuthModal('login')">
+        <button id="auth-button" class="flex items-center px-3 py-2 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 text-sm font-medium" onclick="handleAuthButtonClick()">>>
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
           </svg>
@@ -58,7 +185,7 @@
         
         <!-- User Profile Dropdown (hidden by default) -->
         <div id="user-profile" class="relative hidden">
-          <button id="profile-toggle" class="flex items-center gap-2 px-3 py-2 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 text-sm font-medium" onclick="window.firebaseAuth.toggleUserDropdown()">
+          <button id="profile-toggle" class="flex items-center gap-2 px-3 py-2 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 text-sm font-medium" onclick="safeAppwriteCall('toggleUserDropdown')">>>
             <!-- User info will be populated by JavaScript -->
           </button>
           
@@ -73,7 +200,7 @@
               Admin Panel
             </button>
             <hr class="my-1">
-            <button class="w-full text-left px-3 py-2 text-sm hover:bg-neutral-50 text-red-600" onclick="window.firebaseAuth.logoutUser()" data-i18n="auth.logout">Logout</button>
+            <button class="w-full text-left px-3 py-2 text-sm hover:bg-neutral-50 text-red-600" onclick="safeAppwriteCall('logoutUser')" data-i18n="auth.logout">Logout</button>
           </div>
         </div>
         
@@ -123,7 +250,7 @@ AdDuhaa 3</div>
           </ul> -->
         </div>
         <div class="aspect-square rounded-xl overflow-hidden shadow ring-1 ring-neutral-200 bg-white">
-          <img src="product-main.jpg" alt="ONSi Quranic Verses Box" data-i18n-alt="image.product" class="w-full h-full object-cover">
+          <img src="" alt="ONSi Quranic Verses Box" data-i18n-alt="image.product" class="w-full h-full object-cover" id="product-main-img">
         </div>
       </div>
     </section>
@@ -137,15 +264,15 @@ AdDuhaa 3</div>
         </div>
         <div class="relative aspect-video rounded-xl overflow-hidden shadow-lg ring-1 ring-neutral-200 bg-neutral-100">
           <video 
+            id="product-video"
             class="w-full h-full object-cover" 
             controls 
             preload="metadata"
-            poster="product-main.jpg"
             aria-label="Product explanation video">
-            <source src="assets/ons.mp4" type="video/mp4">
+            <source src="" type="video/mp4" id="video-source">
             <p class="absolute inset-0 flex items-center justify-center text-neutral-600">
               Your browser does not support the video tag. 
-              <a href="assets/ons.mp4" class="underline ml-1">Download the video</a>
+              <a href="" class="underline ml-1" id="video-download">Download the video</a>
             </p>
           </video>
         </div>
@@ -161,17 +288,17 @@ AdDuhaa 3</div>
            
            
             <div class="aspect-square rounded-lg overflow-hidden shadow ring-1 ring-neutral-200 bg-white hover:shadow-md transition-shadow cursor-pointer" onclick="openLightbox(0)">
-              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="gallery-3.jpg" alt="Product photo 1" data-i18n-alt="image.gallery">
+              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="" alt="Product photo 1" data-i18n-alt="image.gallery" id="gallery-img-0">
             </div>
             <div class="aspect-square rounded-lg overflow-hidden shadow ring-1 ring-neutral-200 bg-white hover:shadow-md transition-shadow cursor-pointer" onclick="openLightbox(1)">
-              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="gallery-4.jpg" alt="Product photo 2" data-i18n-alt="image.gallery">
+              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="" alt="Product photo 2" data-i18n-alt="image.gallery" id="gallery-img-1">
             </div>
             <div class="aspect-square rounded-lg overflow-hidden shadow ring-1 ring-neutral-200 bg-white hover:shadow-md transition-shadow cursor-pointer" onclick="openLightbox(2)">
-              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="gallery-5.jpg" alt="Product photo 3" data-i18n-alt="image.gallery">
+              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="" alt="Product photo 3" data-i18n-alt="image.gallery" id="gallery-img-2">
             </div>
 
             <div class="aspect-square rounded-lg overflow-hidden shadow ring-1 ring-neutral-200 bg-white hover:shadow-md transition-shadow cursor-pointer" onclick="openLightbox(3)">
-              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="gallery-8.jpg" alt="Product photo 4" data-i18n-alt="image.gallery">
+              <img class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" src="" alt="Product photo 4" data-i18n-alt="image.gallery" id="gallery-img-3">
             </div>
           </div>
         </div>
@@ -370,7 +497,7 @@ AdDuhaa 3</div>
 
   <!-- Authentication Modal -->
   <div id="auth-modal" class="fixed inset-0 hidden z-50">
-    <div class="absolute inset-0 bg-black/40" onclick="window.firebaseAuth.closeAuthModal()"></div>
+    <div class="absolute inset-0 bg-black/40" onclick="safeAppwriteCall('closeAuthModal')"></div>
     <div class="absolute inset-0 grid place-items-center p-4">
       <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6 space-y-4">
         <div class="text-center">
@@ -391,28 +518,9 @@ AdDuhaa 3</div>
           <button type="button" class="text-sm text-slate-600 hover:text-slate-800" onclick="resetPasswordPrompt()" data-i18n="auth.forgot_password">Forgot Password?</button>
           <button id="login-submit" class="w-full bg-slate-700 text-white py-2 rounded-lg hover:bg-slate-800 transition-colors" data-i18n="auth.sign_in">Sign In</button>
           
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-neutral-300"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-white text-neutral-500" data-i18n="auth.or">Or</span>
-            </div>
-          </div>
-          
-          <button id="google-signin" class="w-full flex items-center justify-center gap-2 border border-neutral-300 py-2 rounded-lg hover:bg-neutral-50 transition-colors">
-            <svg class="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span data-i18n="auth.continue_google">Continue with Google</span>
-          </button>
-          
           <p class="text-center text-sm text-neutral-600">
             <span data-i18n="auth.no_account">Don't have an account?</span>
-            <button type="button" class="text-slate-600 hover:text-slate-800 font-medium" onclick="window.firebaseAuth.switchAuthMode('register')" data-i18n="auth.sign_up">Sign up</button>
+            <button type="button" class="text-slate-600 hover:text-slate-800 font-medium" onclick="safeAppwriteCall('switchAuthMode', 'register')" data-i18n="auth.sign_up">Sign up</button>
           </p>
         </div>
 
@@ -433,28 +541,9 @@ AdDuhaa 3</div>
           </div>
           <button id="register-submit" class="w-full bg-slate-700 text-white py-2 rounded-lg hover:bg-slate-800 transition-colors" data-i18n="auth.create_account">Create Account</button>
           
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-neutral-300"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-white text-neutral-500" data-i18n="auth.or">Or</span>
-            </div>
-          </div>
-          
-          <button id="google-signup" class="w-full flex items-center justify-center gap-2 border border-neutral-300 py-2 rounded-lg hover:bg-neutral-50 transition-colors">
-            <svg class="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span data-i18n="auth.continue_google">Continue with Google</span>
-          </button>
-          
           <p class="text-center text-sm text-neutral-600">
             <span data-i18n="auth.have_account">Already have an account?</span>
-            <button type="button" class="text-slate-600 hover:text-slate-800 font-medium" onclick="window.firebaseAuth.switchAuthMode('login')" data-i18n="auth.sign_in">Sign in</button>
+            <button type="button" class="text-slate-600 hover:text-slate-800 font-medium" onclick="safeAppwriteCall('switchAuthMode', 'login')" data-i18n="auth.sign_in">Sign in</button>
           </p>
         </div>
         
@@ -475,15 +564,14 @@ AdDuhaa 3</div>
   
   <!-- Environment Configuration -->
   <script>
-    // Environment configuration - will be replaced by build process or manually set
+    // Environment configuration for Appwrite and EmailJS
     window.ENV = {
-      VITE_FIREBASE_API_KEY: 'AIzaSyDZw3QJBDlsn10pBbtQmBU61Nfa9bMUFx4',
-      VITE_FIREBASE_AUTH_DOMAIN: 'onsi-de85f.firebaseapp.com',
-      VITE_FIREBASE_PROJECT_ID: 'onsi-de85f',
-      VITE_FIREBASE_STORAGE_BUCKET: 'onsi-de85f.firebasestorage.app',
-      VITE_FIREBASE_MESSAGING_SENDER_ID: '304484751803',
-      VITE_FIREBASE_APP_ID: '1:304484751803:web:4031fad794705c0bac8c9e',
-      VITE_FIREBASE_MEASUREMENT_ID: 'G-5MF3MSH2J5',
+      // Appwrite configuration
+      VITE_APPWRITE_ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
+      VITE_APPWRITE_PROJECT_ID: '68f8c1bc003e3d2c8f5c',
+      VITE_APPWRITE_PROJECT_NAME: 'onsi',
+      // Note: API key is for server-side use only, not included here for security
+      // EmailJS configuration
       VITE_EMAILJS_PUBLIC_KEY: 'ryB3eYn0HP-iAfl2E',
       VITE_EMAILJS_SERVICE_ID: 'service_j4hv4we',
       VITE_EMAILJS_CUSTOMER_TEMPLATE_ID: 'template_3m8gczh',
@@ -494,11 +582,147 @@ AdDuhaa 3</div>
       VITE_SHIPPING_COST: '0.00',
       VITE_TAX_RATE: '0.00'
     };
+
+    // Appwrite Storage Helper - Gets file URL by file ID
+    window.getAppwriteFileUrl = function(fileId) {
+      const endpoint = 'https://fra.cloud.appwrite.io/v1';
+      const projectId = '68f8c1bc003e3d2c8f5c';
+      const bucketId = 'onsiBucket';
+      return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?project=${projectId}`;
+    };
+
+    // Map of filenames to their Appwrite file IDs
+    // You need to replace these with actual file IDs from your Appwrite bucket
+    window.fileIdMap = {};
+
+    // Fetch file list from Appwrite and initialize images
+    async function initializeAppwriteImages() {
+      try {
+        const endpoint = 'https://fra.cloud.appwrite.io/v1';
+        const projectId = '68f8c1bc003e3d2c8f5c';
+        const bucketId = 'onsiBucket';
+        
+        console.log('🔄 Fetching files from Appwrite bucket...');
+        
+        // Fetch list of files from Appwrite bucket
+        const response = await fetch(`${endpoint}/storage/buckets/${bucketId}/files?project=${projectId}`, {
+          method: 'GET',
+          headers: {
+            'X-Appwrite-Project': projectId
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log('📁 Appwrite files loaded:', data);
+        
+        if (data.files && data.files.length > 0) {
+          // Create a map of filename to file ID
+          const fileMap = {};
+          data.files.forEach(file => {
+            fileMap[file.name] = file.$id;
+          });
+          
+          window.fileIdMap = fileMap;
+          console.log('🗺️ File ID map created:', fileMap);
+          
+          // Update favicon and preload links
+          if (fileMap['logo.png']) {
+            const favicon = document.getElementById('favicon');
+            const preloadLogo = document.getElementById('preload-logo');
+            if (favicon) favicon.href = window.getAppwriteFileUrl(fileMap['logo.png']);
+            if (preloadLogo) preloadLogo.href = window.getAppwriteFileUrl(fileMap['logo.png']);
+          }
+          
+          if (fileMap['product-main.jpg']) {
+            const preloadProduct = document.getElementById('preload-product');
+            if (preloadProduct) preloadProduct.href = window.getAppwriteFileUrl(fileMap['product-main.jpg']);
+          }
+          
+          // Now set all image sources using file IDs
+          const headerLogo = document.getElementById('header-logo');
+          const logoFallback = document.getElementById('logo-fallback');
+          
+          if (headerLogo && fileMap['logo.png']) {
+            const logoUrl = window.getAppwriteFileUrl(fileMap['logo.png']);
+            headerLogo.src = logoUrl;
+            console.log('✅ Header logo set:', logoUrl);
+            
+            // Show logo, hide fallback text
+            headerLogo.style.display = 'block';
+            if (logoFallback) logoFallback.style.display = 'none';
+            
+            // Add error handler in case the URL doesn't work
+            headerLogo.onerror = function() {
+              console.warn('⚠️ Logo failed to load, showing fallback');
+              headerLogo.style.display = 'none';
+              if (logoFallback) logoFallback.style.display = 'block';
+            };
+          } else if (logoFallback) {
+            // No logo found, show fallback
+            headerLogo.style.display = 'none';
+            logoFallback.style.display = 'block';
+          }
+          
+          const productMainImg = document.getElementById('product-main-img');
+          if (productMainImg && fileMap['product-main.jpg']) {
+            productMainImg.src = window.getAppwriteFileUrl(fileMap['product-main.jpg']);
+          }
+          
+          // Video elements
+          const productVideo = document.getElementById('product-video');
+          const videoSource = document.getElementById('video-source');
+          const videoDownload = document.getElementById('video-download');
+          
+          if (fileMap['ons.mp4']) {
+            if (videoSource) {
+              videoSource.src = window.getAppwriteFileUrl(fileMap['ons.mp4']);
+              if (productVideo) productVideo.load();
+            }
+            if (videoDownload) videoDownload.href = window.getAppwriteFileUrl(fileMap['ons.mp4']);
+          }
+          
+          // Gallery images
+          const galleryImages = [
+            { id: 'gallery-img-0', file: 'gallery-3.jpg' },
+            { id: 'gallery-img-1', file: 'gallery-4.jpg' },
+            { id: 'gallery-img-2', file: 'gallery-5.jpg' },
+            { id: 'gallery-img-3', file: 'gallery-8.jpg' }
+          ];
+          
+          galleryImages.forEach(function(img) {
+            const element = document.getElementById(img.id);
+            if (element && fileMap[img.file]) {
+              element.src = window.getAppwriteFileUrl(fileMap[img.file]);
+            }
+          });
+          
+          console.log('✅ All Appwrite images initialized successfully');
+          
+          // Dispatch event to notify other scripts that files are loaded
+          window.dispatchEvent(new Event('appwriteFilesLoaded'));
+        } else {
+          console.warn('⚠️ No files found in Appwrite bucket');
+        }
+      } catch (error) {
+        console.error('❌ Failed to load Appwrite images:', error);
+        console.error('Error details:', error.message);
+      }
+    }
+
+    // Initialize images after DOM is loaded
+    document.addEventListener('DOMContentLoaded', initializeAppwriteImages);
   </script>
   
-  <script src="firebase-domain-helper.js"></script>
-  <script src="script.js"></script>
+  <!-- Main Application Script (includes Appwrite) -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
+
+
 
 

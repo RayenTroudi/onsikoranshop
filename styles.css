@@ -19,6 +19,21 @@ button.qty:hover {
 .gallery { transition: transform .2s ease, box-shadow .2s ease; }
 .gallery:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgb(0 0 0 / 0.08); }
 
+/* OAuth login buttons styling */
+.oauth-button {
+	transition: all 0.2s ease;
+}
+
+.oauth-button:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.oauth-button:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* RTL Support for Arabic */
 [dir="rtl"] {
 	text-align: right;

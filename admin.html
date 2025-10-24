@@ -5,7 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ONSi Admin Panel</title>
   <meta name="description" content="Admin panel for managing ONSi products and orders">
-  <link rel="icon" href="logo.png">
+  <link rel="icon" href="" id="admin-favicon">
+  <script>
+    // Appwrite helper function
+    (function() {
+      const endpoint = 'https://fra.cloud.appwrite.io/v1';
+      const projectId = '68f8c1bc003e3d2c8f5c';
+      const bucketId = 'onsiBucket';
+      const logoFileId = '68fb993a0009a2d89a0d';
+      
+      // Set favicon immediately
+      const logoUrl = `${endpoint}/storage/buckets/${bucketId}/files/${logoFileId}/view?project=${projectId}`;
+      document.getElementById('admin-favicon').href = logoUrl;
+      
+      window.getAppwriteFileUrl = function(fileId) {
+        return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?project=${projectId}`;
+      };
+      
+      // Fetch files and initialize sidebar logo after DOM loads
+      document.addEventListener('DOMContentLoaded', async function() {
+        // Set sidebar logo with known file ID
+        const sidebarLogo = document.getElementById('admin-sidebar-logo');
+        if (sidebarLogo) {
+          sidebarLogo.src = logoUrl;
+          console.log('✅ Admin sidebar logo loaded from Appwrite');
+        }
+        
+        // Still fetch file list for other potential uses
+        try {
+          const response = await fetch(`${endpoint}/storage/buckets/${bucketId}/files?project=${projectId}`, {
+            method: 'GET',
+            headers: {
+              'X-Appwrite-Project': projectId
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const fileMap = {};
+            data.files.forEach(file => {
+              fileMap[file.name] = file.$id;
+            });
+            window.fileIdMap = fileMap;
+            console.log('✅ Admin file map loaded:', fileMap);
+          }
+        } catch (error) {
+          console.error('❌ Failed to load file list:', error);
+        }
+      });
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -80,7 +129,7 @@
     <div class="admin-sidebar w-64 flex-shrink-0">
       <div class="p-6">
         <div class="flex items-center mb-8">
-          <img src="logo.png" alt="ONSi Logo" class="h-8 w-auto mr-3">
+          <img src="" alt="ONSi Logo" class="h-8 w-auto mr-3" id="admin-sidebar-logo">
           <div>
             <h1 class="text-white font-bold text-lg">ONSi Admin</h1>
             <p class="text-slate-300 text-sm">Management Panel</p>
@@ -403,24 +452,20 @@
 
   <!-- Environment Configuration -->
   <script>
-    // Environment configuration - will be replaced by build process or manually set
+    // Environment configuration for Appwrite
     window.ENV = {
-      VITE_FIREBASE_API_KEY: 'AIzaSyDZw3QJBDlsn10pBbtQmBU61Nfa9bMUFx4',
-      VITE_FIREBASE_AUTH_DOMAIN: 'onsi-de85f.firebaseapp.com',
-      VITE_FIREBASE_PROJECT_ID: 'onsi-de85f',
-      VITE_FIREBASE_STORAGE_BUCKET: 'onsi-de85f.firebasestorage.app',
-      VITE_FIREBASE_MESSAGING_SENDER_ID: '304484751803',
-      VITE_FIREBASE_APP_ID: '1:304484751803:web:4031fad794705c0bac8c9e',
-      VITE_FIREBASE_MEASUREMENT_ID: 'G-5MF3MSH2J5',
+      // Appwrite configuration
+      VITE_APPWRITE_ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
+      VITE_APPWRITE_PROJECT_ID: '68f8c1bc003e3d2c8f5c',
+      VITE_APPWRITE_PROJECT_NAME: 'onsi',
       VITE_ADMIN_EMAIL: 'onsmaitii@gmail.com'
     };
   </script>
   
-  <!-- Firebase Scripts -->
-  <script src="firebase-domain-helper.js"></script>
-  <script type="module" src="firebase-auth.js"></script>
+  <!-- Appwrite Configuration -->
+  <script type="module" src="appwrite-config.js"></script>
   
-  <!-- Scripts -->
-  <script type="module" src="admin-script.js"></script>
+  <!-- Admin Panel JavaScript -->
+  <script type="module" src="appwrite-admin-script.js"></script>
 </body>
 </html>
