@@ -83,6 +83,7 @@ console.log('Environment vars available:', !!window.ENV);
 
 // Authentication State Management
 let currentUser = null;
+let sessionCheckPromise = null; // Track if session check is in progress
 
 // Auth state observer
 let authStateListeners = [];
@@ -111,11 +112,10 @@ function notifyAuthStateChange(user) {
 // Admin functions (for authenticated admin users only)
 async function isUserAdmin(user) {
     try {
-        if (!user || !user.email) return false;
+        if (!user) return false;
         
-        // Check if user email matches admin email
-        const adminEmail = window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com';
-        return user.email === adminEmail;
+        // Check if user has admin role
+        return user.role === 'admin';
     } catch (error) {
         console.error('Error checking admin status:', error);
         return false;
@@ -141,33 +141,66 @@ async function checkAdminAccess() {
 
 // Check current session on page load
 async function checkCurrentSession() {
-    try {
-        console.log('🔍 Checking current Appwrite session...');
-        const session = await account.get();
-        console.log('✅ Found active session:', session.email);
-        currentUser = session;
-        notifyAuthStateChange(session);
-        return session;
-    } catch (error) {
-        // This is expected if user is not logged in - not an error
-        if (error.code === 401 || error.type === 'general_unauthorized_scope' || error.message.includes('unauthorized')) {
-            console.log('ℹ️ No active session found (user not logged in)');
-        } else {
-            console.log('ℹ️ Session check result:', error.message);
-        }
-        
-        // Ensure local state is cleared
-        currentUser = null;
-        notifyAuthStateChange(null);
-        
-        // Ensure UI reflects logged out state
-        const authButton = document.getElementById('auth-button');
-        const userProfile = document.getElementById('user-profile');
-        if (authButton) authButton.classList.remove('hidden');
-        if (userProfile) userProfile.classList.add('hidden');
-        
-        return null;
+    // If already checking, return the existing promise
+    if (sessionCheckPromise) {
+        console.log('⏳ Session check already in progress, waiting...');
+        return sessionCheckPromise;
     }
+    
+    // Create the promise and store it
+    sessionCheckPromise = (async () => {
+        try {
+            console.log('🔍 Checking current Appwrite session...');
+            const session = await account.get();
+            console.log('✅ Found active session:', session.email);
+            
+            // Fetch user document to get role
+            try {
+                const userDoc = await databases.getDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.users,
+                    session.$id
+                );
+                console.log('👤 User document fetched:', userDoc);
+                console.log('📋 User role from database:', userDoc.role);
+                // Merge session data with user document data
+                currentUser = {
+                    ...session,
+                    role: userDoc.role,
+                    fullName: userDoc.fullName
+                };
+                console.log('✅ currentUser set with role:', currentUser.role);
+            } catch (docError) {
+                console.log('❌ Could not fetch user document:', docError);
+                currentUser = session;
+            }
+            
+            console.log('🔍 Final currentUser object:', currentUser);
+            notifyAuthStateChange(currentUser);
+            return currentUser;
+        } catch (error) {
+            // This is expected if user is not logged in - not an error
+            if (error.code === 401 || error.type === 'general_unauthorized_scope' || error.message.includes('unauthorized')) {
+                console.log('ℹ️ No active session found (user not logged in)');
+            } else {
+                console.log('ℹ️ Session check result:', error.message);
+            }
+            
+            // Ensure local state is cleared
+            currentUser = null;
+            notifyAuthStateChange(null);
+            
+            // Ensure UI reflects logged out state
+            const authButton = document.getElementById('auth-button');
+            const userProfile = document.getElementById('user-profile');
+            if (authButton) authButton.classList.remove('hidden');
+            if (userProfile) userProfile.classList.add('hidden');
+            
+            return null;
+        }
+    })();
+    
+    return sessionCheckPromise;
 }
 
 // Enhanced error handling
@@ -459,13 +492,46 @@ async function loginUser(email, password) {
         console.log('🔑 Creating login session...');
         await account.createEmailPasswordSession(email, password);
         
-        // Get user data
+        // Get user data with role
         const user = await account.get();
         
-        console.log('✅ User logged in successfully:', user.email);
-        notifyAuthStateChange(user);
-        closeAuthModal();
-        return { success: true, user };
+        // Fetch user document to get role
+        try {
+            const userDoc = await databases.getDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.users,
+                user.$id
+            );
+            // Merge session data with user document data
+            const fullUser = {
+                ...user,
+                role: userDoc.role,
+                fullName: userDoc.fullName
+            };
+            currentUser = fullUser;
+            
+            console.log('✅ User logged in successfully:', fullUser.email);
+            notifyAuthStateChange(fullUser);
+            
+            // Check if on index.html?admin=true and user is admin
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('admin') && fullUser.role === 'admin') {
+                console.log('🔄 Admin logged in, redirecting to admin panel...');
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 500);
+                return { success: true, user: fullUser, redirecting: true };
+            }
+            
+            closeAuthModal();
+            return { success: true, user: fullUser };
+        } catch (docError) {
+            console.log('ℹ️ Could not fetch user document, using session data only');
+            currentUser = user;
+            notifyAuthStateChange(user);
+            closeAuthModal();
+            return { success: true, user };
+        }
     } catch (error) {
         console.error('❌ Login error:', error);
         return { success: false, error: handleAppwriteError(error) };
@@ -928,7 +994,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    await checkCurrentSession();
+    console.log('🔍 Checking session and admin redirect...');
+    const user = await checkCurrentSession();
+    console.log('👤 User from checkCurrentSession:', user);
+    
+    // Check if user is trying to access admin and redirect if authenticated
+    console.log('🔍 Checking URL parameters:', {
+        hasAdmin: urlParams.has('admin'),
+        hasUser: !!user,
+        userRole: user?.role
+    });
+    
+    if (urlParams.has('admin') && user) {
+        console.log('🔄 Admin access requested, checking permissions...');
+        // Check if user has admin role
+        if (user.role === 'admin') {
+            console.log('✅ User is admin, redirecting to admin panel...');
+            window.location.href = 'admin.html';
+        } else {
+            console.log('❌ User is not admin, role:', user.role);
+        }
+    } else {
+        console.log('ℹ️ No admin redirect needed:', {
+            hasAdminParam: urlParams.has('admin'),
+            hasUser: !!user
+        });
+    }
+
 });
 
 // Export configuration and services
@@ -960,7 +1052,14 @@ window.appwriteAuth = {
     saveUserCart,
     getUserCart,
     makeUserAdmin,
-    getCurrentUser: () => currentUser,
+    getCurrentUser: async () => {
+        // If session check is in progress, wait for it
+        if (sessionCheckPromise) {
+            console.log('⏳ getCurrentUser: waiting for session check...');
+            await sessionCheckPromise;
+        }
+        return currentUser;
+    },
     subscribeToAuthState,
     checkCurrentSession,
     // Admin functions
@@ -977,7 +1076,7 @@ window.appwriteAuth = {
 // Debug: confirm window.appwriteAuth is set
 console.log('🔧 window.appwriteAuth set:', !!window.appwriteAuth);
 console.log('🔧 Available methods:', Object.keys(window.appwriteAuth));
-console.log('👤 Admin email configured:', window.ENV?.VITE_ADMIN_EMAIL);
+console.log('✅ Admin access is role-based (role="admin" required)');
 
 export { 
     registerUser, 

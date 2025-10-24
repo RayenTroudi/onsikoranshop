@@ -1,11 +1,7 @@
 /**
  * ONSi Admin Panel JavaScript
- * Complete admin management system integrated with Firebase Authentication
+ * Complete admin management system integrated with Appwrite Authentication
  */
-
-// Import Firebase modules
-import { getFirestore, doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
 
 class AdminPanel {
     constructor() {
@@ -14,7 +10,6 @@ class AdminPanel {
         this.orders = [];
         this.currentSection = 'products';
         this.editingProductId = null;
-        this.db = null;
         this.isRedirecting = false;
         this.interfaceShown = false;
         
@@ -23,20 +18,18 @@ class AdminPanel {
 
     init() {
         console.log('🚀 Admin Panel initializing...');
-        this.updateLoadingStatus('Waiting for Firebase...');
+        this.updateLoadingStatus('Waiting for Appwrite...');
         
-        // Wait for Firebase to be ready
-        this.waitForFirebase().then(() => {
-            console.log('✅ Firebase ready');
-            this.updateLoadingStatus('Setting up database...');
-            this.db = getFirestore();
-            this.loadSampleData();
-            this.bindEvents();
+        // Wait for Appwrite to be ready
+        this.waitForAppwrite().then(async () => {
+            console.log('✅ Appwrite ready');
             this.updateLoadingStatus('Checking authentication...');
+            await this.loadSampleData();
+            this.bindEvents();
             this.checkAuthStatus();
         }).catch(error => {
-            console.error('❌ Firebase initialization failed:', error);
-            this.updateLoadingStatus('Failed to load Firebase');
+            console.error('❌ Appwrite initialization failed:', error);
+            this.updateLoadingStatus('Failed to load Appwrite');
         });
     }
 
@@ -48,60 +41,226 @@ class AdminPanel {
         console.log('📝 Status:', status);
     }
 
-    async waitForFirebase() {
-        // Wait for Firebase auth to be loaded
+    async waitForAppwrite() {
+        // Wait for Appwrite auth to be loaded
         let attempts = 0;
-        while (!window.firebaseAuth && attempts < 100) {
+        while (!window.appwriteAuth && attempts < 100) {
             await this.delay(100);
             attempts++;
         }
-        if (!window.firebaseAuth) {
-            throw new Error('Firebase authentication not loaded');
+        if (!window.appwriteAuth) {
+            throw new Error('Appwrite authentication not loaded');
         }
         
-        // Wait for Firebase auth to initialize and check for user
-        console.log('🔄 Waiting for Firebase auth to initialize...');
+        // Wait for Appwrite to finish checking current session
+        console.log('🔄 Waiting for Appwrite to check current session...');
         let authAttempts = 0;
-        while (authAttempts < 50) {
-            const user = window.firebaseAuth.getCurrentUser();
-            if (user !== undefined) { // undefined means still loading, null means no user
-                console.log('✅ Firebase auth initialized, user:', user ? user.email : 'None');
+        let lastUser = undefined;
+        
+        while (authAttempts < 100) {
+            const user = window.appwriteAuth.getCurrentUser();
+            
+            // On first iteration, user is undefined (not yet checked)
+            // Keep waiting until it becomes either a user object or null (checked but no user)
+            if (authAttempts > 0 && user !== undefined && user === lastUser) {
+                // User value has stabilized (same value twice in a row)
+                console.log(`✅ Appwrite auth initialized after ${authAttempts} attempts`);
+                console.log('👤 User:', user ? user.email : 'None');
+                console.log('👤 User role:', user?.role);
                 break;
             }
-            await this.delay(200);
+            
+            lastUser = user;
+            await this.delay(100);
             authAttempts++;
+        }
+        
+        if (authAttempts >= 100) {
+            console.log('⚠️ Timeout waiting for auth state to stabilize');
         }
     }
 
-    // Load sample data (replace with API calls)
-    loadSampleData() {
-        this.products = [
-            {
-                id: '1',
+    // Load real data from Appwrite
+    async loadSampleData() {
+        console.log('📊 Loading data from Appwrite...');
+        this.products = [];
+        this.orders = [];
+        
+        // Load products and orders from the database
+        await this.loadProducts();
+        await this.loadOrders();
+    }
+
+    // Load products from Appwrite database
+    async loadProducts() {
+        try {
+            console.log('📦 Attempting to load products from database...');
+            const response = await fetch(
+                `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/products/documents`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                }
+            );
+            
+            console.log('📦 Product fetch response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Product fetch error:', errorText);
+                
+                if (response.status === 404) {
+                    console.log('ℹ️ Products collection not found, will create initial product');
+                    await this.createInitialProduct();
+                    return;
+                }
+                throw new Error('Failed to fetch products: ' + errorText);
+            }
+            
+            const data = await response.json();
+            console.log('📦 Product data received:', data);
+            console.log('📦 Number of documents:', data.documents?.length);
+            
+            if (data.documents && data.documents.length > 0) {
+                console.log('📦 First document structure:', data.documents[0]);
+            }
+            
+            if (!data.documents || data.documents.length === 0) {
+                console.log('ℹ️ No products found, will create initial product');
+                await this.createInitialProduct();
+                return;
+            }
+            
+            this.products = data.documents.map(doc => {
+                console.log('📦 Mapping document:', doc);
+                return {
+                    id: doc.$id,
+                    name: doc.name,
+                    description: doc.description,
+                    price: doc.price,
+                    category: doc.category,
+                    stock: doc.stock,
+                    status: doc.status,
+                    image: doc.image,
+                    imageFileId: doc.imageFileId,
+                    createdAt: new Date(doc.$createdAt)
+                };
+            });
+            
+            console.log('✅ Loaded', this.products.length, 'products from database');
+            console.log('📦 Products:', this.products);
+        } catch (error) {
+            console.error('❌ Failed to load products:', error);
+            this.products = [];
+        }
+    }
+
+    // Create initial product if collection is empty
+    async createInitialProduct() {
+        try {
+            // Get the file ID for product-main.jpg
+            const imageFileId = window.fileIdMap && window.fileIdMap['product-main.jpg'] 
+                ? window.fileIdMap['product-main.jpg'] 
+                : '68fb982a0028272869bc';
+
+            const productData = {
                 name: 'Quranic Verses Box',
                 description: 'A curated set of 51 beautifully designed cards featuring uplifting ayat in Arabic with English reflections. Gift-ready velvet box.',
-                price: 120.00,
-                category: 'cards',
-                stock: 50,
+                price: 39.00,
+                category: 'Islamic Cards',
+                stock: 100,
                 status: 'active',
                 image: 'product-main.jpg',
-                createdAt: new Date('2024-01-15')
-            }
-        ];
+                imageFileId: imageFileId
+            };
 
-        this.orders = [
-            {
-                id: 'ORD-001',
-                customerName: 'Ahmed Ben Ali',
-                customerEmail: 'ahmed@example.com',
-                date: new Date('2024-10-10'),
-                total: 120.00,
-                status: 'pending',
-                items: [
-                    { name: 'Quranic Verses Box', quantity: 1, price: 120.00 }
-                ]
+            const response = await fetch(
+                `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/products/documents`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        documentId: 'unique()',
+                        data: productData
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error('Server response:', errorData);
+                throw new Error('Failed to create initial product');
             }
-        ];
+
+            const newProduct = await response.json();
+            this.products = [{
+                id: newProduct.$id,
+                name: newProduct.name,
+                description: newProduct.description,
+                price: newProduct.price,
+                category: newProduct.category,
+                stock: newProduct.stock,
+                status: newProduct.status,
+                image: newProduct.image,
+                imageFileId: newProduct.imageFileId,
+                createdAt: new Date(newProduct.$createdAt)
+            }];
+
+            console.log('✅ Created initial product in database');
+            this.showNotification('Initial product created successfully', 'success');
+        } catch (error) {
+            console.error('❌ Failed to create initial product:', error);
+            this.showNotification('Failed to create initial product: ' + error.message, 'error');
+        }
+    }
+
+    // Load orders from Appwrite database
+    async loadOrders() {
+        try {
+            // Use the Appwrite SDK that's already loaded
+            const response = await fetch(
+                `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/orders/documents`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch orders');
+            }
+            
+            const data = await response.json();
+            
+            this.orders = data.documents.map(doc => ({
+                id: doc.$id,
+                customerName: doc.customerName,
+                customerEmail: doc.customerEmail,
+                date: new Date(doc.$createdAt),
+                total: doc.total,
+                status: doc.status,
+                items: typeof doc.items === 'string' ? JSON.parse(doc.items) : doc.items,
+                shippingAddress: doc.shippingAddress,
+                userId: doc.userId
+            }));
+            
+            console.log('✅ Loaded', this.orders.length, 'orders from database');
+        } catch (error) {
+            console.error('❌ Failed to load orders:', error);
+            this.orders = [];
+        }
     }
 
     // Event Bindings
@@ -114,133 +273,120 @@ class AdminPanel {
             });
         });
 
-        // Logout - use Firebase logout
+        // Logout - use Appwrite logout
         document.getElementById('admin-logout').addEventListener('click', () => {
             this.handleLogout();
         });
 
-        // Add product button
-        document.getElementById('add-product-btn').addEventListener('click', () => {
-            this.openProductModal();
-        });
+        // Hide add product button (we only manage existing product)
+        const addProductBtn = document.getElementById('add-product-btn');
+        if (addProductBtn) {
+            addProductBtn.classList.add('hidden');
+        }
 
         // Product modal events
-        document.getElementById('close-product-modal').addEventListener('click', () => {
-            this.closeProductModal();
-        });
+        const closeProductModal = document.getElementById('close-product-modal');
+        if (closeProductModal) {
+            closeProductModal.addEventListener('click', () => {
+                this.closeProductModal();
+            });
+        }
 
-        document.getElementById('cancel-product').addEventListener('click', () => {
-            this.closeProductModal();
-        });
+        const cancelProduct = document.getElementById('cancel-product');
+        if (cancelProduct) {
+            cancelProduct.addEventListener('click', () => {
+                this.closeProductModal();
+            });
+        }
 
         // Product form
-        document.getElementById('product-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveProduct();
-        });
+        const productForm = document.getElementById('product-form');
+        if (productForm) {
+            productForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveProduct();
+            });
+        }
 
         // Image preview
-        document.getElementById('product-image').addEventListener('change', (e) => {
-            this.previewImage(e.target.files[0]);
-        });
+        const productImage = document.getElementById('product-image');
+        if (productImage) {
+            productImage.addEventListener('change', (e) => {
+                this.previewImage(e.target.files[0]);
+            });
+        }
 
         // Delete modal events
-        document.getElementById('cancel-delete').addEventListener('click', () => {
-            this.closeDeleteModal();
-        });
+        const cancelDelete = document.getElementById('cancel-delete');
+        if (cancelDelete) {
+            cancelDelete.addEventListener('click', () => {
+                this.closeDeleteModal();
+            });
+        }
 
-        document.getElementById('confirm-delete').addEventListener('click', () => {
-            this.deleteProduct();
-        });
+        const confirmDelete = document.getElementById('confirm-delete');
+        if (confirmDelete) {
+            confirmDelete.addEventListener('click', () => {
+                this.deleteProduct();
+            });
+        }
+
+        // Order details modal events
+        const closeOrderModal = document.getElementById('close-order-modal');
+        if (closeOrderModal) {
+            closeOrderModal.addEventListener('click', () => {
+                this.closeOrderDetailsModal();
+            });
+        }
+
+        const closeOrderModalBtn = document.getElementById('close-order-modal-btn');
+        if (closeOrderModalBtn) {
+            closeOrderModalBtn.addEventListener('click', () => {
+                this.closeOrderDetailsModal();
+            });
+        }
 
         // Search and filter
-        document.getElementById('search-products').addEventListener('input', (e) => {
-            this.filterProducts();
-        });
+        const searchProducts = document.getElementById('search-products');
+        if (searchProducts) {
+            searchProducts.addEventListener('input', (e) => {
+                this.filterProducts();
+            });
+        }
 
-        document.getElementById('filter-category').addEventListener('change', (e) => {
-            this.filterProducts();
-        });
+        const filterCategory = document.getElementById('filter-category');
+        if (filterCategory) {
+            filterCategory.addEventListener('change', (e) => {
+                this.filterProducts();
+            });
+        }
     }
 
-    // Authentication with Firebase
+    // Authentication with Appwrite
     async checkAuthStatus() {
         console.log('🔐 Checking authentication status...');
         
-        if (!window.firebaseAuth) {
-            console.log('❌ Firebase Auth not available');
-            this.updateLoadingStatus('Firebase Auth not loaded');
+        if (!window.appwriteAuth) {
+            console.log('❌ Appwrite Auth not available');
+            this.updateLoadingStatus('Appwrite Auth not loaded');
             return;
         }
 
-        console.log('✅ Firebase Auth available');
+        console.log('✅ Appwrite Auth available');
         
-        // Wait for Firebase auth state to settle
-        await this.waitForAuthState();
+        // Get current Appwrite user (await since it might be async now)
+        let currentUser = await window.appwriteAuth.getCurrentUser();
         
-        // Check both our wrapper and direct Firebase auth
-        let currentFirebaseUser = window.firebaseAuth.getCurrentUser();
+        console.log('👤 Current Appwrite user:', currentUser ? currentUser.email : 'None');
+        console.log('👤 User role:', currentUser?.role);
         
-        // If our wrapper doesn't have the user, try direct Firebase auth
-        if (!currentFirebaseUser) {
-            try {
-                const auth = getAuth();
-                currentFirebaseUser = auth.currentUser;
-                console.log('👤 Checked direct Firebase auth:', currentFirebaseUser ? currentFirebaseUser.email : 'None');
-            } catch (error) {
-                console.error('❌ Error checking direct Firebase auth:', error);
-            }
-        }
-        
-        console.log('👤 Final auth check - Current Firebase user:', currentFirebaseUser ? currentFirebaseUser.email : 'None');
-        
-        if (currentFirebaseUser) {
-            this.checkAdminPermissions(currentFirebaseUser);
+        if (currentUser) {
+            this.checkAdminPermissions(currentUser);
         } else {
-            console.log('❌ No authenticated user found after waiting');
+            console.log('❌ No authenticated user found');
             this.redirectToLogin();
         }
     }
-
-    async waitForAuthState() {
-        console.log('⏳ Waiting for Firebase auth state to be ready...');
-        
-        return new Promise((resolve) => {
-            let resolved = false;
-            
-            try {
-                const auth = getAuth();
-                console.log('� Setting up Firebase auth state listener...');
-                
-                const unsubscribe = onAuthStateChanged(auth, (user) => {
-                    console.log('🔄 Firebase auth state changed:', user ? user.email : 'No user');
-                    
-                    if (!resolved) {
-                        resolved = true;
-                        unsubscribe(); // Stop listening
-                        resolve();
-                    }
-                });
-                
-                // Fallback timeout
-                setTimeout(() => {
-                    if (!resolved) {
-                        console.log('⏰ Auth state wait timeout, proceeding anyway...');
-                        resolved = true;
-                        try { unsubscribe(); } catch (e) {}
-                        resolve();
-                    }
-                }, 5000);
-                
-            } catch (error) {
-                console.error('❌ Error setting up auth state listener:', error);
-                resolved = true;
-                resolve();
-            }
-        });
-    }
-
-
 
     async checkAdminPermissions(user) {
         if (this.currentUser || this.interfaceShown || this.isRedirecting) {
@@ -252,38 +398,26 @@ class AdminPanel {
             console.log('🔍 Checking admin permissions for user:', user.email);
             this.updateLoadingStatus('Verifying admin permissions...');
             
-            // Check if user has admin role in Firestore
-            const userDoc = await getDoc(doc(this.db, 'users', user.uid));
+            // Check if user has admin role
+            const isAdmin = user.role === 'admin';
             
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                
-                // Check if user has admin role in Firebase
-                const isAdmin = userData.role === 'admin';
-                
-                console.log('✅ User document found. Admin permission check:', {
-                    userId: user.uid,
-                    email: user.email,
-                    userRole: userData.role,
-                    isAdmin: isAdmin
-                });
-                
-                if (isAdmin) {
-                    console.log('🎉 User is admin, setting up interface...');
-                    this.currentUser = {
-                        ...user,
-                        ...userData,
-                        isAdmin: true
-                    };
-                    this.showAdminInterface();
-                    this.showNotification('Welcome back, Admin!', 'success');
-                } else {
-                    console.log('❌ User is not admin, showing access denied');
-                    this.showAccessDenied();
-                }
+            console.log('✅ Admin permission check:', {
+                userId: user.$id,
+                email: user.email,
+                userRole: user.role,
+                isAdmin: isAdmin
+            });
+            
+            if (isAdmin) {
+                console.log('🎉 User is admin, setting up interface...');
+                this.currentUser = {
+                    ...user,
+                    isAdmin: true
+                };
+                this.showAdminInterface();
+                this.showNotification('Welcome back, Admin!', 'success');
             } else {
-                console.log('❌ User document does not exist in Firestore');
-                // User document doesn't exist, definitely not admin
+                console.log('❌ User is not admin, showing access denied');
                 this.showAccessDenied();
             }
         } catch (error) {
@@ -293,8 +427,8 @@ class AdminPanel {
     }
 
     handleLogout() {
-        if (window.firebaseAuth) {
-            window.firebaseAuth.logoutUser();
+        if (window.appwriteAuth) {
+            window.appwriteAuth.logoutUser();
         }
         this.currentUser = null;
         this.redirectToHome();
@@ -352,7 +486,7 @@ class AdminPanel {
     }
 
     async requestAdminAccess() {
-        const currentUser = window.firebaseAuth?.getCurrentUser();
+        const currentUser = window.appwriteAuth?.getCurrentUser();
         if (currentUser) {
             // In a real implementation, this would send a request to admin
             // For now, just show a notification
@@ -399,6 +533,7 @@ class AdminPanel {
             userEmailElement.textContent = this.currentUser.email;
         }
         
+        console.log('📊 Before rendering - Products:', this.products.length, 'Orders:', this.orders.length);
         this.updateDashboardStats();
         this.renderProducts();
         this.renderOrders();
@@ -426,12 +561,15 @@ class AdminPanel {
         const titles = {
             dashboard: { title: 'Dashboard', subtitle: 'Overview of your business' },
             products: { title: 'Products Management', subtitle: 'Manage your product catalog' },
-            orders: { title: 'Orders Management', subtitle: 'Track and manage customer orders' }
+            orders: { title: 'Orders Management', subtitle: 'Track and manage customer orders' },
+            storage: { title: 'Storage Management', subtitle: 'Manage your media files in onsiBucket' }
         };
 
         const pageInfo = titles[section];
-        document.getElementById('page-title').textContent = pageInfo.title;
-        document.getElementById('page-subtitle').textContent = pageInfo.subtitle;
+        if (pageInfo) {
+            document.getElementById('page-title').textContent = pageInfo.title;
+            document.getElementById('page-subtitle').textContent = pageInfo.subtitle;
+        }
 
         // Show/hide add product button
         const addBtn = document.getElementById('add-product-btn');
@@ -472,7 +610,13 @@ class AdminPanel {
 
     // Products Management
     renderProducts() {
+        console.log('🎨 renderProducts called with:', this.products.length, 'products');
         const tbody = document.getElementById('products-table-body');
+        
+        if (!tbody) {
+            console.error('❌ products-table-body element not found!');
+            return;
+        }
         
         if (this.products.length === 0) {
             tbody.innerHTML = `
@@ -483,12 +627,18 @@ class AdminPanel {
             return;
         }
 
-        tbody.innerHTML = this.products.map(product => `
+        tbody.innerHTML = this.products.map(product => {
+            // Get image URL from Appwrite using imageFileId
+            const imageUrl = product.imageFileId 
+                ? `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
+                : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
+            
+            return `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10">
-                            <img class="h-10 w-10 rounded-lg object-cover" src="${product.image}" alt="${product.name}">
+                            <img class="h-10 w-10 rounded-lg object-cover" src="${imageUrl}" alt="${product.name}">
                         </div>
                         <div class="ml-4">
                             <div class="text-sm font-medium text-gray-900">${product.name}</div>
@@ -502,7 +652,13 @@ class AdminPanel {
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${product.price.toFixed(2)} TND
+                    <input 
+                        type="number" 
+                        step="0.01" 
+                        value="${product.price}" 
+                        onchange="adminPanel.updateProductPrice('${product.id}', this.value)"
+                        class="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    /> TND
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${product.stock}
@@ -514,20 +670,81 @@ class AdminPanel {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                     <button onclick="adminPanel.editProduct('${product.id}')" class="text-indigo-600 hover:text-indigo-900">
-                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Edit
-                    </button>
-                    <button onclick="adminPanel.confirmDeleteProduct('${product.id}')" class="text-red-600 hover:text-red-900 ml-2">
-                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                        Delete
+                        View Details
                     </button>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
+    }
+
+    async updateProductPrice(productId, newPrice) {
+        try {
+            const price = parseFloat(newPrice);
+            if (isNaN(price) || price < 0) {
+                this.showNotification('Invalid price value', 'error');
+                await this.loadProducts();
+                this.renderProducts();
+                return;
+            }
+
+            const response = await fetch(
+                `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/products/documents/${productId}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        data: {
+                            price: price
+                        }
+                    })
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error('Failed to update product price');
+            }
+            
+            // Update local data
+            const product = this.products.find(p => p.id === productId);
+            if (product) {
+                product.price = price;
+            }
+            
+            this.showNotification(`Price updated to ${price} TND`, 'success');
+            console.log('✅ Product price updated:', productId, price);
+            
+            // Update dashboard stats
+            this.updateDashboardStats();
+        } catch (error) {
+            console.error('❌ Failed to update product price:', error);
+            this.showNotification('Failed to update price', 'error');
+            // Reload products to revert the UI
+            await this.loadProducts();
+            this.renderProducts();
+        }
+    }
+
+    editProduct(productId) {
+        const product = this.products.find(p => p.id === productId);
+        if (product) {
+            const details = `
+PRODUCT DETAILS
+───────────────────
+Name: ${product.name}
+Description: ${product.description}
+Price: ${product.price} TND
+Category: ${product.category}
+Stock: ${product.stock}
+Status: ${product.status}
+Image: ${product.image}
+            `.trim();
+            alert(details);
+        }
     }
 
     filterProducts() {
@@ -680,6 +897,12 @@ class AdminPanel {
         this.productToDelete = null;
     }
 
+    closeOrderDetailsModal() {
+        const modal = document.getElementById('order-details-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
     async deleteProduct() {
         if (!this.productToDelete) return;
 
@@ -700,12 +923,18 @@ class AdminPanel {
 
     // Orders Management
     renderOrders() {
+        console.log('🎨 renderOrders called with:', this.orders.length, 'orders');
         const tbody = document.getElementById('orders-table-body');
+        
+        if (!tbody) {
+            console.error('❌ orders-table-body element not found!');
+            return;
+        }
         
         if (this.orders.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">No orders found</td>
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">No orders found</td>
                 </tr>
             `;
             return;
@@ -714,7 +943,7 @@ class AdminPanel {
         tbody.innerHTML = this.orders.map(order => `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${order.id}
+                    ${order.id.substring(0, 8)}...
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">${order.customerName}</div>
@@ -727,9 +956,19 @@ class AdminPanel {
                     ${order.total.toFixed(2)} TND
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getOrderStatusColor(order.status)}">
-                        ${this.capitalizeFirst(order.status)}
-                    </span>
+                    <select 
+                        onchange="adminPanel.updateOrderStatus('${order.id}', this.value)"
+                        class="text-xs px-2 py-1 rounded-full border ${this.getOrderStatusColor(order.status)}"
+                    >
+                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                        <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${Array.isArray(order.items) ? order.items.length : 0} item(s)
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button onclick="adminPanel.viewOrderDetails('${order.id}')" class="text-indigo-600 hover:text-indigo-900">
@@ -740,12 +979,113 @@ class AdminPanel {
         `).join('');
     }
 
-    viewOrderDetails(orderId) {
-        const order = this.orders.find(o => o.id === orderId);
-        if (order) {
-            alert(`Order Details:\n\nID: ${order.id}\nCustomer: ${order.customerName}\nEmail: ${order.customerEmail}\nTotal: ${order.total} TND\nStatus: ${order.status}`);
+    async updateOrderStatus(orderId, newStatus) {
+        try {
+            const response = await fetch(
+                `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/orders/documents/${orderId}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        data: {
+                            status: newStatus
+                        }
+                    })
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error('Failed to update order status');
+            }
+            
+            // Update local data
+            const order = this.orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = newStatus;
+            }
+            
+            this.showNotification(`Order status updated to ${newStatus}`, 'success');
+            console.log('✅ Order status updated:', orderId, newStatus);
+        } catch (error) {
+            console.error('❌ Failed to update order status:', error);
+            this.showNotification('Failed to update order status', 'error');
+            // Reload orders to revert the UI
+            await this.loadOrders();
+            this.renderOrders();
         }
     }
+
+    viewOrderDetails(orderId) {
+        const order = this.orders.find(o => o.id === orderId);
+        if (!order) return;
+        
+        // Populate modal with order data
+        document.getElementById('order-id-display').textContent = `Order #${order.id.substring(0, 12)}...`;
+        document.getElementById('order-date-display').textContent = this.formatDate(order.date);
+        
+        // Set status badge
+        const statusBadge = document.getElementById('order-status-badge');
+        statusBadge.textContent = this.capitalizeFirst(order.status);
+        statusBadge.className = `px-4 py-2 rounded-full text-sm font-semibold inline-block ${this.getOrderStatusColor(order.status)}`;
+        
+        // Customer information
+        document.getElementById('customer-name').textContent = order.customerName;
+        document.getElementById('customer-email').textContent = order.customerEmail;
+        
+        const addressContainer = document.getElementById('shipping-address-container');
+        if (order.shippingAddress) {
+            addressContainer.classList.remove('hidden');
+            document.getElementById('shipping-address').textContent = order.shippingAddress;
+        } else {
+            addressContainer.classList.add('hidden');
+        }
+        
+        // Order items
+        const itemsList = document.getElementById('order-items-list');
+        if (Array.isArray(order.items) && order.items.length > 0) {
+            itemsList.innerHTML = order.items.map(item => `
+                <div class="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">${item.name || 'Product'}</p>
+                            <p class="text-sm text-gray-500">Quantity: ${item.quantity}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)} TND</p>
+                        <p class="text-sm text-gray-500">${item.price.toFixed(2)} TND each</p>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            itemsList.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <p>No items in this order</p>
+                </div>
+            `;
+        }
+        
+        // Order total
+        document.getElementById('order-total').textContent = `${order.total.toFixed(2)} TND`;
+        
+        // Show modal
+        const modal = document.getElementById('order-details-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
 
 
 
@@ -868,7 +1208,336 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Global functions for onclick handlers
         window.adminPanel = adminPanel;
+        
+        // Initialize Storage Management
+        initStorageManagement();
     } else {
         console.error('❌ Cannot start Admin Panel - missing required elements');
     }
 });
+
+// ====================================
+// STORAGE MANAGEMENT (APPWRITE)
+// ====================================
+
+let currentFileToDelete = null;
+
+async function initStorageManagement() {
+    console.log('📦 Initializing Storage Management...');
+    
+    // Bind storage section navigation
+    const storageNavBtn = document.querySelector('[data-section="storage"]');
+    if (storageNavBtn) {
+        storageNavBtn.addEventListener('click', () => {
+            showStorageSection();
+        });
+    }
+    
+    // Bind upload button
+    const uploadBtn = document.getElementById('upload-file-btn');
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', openUploadModal);
+    }
+    
+    // Bind file input change
+    const fileInput = document.getElementById('file-upload');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+    
+    // Bind upload form
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', handleFileUpload);
+    }
+}
+
+async function showStorageSection() {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Show storage section
+    const storageSection = document.getElementById('storage-section');
+    if (storageSection) {
+        storageSection.classList.remove('hidden');
+    }
+    
+    // Update nav active state
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active', 'bg-slate-600');
+    });
+    document.querySelector('[data-section="storage"]')?.classList.add('active', 'bg-slate-600');
+    
+    // Update header
+    document.getElementById('page-title').textContent = 'Storage Management';
+    document.getElementById('page-subtitle').textContent = 'Manage your media files in onsiBucket';
+    
+    // Hide add product button
+    document.getElementById('add-product-btn')?.classList.add('hidden');
+    
+    // Load files
+    await loadStorageFiles();
+}
+
+async function loadStorageFiles() {
+    const loading = document.getElementById('storage-loading');
+    const grid = document.getElementById('storage-grid');
+    const empty = document.getElementById('storage-empty');
+    
+    loading?.classList.remove('hidden');
+    grid?.classList.add('hidden');
+    empty?.classList.add('hidden');
+    
+    try {
+        const endpoint = 'https://fra.cloud.appwrite.io/v1';
+        const projectId = '68f8c1bc003e3d2c8f5c';
+        const bucketId = 'onsiBucket';
+        
+        const response = await fetch(`${endpoint}/storage/buckets/${bucketId}/files?project=${projectId}`, {
+            method: 'GET',
+            headers: {
+                'X-Appwrite-Project': projectId
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch files');
+        }
+        
+        const data = await response.json();
+        console.log('📁 Files loaded:', data);
+        
+        loading?.classList.add('hidden');
+        
+        if (data.files && data.files.length > 0) {
+            renderStorageFiles(data.files);
+            grid?.classList.remove('hidden');
+        } else {
+            empty?.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('❌ Failed to load files:', error);
+        loading?.classList.add('hidden');
+        empty?.classList.remove('hidden');
+    }
+}
+
+function renderStorageFiles(files) {
+    const grid = document.getElementById('storage-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = files.map(file => {
+        const fileUrl = getFileUrl(file.$id);
+        const isVideo = file.mimeType?.startsWith('video/');
+        const isImage = file.mimeType?.startsWith('image/');
+        
+        return `
+            <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                <div class="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+                    ${isImage ? `<img src="${fileUrl}" alt="${file.name}" class="w-full h-full object-cover">` : ''}
+                    ${isVideo ? `<video src="${fileUrl}" class="w-full h-full object-cover"></video>` : ''}
+                    ${!isImage && !isVideo ? `
+                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                    ` : ''}
+                </div>
+                <div class="p-3">
+                    <p class="text-sm font-medium text-gray-900 truncate" title="${file.name}">${file.name}</p>
+                    <p class="text-xs text-gray-500 mt-1">${formatFileSize(file.sizeOriginal)}</p>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="viewFile('${file.$id}', '${file.name}')" class="flex-1 text-xs bg-slate-700 text-white px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
+                            View
+                        </button>
+                        <button onclick="deleteFile('${file.$id}', '${file.name}')" class="flex-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 transition-colors">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function getFileUrl(fileId) {
+    return `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${fileId}/view?project=68f8c1bc003e3d2c8f5c`;
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function openUploadModal() {
+    const modal = document.getElementById('upload-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function closeUploadModal() {
+    const modal = document.getElementById('upload-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    
+    // Reset form
+    document.getElementById('upload-form')?.reset();
+    document.getElementById('file-preview')?.classList.add('hidden');
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const preview = document.getElementById('file-preview');
+    const previewImage = document.getElementById('preview-image');
+    const previewVideo = document.getElementById('preview-video');
+    const fileInfo = document.getElementById('preview-file-info');
+    
+    preview?.classList.remove('hidden');
+    previewImage?.classList.add('hidden');
+    previewVideo?.classList.add('hidden');
+    fileInfo?.classList.add('hidden');
+    
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (previewImage) {
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (previewVideo) {
+                previewVideo.src = e.target.result;
+                previewVideo.classList.remove('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        fileInfo?.classList.remove('hidden');
+        document.getElementById('file-name').textContent = file.name;
+        document.getElementById('file-size').textContent = formatFileSize(file.size);
+    }
+}
+
+async function handleFileUpload(event) {
+    event.preventDefault();
+    
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput?.files[0];
+    
+    if (!file) {
+        alert('Please select a file');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('upload-submit-btn');
+    const uploadText = document.getElementById('upload-text');
+    const uploadLoading = document.getElementById('upload-loading');
+    
+    try {
+        submitBtn.disabled = true;
+        uploadText?.classList.add('hidden');
+        uploadLoading?.classList.remove('hidden');
+        
+        // Use Appwrite auth to upload
+        if (!window.appwriteAuth) {
+            throw new Error('Appwrite not initialized');
+        }
+        
+        const result = await window.appwriteAuth.uploadImage(file);
+        
+        if (result.success) {
+            console.log('✅ File uploaded:', result);
+            closeUploadModal();
+            await loadStorageFiles();
+            showNotification('File uploaded successfully!', 'success');
+        } else {
+            throw new Error(result.error || 'Upload failed');
+        }
+    } catch (error) {
+        console.error('❌ Upload error:', error);
+        alert('Failed to upload file: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        uploadText?.classList.remove('hidden');
+        uploadLoading?.classList.add('hidden');
+    }
+}
+
+function viewFile(fileId, fileName) {
+    const url = getFileUrl(fileId);
+    window.open(url, '_blank');
+}
+
+function deleteFile(fileId, fileName) {
+    currentFileToDelete = { fileId, fileName };
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function closeDeleteModal() {
+    currentFileToDelete = null;
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+document.getElementById('confirm-delete-btn')?.addEventListener('click', async () => {
+    if (!currentFileToDelete) return;
+    
+    try {
+        if (!window.appwriteAuth) {
+            throw new Error('Appwrite not initialized');
+        }
+        
+        const result = await window.appwriteAuth.deleteImage(currentFileToDelete.fileId);
+        
+        if (result.success) {
+            console.log('✅ File deleted');
+            closeDeleteModal();
+            await loadStorageFiles();
+            showNotification('File deleted successfully!', 'success');
+        } else {
+            throw new Error(result.error || 'Delete failed');
+        }
+    } catch (error) {
+        console.error('❌ Delete error:', error);
+        alert('Failed to delete file: ' + error.message);
+    }
+});
+
+function showNotification(message, type = 'info') {
+    // Simple notification - you can enhance this
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    } text-white`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Make functions global for onclick handlers
+window.viewFile = viewFile;
+window.deleteFile = deleteFile;
+window.closeUploadModal = closeUploadModal;
+window.closeDeleteModal = closeDeleteModal;

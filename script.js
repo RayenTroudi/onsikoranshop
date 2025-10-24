@@ -17,17 +17,122 @@ function getAppwriteFileUrl(fileName) {
 const state = {
 	items: [], // {id, name, price, qty}
 	language: localStorage.getItem('lang') || 'en',
+	currency: localStorage.getItem('currency') || 'TND', // TND or EUR
 	user: null, // Current authenticated user
 };
 
 const PRODUCT = {
 	id: 'default',
 	name: 'Quranic Verses Box',
-	price: 120,
+	price: 39.00, // Default price in TND, will be updated from database
 };
 
+// Exchange rate: 1 EUR = ~3.3 TND (update as needed)
+const EXCHANGE_RATE = 3.3;
+
+// Convert price based on selected currency
+function convertPrice(priceInTND) {
+	if (state.currency === 'EUR') {
+		return priceInTND / EXCHANGE_RATE;
+	}
+	return priceInTND;
+}
+
+// Format currency with symbol
 function formatCurrency(value) {
-	return `${value.toFixed(0)} TND`;
+	const convertedValue = convertPrice(value);
+	if (state.currency === 'EUR') {
+		return `€${convertedValue.toFixed(2)}`;
+	}
+	return `${convertedValue.toFixed(2)} TND`;
+}
+
+// Toggle currency
+function toggleCurrency() {
+	state.currency = state.currency === 'TND' ? 'EUR' : 'TND';
+	localStorage.setItem('currency', state.currency);
+	updateAllPrices();
+	updateCurrencyButton();
+}
+
+// Update currency button display
+function updateCurrencyButton() {
+	const currencyBtn = document.getElementById('currency-toggle');
+	const currencyLabel = document.getElementById('currency-label');
+	if (currencyLabel) {
+		// Show current currency
+		currencyLabel.textContent = state.currency;
+	}
+	if (currencyBtn) {
+		// Update title to show what currency it will switch to
+		currencyBtn.title = state.currency === 'TND' ? 'Switch to EUR' : 'Switch to TND';
+	}
+}
+
+// Update all prices on the page
+function updateAllPrices() {
+	updatePriceDisplays();
+	renderCart();
+}
+
+// Load product data from Appwrite
+async function loadProductFromDatabase() {
+	try {
+		console.log('📦 Loading product from Appwrite...');
+		const response = await fetch(
+			`https://fra.cloud.appwrite.io/v1/databases/onsi/collections/products/documents`,
+			{
+				method: 'GET',
+				headers: {
+					'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include'
+			}
+		);
+		
+		if (!response.ok) {
+			console.error('❌ Failed to load product:', response.status);
+			return;
+		}
+		
+		const data = await response.json();
+		
+		if (data.documents && data.documents.length > 0) {
+			const product = data.documents[0];
+			PRODUCT.id = product.$id;
+			PRODUCT.name = product.name;
+			PRODUCT.price = product.price;
+			
+			console.log('✅ Product loaded:', PRODUCT);
+			
+			// Update all price displays on the page
+			updatePriceDisplays();
+		}
+	} catch (error) {
+		console.error('❌ Error loading product:', error);
+	}
+}
+
+// Update all price displays on the page
+function updatePriceDisplays() {
+	// Update all elements with data-product-price attribute
+	const priceElements = document.querySelectorAll('[data-product-price]');
+	priceElements.forEach(el => {
+		el.textContent = formatCurrency(PRODUCT.price);
+	});
+	
+	console.log(`✅ Updated ${priceElements.length} price displays to: ${formatCurrency(PRODUCT.price)}`);
+	
+	// Update prices in existing cart items
+	state.items.forEach(item => {
+		if (item.id === PRODUCT.id || item.id === 'default') {
+			item.price = PRODUCT.price;
+		}
+	});
+	
+	// Re-render cart to update item prices
+	renderCart();
 }
 
 function findItem(id) {
@@ -599,6 +704,14 @@ window.showNotification = showNotification;
 
 function initializeEventListeners() {
 	
+	// Currency toggle button
+	const currencyToggle = document.getElementById('currency-toggle');
+	if (currencyToggle) {
+		currencyToggle.addEventListener('click', () => {
+			toggleCurrency();
+		});
+	}
+	
 	// Main click event listener for various elements
 	document.addEventListener('click', (e) => {
 		const add = e.target.closest('.add-to-cart');
@@ -1103,9 +1216,14 @@ function initializeLanguageSwitcher() {
 // Initialize the app when DOM is ready
 function initializeApp() {
 	
+	// Load product data from database first
+	loadProductFromDatabase();
 	
 	// Initialize EmailJS (free email service)
 	initializeEmailJS();
+	
+	// Initialize currency button
+	updateCurrencyButton();
 	
 	// Initialize language switcher
 	initializeLanguageSwitcher();
