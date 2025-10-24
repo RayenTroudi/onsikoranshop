@@ -282,7 +282,7 @@ async function processOrder(formData) {
 		// Prepare order data
 		const orderData = {
 			orderNumber,
-			userId: state.user ? state.user.uid : null,
+			userId: state.user ? state.user.$id : null,
 			customerInfo: formData,
 			items: state.items.map(item => ({
 				id: item.id,
@@ -298,13 +298,13 @@ async function processOrder(formData) {
 			timestamp: Date.now()
 		};
 		
-		// Save order to Firebase if user is authenticated (free tier)
+		// Save order to Appwrite Database if user is authenticated
 		if (state.user && window.appwriteAuth) {
 			try {
-				await saveOrderToFirebase(orderData);
+				await saveOrderToAppwrite(orderData);
 			} catch (error) {
-				console.error('Failed to save order to Firebase:', error);
-				// Continue with local processing even if Firebase fails
+				console.error('Failed to save order to Appwrite:', error);
+				// Continue with local processing even if Appwrite fails
 			}
 		} else {
 			// For guest users, save to localStorage as backup
@@ -339,21 +339,55 @@ function generateOrderNumber() {
 	return `ONS-${timestamp}-${random}`;
 }
 
-async function saveOrderToFirebase(orderData) {
-	// This function will use Firebase Firestore to save the order
-	if (!window.appwriteAuth || !window.appwriteAuth.getCurrentUser()) {
-		throw new Error('User not authenticated');
+// Save order to Appwrite Database
+async function saveOrderToAppwrite(orderData) {
+	try {
+		if (!window.appwriteAuth) {
+			throw new Error('Appwrite not initialized');
+		}
+		
+		// Import Appwrite SDK
+		const { Databases, ID } = await import('https://cdn.skypack.dev/appwrite@15.0.0');
+		const { Client } = await import('https://cdn.skypack.dev/appwrite@15.0.0');
+		
+		// Create Appwrite client
+		const client = new Client()
+			.setEndpoint('https://fra.cloud.appwrite.io/v1')
+			.setProject('68f8c1bc003e3d2c8f5c');
+		
+		const databases = new Databases(client);
+		
+		// Prepare order document - matching your exact collection attributes
+		const orderDocument = {
+			userId: orderData.userId || 'guest',
+			customerEmail: orderData.customerInfo.email,
+			customerName: orderData.customerInfo.name,
+			shippingAddress: `${orderData.customerInfo.address}, ${orderData.customerInfo.city}, ${orderData.customerInfo.postalCode}, ${orderData.customerInfo.country}. Phone: ${orderData.customerInfo.phone}`,
+			items: JSON.stringify(orderData.items),
+			total: orderData.total,
+			status: orderData.status
+		};
+		
+		// Save order to Appwrite database
+		const order = await databases.createDocument(
+			'onsi', // Database ID
+			'orders', // Collection ID
+			ID.unique(), // Document ID - will become $id
+			orderDocument // $createdAt is automatically added by Appwrite
+		);
+		
+		console.log('✅ Order saved to Appwrite:', order);
+		return order;
+	} catch (error) {
+		console.error('❌ Failed to save order to Appwrite:', error);
+		console.error('Error details:', error.message);
+		
+		// Save to localStorage as fallback
+		saveOrderToLocalStorage(orderData);
+		
+		// Don't throw - allow order to continue
+		return null;
 	}
-	
-	// Import Firebase Firestore functions
-	const { doc, setDoc, collection, getFirestore } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js');
-	const db = getFirestore();
-	
-	// Save order to Firestore
-	const orderRef = doc(collection(db, 'orders'), orderData.orderNumber);
-	await setDoc(orderRef, orderData);
-	
-	
 }
 
 // Save order to localStorage for guest users or as backup
@@ -376,7 +410,6 @@ function saveOrderToLocalStorage(orderData) {
 async function sendOrderNotificationsAppwrite(orderData) {
 	try {
 		const functionId = '68fbb51700021c6f9655';
-		const functionDomain = '68fbb517001023f2105a.fra.appwrite.run';
 		
 		// Prepare email data
 		const emailData = {
@@ -402,29 +435,47 @@ async function sendOrderNotificationsAppwrite(orderData) {
 		
 		console.log('📧 Sending order emails via Appwrite...', emailData);
 		
-		// Call the Appwrite function using fetch
-		const response = await fetch(`https://${functionDomain}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c'
-			},
-			body: JSON.stringify(emailData)
-		});
-		
-		if (!response.ok) {
-			const errorText = await response.text();
-			throw new Error(`Email function failed: ${response.status} - ${errorText}`);
+		// Use Appwrite SDK's Functions service
+		if (!window.appwriteAuth) {
+			throw new Error('Appwrite not initialized');
 		}
 		
-		const result = await response.json();
-		console.log('✅ Order emails sent successfully:', result);
+		// Import Functions from Appwrite SDK
+		const { Functions } = await import('https://cdn.skypack.dev/appwrite@15.0.0');
+		const { Client } = await import('https://cdn.skypack.dev/appwrite@15.0.0');
 		
-		return result;
+		// Create Appwrite client for functions
+		const client = new Client()
+			.setEndpoint('https://fra.cloud.appwrite.io/v1')
+			.setProject('68f8c1bc003e3d2c8f5c');
+		
+		const functions = new Functions(client);
+		
+		// Execute the function
+		const execution = await functions.createExecution(
+			functionId,
+			JSON.stringify(emailData),
+			false, // async
+			'/', // path
+			'POST' // method
+		);
+		
+		console.log('✅ Order emails sent successfully:', execution);
+		
+		return execution;
 	} catch (error) {
 		console.error('❌ Appwrite email notification error:', error);
+		console.error('Error message:', error.message);
+		
+		// Check if it's a deployment issue
+		if (error.message && error.message.includes('Deployment not found')) {
+			console.error('⚠️ Function deployment issue - Please deploy the function in Appwrite Console');
+			console.info('💡 Go to: Functions → Your Email Function → Deploy');
+		}
+		
 		// Don't throw error to prevent order failure if email fails
-		console.warn('Order completed but email notification failed');
+		console.warn('⚠️ Order completed but email notification failed');
+		return null;
 	}
 }
 
