@@ -223,13 +223,23 @@
 
   <main>
     <!-- Hero -->
-    <section class="relative">
-      <div class="mx-auto max-w-6xl px-4 py-12 grid md:grid-cols-2 gap-10 items-center">
-        <div>
-          <h1 class="text-3xl md:text-5xl font-semibold leading-tight" data-i18n="hero.title">Quranic Verses Box</h1>
-          <p class="mt-4 text-neutral-700" data-i18n="hero.subtitle">A curated set of 51 beautifully designed cards featuring uplifting ayat in Arabic with English reflections. Gift-ready velvet box.</p>
-          <div class="mt-6 p-4 bg-neutral-100 rounded-lg border-l-4 border-slate-600">
-            <div class="whitespace-pre-line text-sm text-neutral-800 leading-relaxed" data-i18n="hero.description">بسم الله الرحمن الرحيم
+    <section class="relative bg-gradient-to-b from-neutral-50 to-white">
+      <div class="mx-auto max-w-5xl px-4 py-16 md:py-24">
+        <div class="text-center space-y-8">
+          <!-- Title with elegant styling -->
+          <div>
+            <h1 class="text-4xl md:text-6xl font-bold leading-tight text-neutral-900 mb-4" data-i18n="hero.title">Quranic Verses Box</h1>
+            <div class="w-20 h-1 bg-gradient-to-r from-slate-600 to-slate-400 mx-auto rounded-full"></div>
+          </div>
+          
+          <!-- Description Card with elegant border and shadow -->
+          <div class="max-w-3xl mx-auto">
+            <div class="relative p-6 md:p-8 bg-white rounded-2xl shadow-lg border border-neutral-200 overflow-hidden">
+              <!-- Decorative corner accent -->
+              <div class="absolute top-0 left-0 w-20 h-20 bg-slate-700/5 rounded-br-full"></div>
+              <div class="absolute bottom-0 right-0 w-20 h-20 bg-slate-700/5 rounded-tl-full"></div>
+              
+              <div class="relative whitespace-pre-line text-sm md:text-base text-neutral-700 leading-relaxed" data-i18n="hero.description">بسم الله الرحمن الرحيم
 
 في لحظات الانكسار، حين يثقل القلب بالهم،
 وتغيب الطمأنينة؛ يتجلى نور الله في كلماته:
@@ -243,22 +253,39 @@ the light of Allah shines through His words:
 Your Lord has not forsaken you, nor has He turned away.
 
 AdDuhaa 3</div>
-          </div>
-          <div class="mt-6 flex items-end gap-6">
-            <div>
-              <div class="text-2xl font-semibold" data-product-price>39.00 TND</div>
-              <div class="text-xs text-neutral-500" data-i18n="hero.vat">VAT included</div>
             </div>
-            <button data-add="default" class="add-to-cart inline-flex items-center gap-2 rounded-md bg-slate-700 text-white px-6 py-3 text-sm font-medium hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400" data-i18n="actions.add_to_cart">Add to cart</button>
           </div>
-          <!-- <ul id="features" class="mt-6 space-y-2 text-sm text-neutral-700 list-disc pl-5">
-            <li data-i18n="features.item1">51 premium square cards, rounded corners</li>
-            <li data-i18n="features.item2">Arabic ayat with English translation/reflection</li>
-            <li data-i18n="features.item3">Luxury magnetic gift box with velvet finish</li>
-          </ul> -->
-        </div>
-        <div class="aspect-square rounded-xl overflow-hidden shadow ring-1 ring-neutral-200 bg-white">
-          <img src="" alt="ONSi Quranic Verses Box" data-i18n-alt="image.product" class="w-full h-full object-cover" id="product-main-img">
+          
+          <!-- Price and CTA Section with modern card design -->
+          <div class="max-w-lg mx-auto">
+            <div class="bg-white rounded-xl shadow-md border border-neutral-200 p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <p class="text-sm text-neutral-500 mb-1" data-i18n="hero.vat">VAT included</p>
+                  <p class="text-3xl md:text-4xl font-bold text-slate-700" data-product-price>39.00 TND</p>
+                </div>
+                <button data-add="default" class="add-to-cart inline-flex items-center gap-2 rounded-xl bg-slate-700 text-white px-8 py-4 text-base font-semibold hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl" data-i18n="actions.add_to_cart">
+                  Add to cart
+                </button>
+              </div>
+              
+              <!-- Trust indicators -->
+              <div class="flex items-center justify-center gap-6 pt-4 border-t border-neutral-200 text-xs text-neutral-500">
+                <div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Worldwide Shipping</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  </svg>
+                  <span>Secure Payment</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -276,6 +303,7 @@ AdDuhaa 3</div>
             class="w-full h-full object-cover" 
             controls 
             preload="metadata"
+            poster=""
             aria-label="Product explanation video">
             <source src="" type="video/mp4" id="video-source">
             <p class="absolute inset-0 flex items-center justify-center text-neutral-600">
@@ -291,7 +319,11 @@ AdDuhaa 3</div>
     <section class="border-t border-neutral-200 bg-neutral-50">
       <div class="mx-auto max-w-6xl px-4 py-12 grid md:grid-cols-3 gap-10">
         <div class="md:col-span-2">
-          <h3 class="text-xl font-semibold mb-6" data-i18n="gallery.title">Product Gallery</h3>
+          <div class="mb-8">
+            <h3 class="text-2xl font-semibold mb-3 text-neutral-900" data-i18n="gallery.title">Product Gallery</h3>
+            <p class="text-base text-neutral-600 leading-relaxed" data-i18n="hero.subtitle">A curated set of 51 beautifully designed cards featuring uplifting ayat in Arabic with English reflections. Gift-ready velvet box.</p>
+          </div>
+          
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
            
            
@@ -687,11 +719,61 @@ AdDuhaa 3</div>
           const videoDownload = document.getElementById('video-download');
           
           if (fileMap['ons.mp4']) {
-            if (videoSource) {
-              videoSource.src = window.getAppwriteFileUrl(fileMap['ons.mp4']);
-              if (productVideo) productVideo.load();
+            const videoUrl = window.getAppwriteFileUrl(fileMap['ons.mp4']);
+            if (videoSource && productVideo) {
+              videoSource.src = videoUrl;
+              productVideo.load();
+              
+              let thumbnailCaptured = false;
+              
+              // Create thumbnail from 13-second mark
+              productVideo.addEventListener('loadeddata', function() {
+                if (!thumbnailCaptured) {
+                  console.log('📹 Video loaded, seeking to 13 seconds for thumbnail...');
+                  // Seek to 13 seconds to capture frame for thumbnail
+                  this.currentTime = 13;
+                }
+              }, { once: true });
+              
+              // When the frame at 13 seconds is ready, capture it as poster
+              productVideo.addEventListener('seeked', function() {
+                if (!thumbnailCaptured && Math.abs(this.currentTime - 13) < 0.5) {
+                  console.log('🎯 Capturing thumbnail at:', this.currentTime, 'seconds');
+                  
+                  // Wait a frame to ensure the video has rendered
+                  requestAnimationFrame(() => {
+                    try {
+                      // Create canvas to capture the frame
+                      const canvas = document.createElement('canvas');
+                      canvas.width = this.videoWidth;
+                      canvas.height = this.videoHeight;
+                      const ctx = canvas.getContext('2d');
+                      ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+                      
+                      // Set the captured frame as poster
+                      this.poster = canvas.toDataURL('image/jpeg', 0.8);
+                      console.log('✅ Thumbnail captured and set as poster');
+                      
+                      thumbnailCaptured = true;
+                      
+                      // Reset video to start from beginning
+                      this.currentTime = 0;
+                    } catch (error) {
+                      console.error('❌ Error capturing thumbnail:', error);
+                    }
+                  });
+                }
+              });
+              
+              // When user plays, ensure it starts from 0:00
+              productVideo.addEventListener('play', function() {
+                if (this.currentTime > 1) {
+                  console.log('🎬 Resetting video to start from 0:00');
+                  this.currentTime = 0;
+                }
+              });
             }
-            if (videoDownload) videoDownload.href = window.getAppwriteFileUrl(fileMap['ons.mp4']);
+            if (videoDownload) videoDownload.href = videoUrl;
           }
           
           // Gallery images
