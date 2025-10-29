@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.skypack.dev https://cdn.jsdelivr.net https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run; connect-src 'self' https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run; object-src 'none';">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.skypack.dev https://cdn.jsdelivr.net https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run; connect-src 'self' https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run; img-src 'self' data: https://fra.cloud.appwrite.io; media-src 'self' https://fra.cloud.appwrite.io; object-src 'none';">
+  <!-- Note: Replace 'self' with your actual domain when deploying, e.g., https://yourdomain.ovh.net -->
   <title>ONSi | Quranic Verses Box</title>
   <meta name="description" content="Buy the ONSi Quranic Verses Box – a beautifully crafted set of cards with uplifting ayat in Arabic and English.">
   <link rel="icon" href="" id="favicon">
@@ -722,50 +723,16 @@ AdDuhaa 3</div>
             const videoUrl = window.getAppwriteFileUrl(fileMap['ons.mp4']);
             if (videoSource && productVideo) {
               videoSource.src = videoUrl;
+              
+              // Set static poster image (avoids CORS issues with canvas)
+              if (fileMap['video-thumbnail.jpg']) {
+                productVideo.poster = window.getAppwriteFileUrl(fileMap['video-thumbnail.jpg']);
+                console.log('✅ Static video poster set');
+              }
+              
               productVideo.load();
               
-              let thumbnailCaptured = false;
-              
-              // Create thumbnail from 13-second mark
-              productVideo.addEventListener('loadeddata', function() {
-                if (!thumbnailCaptured) {
-                  console.log('📹 Video loaded, seeking to 13 seconds for thumbnail...');
-                  // Seek to 13 seconds to capture frame for thumbnail
-                  this.currentTime = 13;
-                }
-              }, { once: true });
-              
-              // When the frame at 13 seconds is ready, capture it as poster
-              productVideo.addEventListener('seeked', function() {
-                if (!thumbnailCaptured && Math.abs(this.currentTime - 13) < 0.5) {
-                  console.log('🎯 Capturing thumbnail at:', this.currentTime, 'seconds');
-                  
-                  // Wait a frame to ensure the video has rendered
-                  requestAnimationFrame(() => {
-                    try {
-                      // Create canvas to capture the frame
-                      const canvas = document.createElement('canvas');
-                      canvas.width = this.videoWidth;
-                      canvas.height = this.videoHeight;
-                      const ctx = canvas.getContext('2d');
-                      ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
-                      
-                      // Set the captured frame as poster
-                      this.poster = canvas.toDataURL('image/jpeg', 0.8);
-                      console.log('✅ Thumbnail captured and set as poster');
-                      
-                      thumbnailCaptured = true;
-                      
-                      // Reset video to start from beginning
-                      this.currentTime = 0;
-                    } catch (error) {
-                      console.error('❌ Error capturing thumbnail:', error);
-                    }
-                  });
-                }
-              });
-              
-              // When user plays, ensure it starts from 0:00
+              // Ensure video starts from 0:00 when played
               productVideo.addEventListener('play', function() {
                 if (this.currentTime > 1) {
                   console.log('🎬 Resetting video to start from 0:00');

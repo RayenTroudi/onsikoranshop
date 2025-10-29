@@ -7,9 +7,9 @@ This is an Appwrite function that sends order confirmation emails to customers a
 Set these in your Appwrite Function settings:
 
 - `SMTP_HOST`: smtp.gmail.com
-- `SMTP_USERNAME`: rayentroudi00@gmail.com
-- `SMTP_PASSWORD`: laoelooltsiaonfm
-- `SUBMIT_EMAIL`: rayentroudi00@gmail.com
+- `SMTP_USERNAME`: onsmaitii@gmail.com
+- `SMTP_PASSWORD`: hukoutqxfvpkkmnw
+- `SUBMIT_EMAIL`: onsmaitii@gmail.com
 - `ALLOWED_ORIGINS`: *
 
 ## Runtime
