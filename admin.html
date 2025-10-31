@@ -188,6 +188,20 @@
             Orders
           </button>
           
+          <button class="nav-item w-full flex items-center px-4 py-3 text-white rounded-lg hover:bg-slate-600 transition-colors" data-section="users">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            </svg>
+            Users
+          </button>
+          
+          <button class="nav-item w-full flex items-center px-4 py-3 text-white rounded-lg hover:bg-slate-600 transition-colors" data-section="stats">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            Stats
+          </button>
+          
           <button class="nav-item w-full flex items-center px-4 py-3 text-white rounded-lg hover:bg-slate-600 transition-colors" data-section="storage">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -423,6 +437,173 @@
               </svg>
               <p class="text-gray-600">No files in storage</p>
               <button onclick="document.getElementById('upload-file-btn').click()" class="mt-4 text-slate-700 hover:text-slate-900 font-medium">Upload your first file</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Section -->
+      <div id="users-section" class="section hidden flex-1 p-4 lg:p-6 overflow-y-auto">
+        <div class="admin-card mb-6">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+              <h3 class="text-lg font-semibold text-gray-900">User Management</h3>
+              <button id="refresh-users-btn" class="bg-slate-700 text-white px-4 py-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-colors text-sm">
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+          
+          <div class="p-6">
+            <div id="users-loading" class="text-center py-12">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-700 mx-auto mb-4"></div>
+              <p class="text-gray-600">Loading users...</p>
+            </div>
+            
+            <!-- Users Table (Desktop) -->
+            <div id="users-table" class="hidden overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                  <!-- Users will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Users Cards (Mobile) -->
+            <div id="users-cards" class="hidden space-y-4">
+              <!-- User cards will be loaded here -->
+            </div>
+            
+            <div id="users-empty" class="hidden text-center py-12">
+              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+              </svg>
+              <p class="text-gray-600">No users found</p>
+              <p class="text-sm text-gray-500 mt-2">Users will appear here when they register on your site</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Section -->
+      <div id="stats-section" class="section hidden flex-1 p-4 lg:p-6 overflow-y-auto">
+        <div class="space-y-6">
+          <!-- Analytics Overview -->
+          <div class="admin-card">
+            <div class="p-6 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">Analytics Overview</h3>
+              <p class="text-gray-600 text-sm mt-1">Detailed statistics and insights</p>
+            </div>
+            
+            <div class="p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Revenue Trends -->
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-blue-600 text-sm font-medium">Total Revenue</p>
+                      <p id="stats-total-revenue" class="text-2xl font-bold text-blue-900">0.00 TND</p>
+                    </div>
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                  </div>
+                </div>
+                
+                <!-- Monthly Growth -->
+                <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-green-600 text-sm font-medium">Monthly Growth</p>
+                      <p id="stats-monthly-growth" class="text-2xl font-bold text-green-900">+0%</p>
+                    </div>
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                  </div>
+                </div>
+                
+                <!-- Average Order -->
+                <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-purple-600 text-sm font-medium">Avg. Order Value</p>
+                      <p id="stats-avg-order" class="text-2xl font-bold text-purple-900">0.00 TND</p>
+                    </div>
+                    <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                </div>
+                
+                <!-- Conversion Rate -->
+                <div class="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-orange-600 text-sm font-medium">Conversion Rate</p>
+                      <p id="stats-conversion-rate" class="text-2xl font-bold text-orange-900">0.0%</p>
+                    </div>
+                    <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Recent Activity Chart -->
+              <div class="bg-gray-50 p-6 rounded-lg">
+                <div class="flex justify-between items-center mb-4">
+                  <h4 class="text-lg font-medium text-gray-900">Revenue Trend (Last 7 Days)</h4>
+                  <button id="refresh-stats-btn" class="bg-slate-700 text-white px-3 py-1 rounded text-sm hover:bg-slate-800 transition-colors">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Refresh
+                  </button>
+                </div>
+                <div id="revenue-chart" class="h-64 flex items-end justify-between space-x-2">
+                  <!-- Chart bars will be generated here -->
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Performance Metrics -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Top Products -->
+            <div class="admin-card">
+              <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Top Selling Products</h3>
+              </div>
+              <div class="p-6">
+                <div id="top-products-list" class="space-y-4">
+                  <!-- Top products will be loaded here -->
+                </div>
+              </div>
+            </div>
+            
+            <!-- Recent Orders Summary -->
+            <div class="admin-card">
+              <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Order Status Summary</h3>
+              </div>
+              <div class="p-6">
+                <div id="order-status-summary" class="space-y-4">
+                  <!-- Order status summary will be loaded here -->
+                </div>
+              </div>
             </div>
           </div>
         </div>

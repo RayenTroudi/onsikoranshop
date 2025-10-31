@@ -362,6 +362,14 @@ class AdminPanel {
                 this.filterProducts();
             });
         }
+
+        // Users section refresh button
+        const refreshUsersBtn = document.getElementById('refresh-users-btn');
+        if (refreshUsersBtn) {
+            refreshUsersBtn.addEventListener('click', () => {
+                loadUsersSection();
+            });
+        }
     }
 
     // Authentication with Appwrite
@@ -564,6 +572,8 @@ class AdminPanel {
             dashboard: { title: 'Dashboard', subtitle: 'Overview of your business' },
             products: { title: 'Products Management', subtitle: 'Manage your product catalog' },
             orders: { title: 'Orders Management', subtitle: 'Track and manage customer orders' },
+            users: { title: 'Users Management', subtitle: 'View and manage your customers' },
+            stats: { title: 'Statistics & Analytics', subtitle: 'Detailed insights and performance metrics' },
             storage: { title: 'Storage Management', subtitle: 'Manage your media files in onsiBucket' }
         };
 
@@ -579,6 +589,17 @@ class AdminPanel {
             addBtn.classList.remove('hidden');
         } else {
             addBtn.classList.add('hidden');
+        }
+
+        // Load section-specific data
+        if (section === 'dashboard') {
+            loadDashboardStats();
+        } else if (section === 'users') {
+            loadUsersSection();
+        } else if (section === 'stats') {
+            loadStatsSection();
+        } else if (section === 'storage') {
+            initStorageManagement();
         }
 
         this.currentSection = section;
@@ -1736,8 +1757,630 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// User Management Functions
+async function loadUsersSection() {
+    console.log('🔄 Loading users section...');
+    
+    const usersLoading = document.getElementById('users-loading');
+    const usersTable = document.getElementById('users-table');
+    const usersCards = document.getElementById('users-cards');
+    const usersEmpty = document.getElementById('users-empty');
+    
+    if (!usersLoading) return;
+    
+    // Show loading state
+    usersLoading.classList.remove('hidden');
+    usersTable?.classList.add('hidden');
+    usersCards?.classList.add('hidden');
+    usersEmpty?.classList.add('hidden');
+    
+    try {
+        // Fetch users from Appwrite Users collection
+        const response = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/Users/documents`, {
+            method: 'GET',
+            headers: {
+                'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Users loaded:', data);
+        
+        // Hide loading
+        usersLoading.classList.add('hidden');
+        
+        if (data.documents && data.documents.length > 0) {
+            renderUsers(data.documents);
+        } else {
+            usersEmpty?.classList.remove('hidden');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading users:', error);
+        usersLoading.classList.add('hidden');
+        usersEmpty?.classList.remove('hidden');
+    }
+}
+
+function renderUsers(users) {
+    const usersTable = document.getElementById('users-table');
+    const usersCards = document.getElementById('users-cards');
+    const usersTableBody = document.getElementById('users-table-body');
+    
+    if (!usersTableBody || !usersCards) return;
+    
+    // Clear existing content
+    usersTableBody.innerHTML = '';
+    usersCards.innerHTML = '';
+    
+    users.forEach(user => {
+        const registrationDate = new Date(user.$createdAt).toLocaleDateString();
+        const lastCartUpdate = user.lastCartUpdate ? new Date(user.lastCartUpdate).toLocaleDateString() : 'Never';
+        const hasCart = user.savedCart && user.savedCart.length > 0;
+        
+        const roleBadge = user.role === 'admin' ?
+            '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Admin</span>' :
+            '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Customer</span>';
+        
+        const cartBadge = hasCart ?
+            '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Has Cart</span>' :
+            '<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Empty Cart</span>';
+        
+        // Desktop table row
+        const tableRow = `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10">
+                            <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center">
+                                <span class="text-sm font-medium text-slate-700">${(user.fullName || user.email).charAt(0).toUpperCase()}</span>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900">${user.fullName || 'No Name'}</div>
+                            <div class="text-sm text-gray-500">${roleBadge}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${user.email}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${registrationDate}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${cartBadge}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button onclick="viewUserDetails('${user.$id}')" class="text-slate-600 hover:text-slate-900 mr-3">View</button>
+                    <button onclick="viewUserCart('${user.$id}')" class="text-blue-600 hover:text-blue-900">View Cart</button>
+                </td>
+            </tr>
+        `;
+        
+        // Mobile card
+        const userCard = `
+            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center mr-3">
+                            <span class="text-sm font-medium text-slate-700">${(user.fullName || user.email).charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900">${user.fullName || 'No Name'}</h4>
+                            <p class="text-sm text-gray-500">${user.email}</p>
+                        </div>
+                    </div>
+                    ${roleBadge}
+                </div>
+                <div class="flex justify-between items-center text-sm text-gray-600 mb-3">
+                    <span>Registered: ${registrationDate}</span>
+                    ${cartBadge}
+                </div>
+                <div class="text-xs text-gray-500 mb-3">
+                    Last cart update: ${lastCartUpdate}
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="viewUserDetails('${user.$id}')" class="flex-1 bg-slate-100 text-slate-700 px-3 py-2 rounded text-sm hover:bg-slate-200 transition-colors">
+                        View Details
+                    </button>
+                    <button onclick="viewUserCart('${user.$id}')" class="flex-1 bg-blue-100 text-blue-700 px-3 py-2 rounded text-sm hover:bg-blue-200 transition-colors">
+                        View Cart
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        usersTableBody.innerHTML += tableRow;
+        usersCards.innerHTML += userCard;
+    });
+    
+    // Show appropriate view based on screen size
+    if (window.innerWidth >= 768) {
+        usersTable?.classList.remove('hidden');
+        usersCards?.classList.add('hidden');
+    } else {
+        usersTable?.classList.add('hidden');
+        usersCards?.classList.remove('hidden');
+    }
+}
+
+function viewUserDetails(userId) {
+    console.log('👁️ Viewing user details for:', userId);
+    showNotification('User details view - Feature coming soon!', 'info');
+}
+
+function viewUserCart(userId) {
+    console.log('� Viewing cart for user:', userId);
+    showNotification('User cart view - Feature coming soon!', 'info');
+}
+
+async function loadDashboardStats() {
+    console.log('📊 Loading dashboard statistics...');
+    
+    try {
+        // Load products count
+        const products = document.querySelectorAll('#products-list .product-row').length;
+        document.getElementById('total-products').textContent = products;
+        
+        // Load orders and calculate monthly income and revenue metrics
+        let totalOrders = 0;
+        let totalRevenue = 0;
+        let monthlyRevenue = 0;
+        
+        try {
+            // Fetch from Appwrite orders collection
+            const ordersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/orders/documents`, {
+                method: 'GET',
+                headers: {
+                    'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (ordersResponse.ok) {
+                const ordersData = await ordersResponse.json();
+                totalOrders = ordersData.total || ordersData.documents?.length || 0;
+                
+                // Calculate total revenue and monthly revenue
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+                
+                ordersData.documents?.forEach(order => {
+                    const orderAmount = parseFloat(order.totalAmount || order.amount || 0);
+                    totalRevenue += orderAmount;
+                    
+                    // Check if order is from current month
+                    const orderDate = new Date(order.$createdAt || order.createdAt);
+                    if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+                        monthlyRevenue += orderAmount;
+                    }
+                });
+            }
+        } catch (error) {
+            console.log('📊 Could not fetch orders data:', error);
+        }
+        
+        // Fetch registered users count (customers)
+        let totalCustomers = 0;
+        try {
+            const usersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/Users/documents`, {
+                method: 'GET',
+                headers: {
+                    'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (usersResponse.ok) {
+                const usersData = await usersResponse.json();
+                totalCustomers = usersData.total || usersData.documents?.length || 0;
+            }
+        } catch (error) {
+            console.log('📊 Could not fetch users count:', error);
+        }
+        
+        // Update dashboard with website metrics
+        document.getElementById('total-orders').textContent = totalOrders;
+        document.getElementById('total-revenue').textContent = `${monthlyRevenue.toFixed(2)} TND`;
+        document.getElementById('total-customers').textContent = totalCustomers;
+        
+        // Update revenue label to show it's monthly
+        const revenueLabel = document.querySelector('#total-revenue').previousElementSibling;
+        if (revenueLabel && revenueLabel.textContent === 'Revenue') {
+            revenueLabel.textContent = 'Monthly Income';
+        }
+        
+        console.log('✅ Dashboard stats updated - Monthly Income:', monthlyRevenue.toFixed(2), 'TND');
+        
+    } catch (error) {
+        console.error('❌ Error loading dashboard stats:', error);
+    }
+}
+
+// Stats Section Functions
+async function loadStatsSection() {
+    console.log('📊 Loading detailed statistics section...');
+    
+    try {
+        await loadDetailedStats();
+        await loadTopProducts();
+        await loadOrderStatusSummary();
+        await generateRevenueChart();
+        
+        // Bind refresh button
+        document.getElementById('refresh-stats-btn')?.addEventListener('click', loadStatsSection);
+        
+        console.log('✅ Stats section loaded successfully');
+    } catch (error) {
+        console.error('❌ Error loading stats section:', error);
+    }
+}
+
+async function loadDetailedStats() {
+    try {
+        let totalRevenue = 0;
+        let monthlyRevenue = 0;
+        let totalOrders = 0;
+        let orderValues = [];
+        
+        // Fetch orders data
+        const ordersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/orders/documents`, {
+            method: 'GET',
+            headers: {
+                'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (ordersResponse.ok) {
+            const ordersData = await ordersResponse.json();
+            totalOrders = ordersData.total || ordersData.documents?.length || 0;
+            
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            
+            let lastMonthRevenue = 0;
+            
+            ordersData.documents?.forEach(order => {
+                const orderAmount = parseFloat(order.totalAmount || order.amount || 0);
+                totalRevenue += orderAmount;
+                orderValues.push(orderAmount);
+                
+                const orderDate = new Date(order.$createdAt || order.createdAt);
+                
+                // Current month revenue
+                if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+                    monthlyRevenue += orderAmount;
+                }
+                
+                // Last month revenue for growth calculation
+                if (orderDate.getMonth() === lastMonth && orderDate.getFullYear() === lastMonthYear) {
+                    lastMonthRevenue += orderAmount;
+                }
+            });
+            
+            // Calculate metrics
+            const avgOrderValue = orderValues.length > 0 ? totalRevenue / orderValues.length : 0;
+            const monthlyGrowth = lastMonthRevenue > 0 ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+            
+            // Fetch users for conversion rate calculation
+            let totalUsers = 0;
+            try {
+                const usersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/Users/documents`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (usersResponse.ok) {
+                    const usersData = await usersResponse.json();
+                    totalUsers = usersData.total || usersData.documents?.length || 0;
+                }
+            } catch (error) {
+                console.log('📊 Could not fetch users for conversion rate');
+            }
+            
+            const conversionRate = totalUsers > 0 ? (totalOrders / totalUsers * 100) : 0;
+            
+            // Update UI
+            document.getElementById('stats-total-revenue').textContent = `${totalRevenue.toFixed(2)} TND`;
+            document.getElementById('stats-monthly-growth').textContent = `${monthlyGrowth >= 0 ? '+' : ''}${monthlyGrowth.toFixed(1)}%`;
+            document.getElementById('stats-avg-order').textContent = `${avgOrderValue.toFixed(2)} TND`;
+            document.getElementById('stats-conversion-rate').textContent = `${conversionRate.toFixed(1)}%`;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading detailed stats:', error);
+    }
+}
+
+async function loadTopProducts() {
+    try {
+        const topProductsList = document.getElementById('top-products-list');
+        topProductsList.innerHTML = '<div class="text-center py-4"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div></div>';
+        
+        // Fetch orders to analyze product sales
+        const ordersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/orders/documents`, {
+            method: 'GET',
+            headers: {
+                'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (ordersResponse.ok) {
+            const ordersData = await ordersResponse.json();
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            // Count products from orders this month
+            const productSales = {};
+            
+            ordersData.documents?.forEach(order => {
+                const orderDate = new Date(order.$createdAt || order.createdAt);
+                if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+                    // Extract products from order (assuming order has items array or productName field)
+                    const items = order.items || order.products || [];
+                    const productName = order.productName || 'Unknown Product';
+                    const orderAmount = parseFloat(order.totalAmount || order.amount || 0);
+                    
+                    if (items.length > 0) {
+                        items.forEach(item => {
+                            const name = item.name || item.productName || 'Product';
+                            if (!productSales[name]) {
+                                productSales[name] = { count: 0, revenue: 0 };
+                            }
+                            productSales[name].count += item.quantity || 1;
+                            productSales[name].revenue += parseFloat(item.price || item.total || 0);
+                        });
+                    } else if (productName !== 'Unknown Product') {
+                        if (!productSales[productName]) {
+                            productSales[productName] = { count: 0, revenue: 0 };
+                        }
+                        productSales[productName].count += 1;
+                        productSales[productName].revenue += orderAmount;
+                    }
+                }
+            });
+            
+            // Sort products by revenue and get top 3
+            const sortedProducts = Object.entries(productSales)
+                .sort(([,a], [,b]) => b.revenue - a.revenue)
+                .slice(0, 3);
+            
+            if (sortedProducts.length > 0) {
+                topProductsList.innerHTML = sortedProducts.map(([name, data]) => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">${name}</p>
+                            <p class="text-sm text-gray-600">${data.count} sales this month</p>
+                        </div>
+                        <span class="text-green-600 font-semibold">${data.revenue.toFixed(2)} TND</span>
+                    </div>
+                `).join('');
+            } else {
+                topProductsList.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <p class="text-gray-600">No product sales this month</p>
+                        <p class="text-sm text-gray-500">Product sales data will appear here</p>
+                    </div>
+                `;
+            }
+        } else {
+            throw new Error('Failed to fetch orders');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading top products:', error);
+        const topProductsList = document.getElementById('top-products-list');
+        topProductsList.innerHTML = `
+            <div class="text-center py-8 text-red-600">
+                <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p>Error loading product data</p>
+            </div>
+        `;
+    }
+}
+
+async function loadOrderStatusSummary() {
+    try {
+        const orderStatusSummary = document.getElementById('order-status-summary');
+        orderStatusSummary.innerHTML = '<div class="text-center py-4"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div></div>';
+        
+        // Fetch orders to get real status counts
+        const ordersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/orders/documents`, {
+            method: 'GET',
+            headers: {
+                'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (ordersResponse.ok) {
+            const ordersData = await ordersResponse.json();
+            
+            // Count order statuses
+            const statusCounts = {
+                completed: 0,
+                processing: 0,
+                pending: 0,
+                cancelled: 0,
+                delivered: 0,
+                shipped: 0
+            };
+            
+            ordersData.documents?.forEach(order => {
+                const status = (order.status || 'pending').toLowerCase();
+                if (statusCounts.hasOwnProperty(status)) {
+                    statusCounts[status]++;
+                } else {
+                    // Default unknown statuses to pending
+                    statusCounts.pending++;
+                }
+            });
+            
+            // Combine related statuses
+            const completedTotal = statusCounts.completed + statusCounts.delivered;
+            const processingTotal = statusCounts.processing + statusCounts.shipped;
+            
+            orderStatusSummary.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                        <span class="text-gray-700">Completed</span>
+                    </div>
+                    <span class="font-semibold text-gray-900">${completedTotal}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                        <span class="text-gray-700">Processing</span>
+                    </div>
+                    <span class="font-semibold text-gray-900">${processingTotal}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                        <span class="text-gray-700">Pending</span>
+                    </div>
+                    <span class="font-semibold text-gray-900">${statusCounts.pending}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-red-400 rounded-full mr-3"></div>
+                        <span class="text-gray-700">Cancelled</span>
+                    </div>
+                    <span class="font-semibold text-gray-900">${statusCounts.cancelled}</span>
+                </div>
+            `;
+        } else {
+            throw new Error('Failed to fetch orders');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading order status summary:', error);
+        const orderStatusSummary = document.getElementById('order-status-summary');
+        orderStatusSummary.innerHTML = `
+            <div class="text-center py-8 text-red-600">
+                <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p>Error loading order status data</p>
+            </div>
+        `;
+    }
+}
+
+async function generateRevenueChart() {
+    try {
+        const chartContainer = document.getElementById('revenue-chart');
+        chartContainer.innerHTML = '<div class="flex items-center justify-center h-full"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700"></div></div>';
+        
+        // Fetch orders to generate real revenue chart for last 7 days
+        const ordersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/orders/documents`, {
+            method: 'GET',
+            headers: {
+                'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (ordersResponse.ok) {
+            const ordersData = await ordersResponse.json();
+            
+            // Generate last 7 days data
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const revenues = new Array(7).fill(0);
+            
+            // Calculate revenue for each of the last 7 days
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dayIndex = (7 - i) % 7;
+                
+                ordersData.documents?.forEach(order => {
+                    const orderDate = new Date(order.$createdAt || order.createdAt);
+                    if (orderDate.toDateString() === date.toDateString()) {
+                        revenues[dayIndex] += parseFloat(order.totalAmount || order.amount || 0);
+                    }
+                });
+            }
+            
+            const maxRevenue = Math.max(...revenues, 1); // Ensure at least 1 to avoid division by 0
+            
+            chartContainer.innerHTML = '';
+            
+            revenues.forEach((revenue, index) => {
+                const barHeight = maxRevenue > 0 ? (revenue / maxRevenue) * 100 : 0;
+                const bar = document.createElement('div');
+                bar.className = 'flex flex-col items-center flex-1';
+                bar.innerHTML = `
+                    <div class="bg-slate-600 w-full rounded-t transition-all duration-500 hover:bg-slate-700" 
+                         style="height: ${Math.max(barHeight, 2)}%; min-height: 8px;"></div>
+                    <span class="text-xs text-gray-600 mt-2">${days[index]}</span>
+                    <span class="text-xs text-gray-500">${revenue.toFixed(0)} TND</span>
+                `;
+                chartContainer.appendChild(bar);
+            });
+            
+            // Add total for the week
+            const weekTotal = revenues.reduce((sum, revenue) => sum + revenue, 0);
+            if (weekTotal === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-center">
+                        <div>
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <p class="text-gray-600">No revenue data for the past 7 days</p>
+                            <p class="text-sm text-gray-500">Revenue data will appear when orders are placed</p>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            throw new Error('Failed to fetch orders');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error generating revenue chart:', error);
+        const chartContainer = document.getElementById('revenue-chart');
+        chartContainer.innerHTML = `
+            <div class="flex items-center justify-center h-full text-center">
+                <div class="text-red-600">
+                    <svg class="w-16 h-16 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p>Error loading chart data</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
 // Make functions global for onclick handlers
 window.viewFile = viewFile;
 window.deleteFile = deleteFile;
 window.closeUploadModal = closeUploadModal;
+window.loadUsersSection = loadUsersSection;
+window.loadStatsSection = loadStatsSection;
+window.viewUserDetails = viewUserDetails;
+window.toggleUserStatus = toggleUserStatus;
+window.loadDashboardStats = loadDashboardStats;
 window.closeDeleteModal = closeDeleteModal;
