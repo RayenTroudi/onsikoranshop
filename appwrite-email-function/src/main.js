@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
+const nodemailer = require('nodemailer');
 
-export default async ({ req, res, log, error }) => {
+module.exports = async ({ req, res, log, error }) => {
   // Handle CORS
   const allowedOrigins = process.env.ALLOWED_ORIGINS || '*';
   
