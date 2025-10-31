@@ -99,15 +99,29 @@ async function loadProductFromDatabase() {
 		const data = await response.json();
 		
 		if (data.documents && data.documents.length > 0) {
-			const product = data.documents[0];
+			// Find the main product or use the first active one
+			const product = data.documents.find(p => p.status === 'active') || data.documents[0];
+			
 			PRODUCT.id = product.$id;
 			PRODUCT.name = product.name;
 			PRODUCT.price = product.price;
 			
-			console.log('✅ Product loaded:', PRODUCT);
+			console.log('✅ Product loaded from database:', PRODUCT);
+			console.log('📦 Total products available:', data.documents.length);
 			
 			// Update all price displays on the page
 			updatePriceDisplays();
+			
+			// Update product name if it has changed
+			const nameElements = document.querySelectorAll('[data-i18n="product.name"]');
+			nameElements.forEach(el => {
+				if (!el.dataset.originalText) {
+					el.dataset.originalText = el.textContent;
+				}
+				el.textContent = product.name;
+			});
+		} else {
+			console.warn('⚠️ No products found in database, using default product');
 		}
 	} catch (error) {
 		console.error('❌ Error loading product:', error);

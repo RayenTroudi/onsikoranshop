@@ -278,10 +278,12 @@ class AdminPanel {
             this.handleLogout();
         });
 
-        // Hide add product button (we only manage existing product)
+        // Add Product button event
         const addProductBtn = document.getElementById('add-product-btn');
         if (addProductBtn) {
-            addProductBtn.classList.add('hidden');
+            addProductBtn.addEventListener('click', () => {
+                this.openProductModal(); // Open modal for new product
+            });
         }
 
         // Product modal events
@@ -612,70 +614,132 @@ class AdminPanel {
     renderProducts() {
         console.log('🎨 renderProducts called with:', this.products.length, 'products');
         const tbody = document.getElementById('products-table-body');
+        const mobileList = document.getElementById('products-mobile-list');
         
-        if (!tbody) {
-            console.error('❌ products-table-body element not found!');
+        if (!tbody && !mobileList) {
+            console.error('❌ products table/mobile list elements not found!');
             return;
         }
         
         if (this.products.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">No products found</td>
-                </tr>
-            `;
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No products found</td>
+                    </tr>
+                `;
+            }
+            if (mobileList) {
+                mobileList.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">No products found</div>
+                `;
+            }
             return;
         }
 
-        tbody.innerHTML = this.products.map(product => {
-            // Get image URL from Appwrite using imageFileId
-            const imageUrl = product.imageFileId 
-                ? `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
-                : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
-            
-            return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 h-10 w-10">
-                            <img class="h-10 w-10 rounded-lg object-cover" src="${imageUrl}" alt="${product.name}">
+        // Render desktop table
+        if (tbody) {
+            tbody.innerHTML = this.products.map(product => {
+                // Get image URL from Appwrite using imageFileId
+                const imageUrl = product.imageFileId 
+                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
+                    : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
+                
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <img class="h-10 w-10 rounded-lg object-cover" src="${imageUrl}" alt="${product.name}">
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${product.name}</div>
+                                <div class="text-sm text-gray-500">${product.description.substring(0, 50)}...</div>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900">${product.name}</div>
-                            <div class="text-sm text-gray-500">${product.description.substring(0, 50)}...</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            ${this.capitalizeFirst(product.category)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <input 
+                            type="number" 
+                            step="0.01" 
+                            value="${product.price}" 
+                            onchange="adminPanel.updateProductPrice('${product.id}', this.value)"
+                            class="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        /> TND
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${product.stock}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getStatusColor(product.status)}">
+                            ${this.capitalizeFirst(product.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button onclick="adminPanel.editProduct('${product.id}')" class="text-indigo-600 hover:text-indigo-900">
+                            View Details
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        // Render mobile cards
+        if (mobileList) {
+            mobileList.innerHTML = this.products.map(product => {
+                // Get image URL from Appwrite using imageFileId
+                const imageUrl = product.imageFileId 
+                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
+                    : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
+                
+                return `
+                <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+                    <div class="flex items-start space-x-4">
+                        <img class="h-16 w-16 rounded-lg object-cover flex-shrink-0" src="${imageUrl}" alt="${product.name}">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900 truncate">${product.name}</h4>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">${product.description}</p>
+                                </div>
+                                <span class="ml-2 px-2 py-1 text-xs font-medium rounded-full ${this.getStatusColor(product.status)} whitespace-nowrap">
+                                    ${this.capitalizeFirst(product.status)}
+                                </span>
+                            </div>
+                            
+                            <div class="mt-3 flex items-center justify-between">
+                                <div class="flex items-center space-x-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-500">Price:</span>
+                                        <input 
+                                            type="number" 
+                                            step="0.01" 
+                                            value="${product.price}" 
+                                            onchange="adminPanel.updateProductPrice('${product.id}', this.value)"
+                                            class="w-20 ml-1 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        /> TND
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Stock:</span> 
+                                        <span class="font-medium">${product.stock}</span>
+                                    </div>
+                                </div>
+                                <button onclick="adminPanel.editProduct('${product.id}')" class="text-xs bg-slate-700 text-white px-3 py-1 rounded-md hover:bg-slate-800 transition-colors">
+                                    Details
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        ${this.capitalizeFirst(product.category)}
-                    </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <input 
-                        type="number" 
-                        step="0.01" 
-                        value="${product.price}" 
-                        onchange="adminPanel.updateProductPrice('${product.id}', this.value)"
-                        class="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    /> TND
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${product.stock}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getStatusColor(product.status)}">
-                        ${this.capitalizeFirst(product.status)}
-                    </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button onclick="adminPanel.editProduct('${product.id}')" class="text-indigo-600 hover:text-indigo-900">
-                        View Details
-                    </button>
-                </td>
-            </tr>
-        `;
-        }).join('');
+                </div>
+            `;
+            }).join('');
+        }
     }
 
     async updateProductPrice(productId, newPrice) {
@@ -829,12 +893,8 @@ Image: ${product.image}
         saveBtnLoading.classList.remove('hidden');
 
         try {
-            // Simulate API call
-            await this.delay(1000);
-
-            const formData = new FormData();
+            // Get form data
             const productData = {
-                id: this.editingProductId || this.generateId(),
                 name: document.getElementById('product-name').value,
                 description: document.getElementById('product-description').value,
                 price: parseFloat(document.getElementById('product-price').value),
@@ -842,34 +902,120 @@ Image: ${product.image}
                 stock: parseInt(document.getElementById('product-stock').value),
                 status: document.getElementById('product-status').value,
                 image: 'product-main.jpg', // Default image
-                createdAt: new Date()
+                imageFileId: window.fileIdMap && window.fileIdMap['product-main.jpg'] 
+                    ? window.fileIdMap['product-main.jpg'] 
+                    : '68fb982a0028272869bc' // Fallback file ID
             };
 
-            // Handle image upload (in real implementation, upload to server)
+            // Handle image upload (for future implementation)
             const imageFile = document.getElementById('product-image').files[0];
             if (imageFile) {
-                // In real implementation, upload image to server and get URL
-                productData.image = URL.createObjectURL(imageFile);
+                // TODO: In future implementation, upload image to Appwrite Storage first
+                console.log('Image file selected:', imageFile.name);
             }
+
+            let response;
 
             if (this.editingProductId) {
-                // Update existing product
+                // Update existing product in database
+                response = await fetch(
+                    `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/products/documents/${this.editingProductId}`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            data: productData
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('Update product error:', errorData);
+                    throw new Error('Failed to update product');
+                }
+
+                const updatedProduct = await response.json();
+                
+                // Update local array
                 const index = this.products.findIndex(p => p.id === this.editingProductId);
                 if (index !== -1) {
-                    this.products[index] = { ...this.products[index], ...productData };
-                    this.showNotification('Product updated successfully!', 'success');
+                    this.products[index] = {
+                        id: updatedProduct.$id,
+                        name: updatedProduct.name,
+                        description: updatedProduct.description,
+                        price: updatedProduct.price,
+                        category: updatedProduct.category,
+                        stock: updatedProduct.stock,
+                        status: updatedProduct.status,
+                        image: updatedProduct.image,
+                        imageFileId: updatedProduct.imageFileId,
+                        createdAt: new Date(updatedProduct.$createdAt)
+                    };
                 }
+
+                this.showNotification('Product updated successfully!', 'success');
+                console.log('✅ Product updated in database:', updatedProduct.$id);
+
             } else {
-                // Add new product
-                this.products.push(productData);
+                // Create new product in database
+                response = await fetch(
+                    `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/products/documents`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            documentId: 'unique()',
+                            data: productData
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('Create product error:', errorData);
+                    throw new Error('Failed to create product');
+                }
+
+                const newProduct = await response.json();
+                
+                // Add to local array
+                this.products.push({
+                    id: newProduct.$id,
+                    name: newProduct.name,
+                    description: newProduct.description,
+                    price: newProduct.price,
+                    category: newProduct.category,
+                    stock: newProduct.stock,
+                    status: newProduct.status,
+                    image: newProduct.image,
+                    imageFileId: newProduct.imageFileId,
+                    createdAt: new Date(newProduct.$createdAt)
+                });
+
                 this.showNotification('Product added successfully!', 'success');
+                console.log('✅ Product created in database:', newProduct.$id);
             }
 
+            // Re-render products and update dashboard
             this.renderProducts();
             this.updateDashboardStats();
             this.closeProductModal();
 
+            // The homepage will automatically load the updated product from the database
+            // when users visit it because it calls loadProductFromDatabase()
+            console.log('✅ Product saved successfully. Homepage will show updated products on next load.');
+
         } catch (error) {
+            console.error('❌ Failed to save product:', error);
             this.showNotification('Error saving product: ' + error.message, 'error');
         } finally {
             // Reset button state
@@ -925,58 +1071,112 @@ Image: ${product.image}
     renderOrders() {
         console.log('🎨 renderOrders called with:', this.orders.length, 'orders');
         const tbody = document.getElementById('orders-table-body');
+        const mobileList = document.getElementById('orders-mobile-list');
         
-        if (!tbody) {
-            console.error('❌ orders-table-body element not found!');
+        if (!tbody && !mobileList) {
+            console.error('❌ orders table/mobile list elements not found!');
             return;
         }
         
         if (this.orders.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">No orders found</td>
-                </tr>
-            `;
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">No orders found</td>
+                    </tr>
+                `;
+            }
+            if (mobileList) {
+                mobileList.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">No orders found</div>
+                `;
+            }
             return;
         }
 
-        tbody.innerHTML = this.orders.map(order => `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${order.id.substring(0, 8)}...
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">${order.customerName}</div>
-                    <div class="text-sm text-gray-500">${order.customerEmail}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${this.formatDate(order.date)}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${order.total.toFixed(2)} TND
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <select 
-                        onchange="adminPanel.updateOrderStatus('${order.id}', this.value)"
-                        class="text-xs px-2 py-1 rounded-full border ${this.getOrderStatusColor(order.status)}"
-                    >
-                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                        <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
-                        <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                    </select>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${Array.isArray(order.items) ? order.items.length : 0} item(s)
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button onclick="adminPanel.viewOrderDetails('${order.id}')" class="text-indigo-600 hover:text-indigo-900">
-                        View Details
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        // Render desktop table
+        if (tbody) {
+            tbody.innerHTML = this.orders.map(order => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${order.id.substring(0, 8)}...
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${order.customerName}</div>
+                        <div class="text-sm text-gray-500">${order.customerEmail}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${this.formatDate(order.date)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${order.total.toFixed(2)} TND
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <select 
+                            onchange="adminPanel.updateOrderStatus('${order.id}', this.value)"
+                            class="text-xs px-2 py-1 rounded-full border ${this.getOrderStatusColor(order.status)}"
+                        >
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${Array.isArray(order.items) ? order.items.length : 0} item(s)
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="adminPanel.viewOrderDetails('${order.id}')" class="text-indigo-600 hover:text-indigo-900">
+                            View Details
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render mobile cards
+        if (mobileList) {
+            mobileList.innerHTML = this.orders.map(order => `
+                <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900">Order #${order.id.substring(0, 8)}</h4>
+                            <p class="text-xs text-gray-500 mt-1">${this.formatDate(order.date)}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-semibold text-gray-900">${order.total.toFixed(2)} TND</p>
+                            <p class="text-xs text-gray-500">${Array.isArray(order.items) ? order.items.length : 0} item(s)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-3">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">${order.customerName}</p>
+                                <p class="text-xs text-gray-500 truncate">${order.customerEmail}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <select 
+                                onchange="adminPanel.updateOrderStatus('${order.id}', this.value)"
+                                class="text-xs px-3 py-2 rounded-md border ${this.getOrderStatusColor(order.status)} focus:outline-none focus:ring-2 focus:ring-slate-500"
+                            >
+                                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                            <button onclick="adminPanel.viewOrderDetails('${order.id}')" class="text-xs bg-slate-700 text-white px-3 py-2 rounded-md hover:bg-slate-800 transition-colors mobile-btn">
+                                Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
     }
 
     async updateOrderStatus(orderId, newStatus) {
