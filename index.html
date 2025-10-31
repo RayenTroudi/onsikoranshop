@@ -18,16 +18,22 @@
   
   <script>
     // Set logo favicon immediately using known file ID
-    (function() {
-      const endpoint = 'https://fra.cloud.appwrite.io/v1';
-      const projectId = '68f8c1bc003e3d2c8f5c';
-      const bucketId = 'onsiBucket';
-      const logoFileId = '68fb993a0009a2d89a0d';
-      
-      const logoUrl = `${endpoint}/storage/buckets/${bucketId}/files/${logoFileId}/view?project=${projectId}`;
-      document.getElementById('favicon').href = logoUrl;
-      document.getElementById('preload-logo').href = logoUrl;
-    })();
+    // Wait for ENV to be available
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.ENV) {
+        const endpoint = window.ENV.VITE_APPWRITE_ENDPOINT;
+        const projectId = window.ENV.VITE_APPWRITE_PROJECT_ID;
+        const bucketId = 'onsiBucket';
+        const logoFileId = '68fb993a0009a2d89a0d';
+        
+        const logoUrl = `${endpoint}/storage/buckets/${bucketId}/files/${logoFileId}/view?project=${projectId}`;
+        const favicon = document.getElementById('favicon');
+        const preloadLogo = document.getElementById('preload-logo');
+        
+        if (favicon) favicon.href = logoUrl;
+        if (preloadLogo) preloadLogo.href = logoUrl;
+      }
+    });
   </script>
   
   <!-- Critical: Enhanced error suppression for browser extensions -->
@@ -606,28 +612,33 @@ AdDuhaa 3</div>
   <!-- Environment Configuration -->
   <script>
     // Environment configuration for Appwrite and EmailJS
+    // Variables are injected at build time by Vite
     window.ENV = {
       // Appwrite configuration
-      VITE_APPWRITE_ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
-      VITE_APPWRITE_PROJECT_ID: '68f8c1bc003e3d2c8f5c',
-      VITE_APPWRITE_PROJECT_NAME: 'onsi',
-      // Note: API key is for server-side use only, not included here for security
-      // EmailJS configuration
-      VITE_EMAILJS_PUBLIC_KEY: 'ryB3eYn0HP-iAfl2E',
-      VITE_EMAILJS_SERVICE_ID: 'service_j4hv4we',
-      VITE_EMAILJS_CUSTOMER_TEMPLATE_ID: 'template_3m8gczh',
-      VITE_EMAILJS_ADMIN_TEMPLATE_ID: 'template_lkl5yxm',
-      VITE_ADMIN_EMAIL: 'onsmaitii@gmail.com',
-      VITE_APP_NAME: 'Onsi Koran Shop',
-      VITE_PRODUCT_PRICE: '39.00',
-      VITE_SHIPPING_COST: '0.00',
-      VITE_TAX_RATE: '0.00'
+      VITE_APPWRITE_ENDPOINT: typeof __VITE_APPWRITE_ENDPOINT__ !== 'undefined' ? __VITE_APPWRITE_ENDPOINT__ : 'https://fra.cloud.appwrite.io/v1',
+      VITE_APPWRITE_PROJECT_ID: typeof __VITE_APPWRITE_PROJECT_ID__ !== 'undefined' ? __VITE_APPWRITE_PROJECT_ID__ : '68f8c1bc003e3d2c8f5c',
+      VITE_APPWRITE_PROJECT_NAME: typeof __VITE_APPWRITE_PROJECT_NAME__ !== 'undefined' ? __VITE_APPWRITE_PROJECT_NAME__ : 'onsi',
+      // EmailJS configuration  
+      VITE_EMAILJS_PUBLIC_KEY: typeof __VITE_EMAILJS_PUBLIC_KEY__ !== 'undefined' ? __VITE_EMAILJS_PUBLIC_KEY__ : 'ryB3eYn0HP-iAfl2E',
+      VITE_EMAILJS_SERVICE_ID: typeof __VITE_EMAILJS_SERVICE_ID__ !== 'undefined' ? __VITE_EMAILJS_SERVICE_ID__ : 'service_j4hv4we',
+      VITE_EMAILJS_CUSTOMER_TEMPLATE_ID: typeof __VITE_EMAILJS_CUSTOMER_TEMPLATE_ID__ !== 'undefined' ? __VITE_EMAILJS_CUSTOMER_TEMPLATE_ID__ : 'template_3m8gczh',
+      VITE_EMAILJS_ADMIN_TEMPLATE_ID: typeof __VITE_EMAILJS_ADMIN_TEMPLATE_ID__ !== 'undefined' ? __VITE_EMAILJS_ADMIN_TEMPLATE_ID__ : 'template_lkl5yxm',
+      VITE_ADMIN_EMAIL: typeof __VITE_ADMIN_EMAIL__ !== 'undefined' ? __VITE_ADMIN_EMAIL__ : 'onsmaitii@gmail.com',
+      VITE_APP_NAME: typeof __VITE_APP_NAME__ !== 'undefined' ? __VITE_APP_NAME__ : 'Onsi Koran Shop',
+      VITE_PRODUCT_PRICE: typeof __VITE_PRODUCT_PRICE__ !== 'undefined' ? __VITE_PRODUCT_PRICE__ : '39.00',
+      VITE_SHIPPING_COST: typeof __VITE_SHIPPING_COST__ !== 'undefined' ? __VITE_SHIPPING_COST__ : '0.00',
+      VITE_TAX_RATE: typeof __VITE_TAX_RATE__ !== 'undefined' ? __VITE_TAX_RATE__ : '0.00'
     };
+
+    // Debug: Log the environment in development
+    if (window.ENV.VITE_APPWRITE_ENDPOINT.includes('localhost') || window.location.hostname === 'localhost') {
+      console.log('🔧 Environment Config:', window.ENV);
+    }
 
     // Appwrite Storage Helper - Gets file URL by file ID
     window.getAppwriteFileUrl = function(fileId) {
-      const endpoint = 'https://fra.cloud.appwrite.io/v1';
-      const projectId = '68f8c1bc003e3d2c8f5c';
+      const endpoint = window.ENV.VITE_APPWRITE_ENDPOINT;
+      const projectId = window.ENV.VITE_APPWRITE_PROJECT_ID;
       const bucketId = 'onsiBucket';
       return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?project=${projectId}`;
     };
@@ -639,8 +650,8 @@ AdDuhaa 3</div>
     // Fetch file list from Appwrite and initialize images
     async function initializeAppwriteImages() {
       try {
-        const endpoint = 'https://fra.cloud.appwrite.io/v1';
-        const projectId = '68f8c1bc003e3d2c8f5c';
+        const endpoint = window.ENV.VITE_APPWRITE_ENDPOINT;
+        const projectId = window.ENV.VITE_APPWRITE_PROJECT_ID;
         const bucketId = 'onsiBucket';
         
         console.log('🔄 Fetching files from Appwrite bucket...');
