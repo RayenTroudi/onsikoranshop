@@ -73,6 +73,22 @@
   "order.confirmation_title": "Order Confirmed!",
   "order.confirmation_message": "Thank you for your order. You will receive a confirmation email shortly.",
   "order.order_number": "Order Number",
-  "actions.continue_shopping": "Continue Shopping"
+  "actions.continue_shopping": "Continue Shopping",
+  
+  "product.whats_included": "What's Included",
+  "product.feature1": "51 beautifully designed cards",
+  "product.feature2": "Arabic verses with English reflections",
+  "product.feature3": "Premium velvet gift box",
+  "product.feature4": "Ready for gifting",
+  "product.details_title": "Product Details",
+  "product.material": "Material:",
+  "product.material_value": "Premium cardstock",
+  "product.dimensions": "Dimensions:",
+  "product.dimensions_value": "3.5 × 5",
+  "product.language": "Language:",
+  "product.language_value": "Arabic & English",
+  "product.origin": "Origin:",
+  "product.origin_value": "Handcrafted",
+  "product.free_shipping": "Free worldwide shipping"
 }
 

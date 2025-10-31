@@ -73,6 +73,22 @@
   "order.confirmation_title": "تم تأكيد الطلب!",
   "order.confirmation_message": "شكرًا لك على طلبك. ستتلقى رسالة تأكيد قريبًا.",
   "order.order_number": "رقم الطلب",
-  "actions.continue_shopping": "متابعة التسوق"
+  "actions.continue_shopping": "متابعة التسوق",
+  
+  "product.whats_included": "ما يشمله المنتج",
+  "product.feature1": "51 بطاقة مصممة بجمال",
+  "product.feature2": "آيات عربية مع تأملات إنجليزية",
+  "product.feature3": "علبة هدايا مخملية فاخرة",
+  "product.feature4": "جاهزة للإهداء",
+  "product.details_title": "تفاصيل المنتج",
+  "product.material": "المادة:",
+  "product.material_value": "ورق مقوى فاخر",
+  "product.dimensions": "الأبعاد:",
+  "product.dimensions_value": "3.5 × 5",
+  "product.language": "اللغة:",
+  "product.language_value": "العربية والإنجليزية",
+  "product.origin": "المنشأ:",
+  "product.origin_value": "مصنوع يدوياً",
+  "product.free_shipping": "شحن مجاني إلى جميع أنحاء العالم"
 }
 
