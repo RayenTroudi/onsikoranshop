@@ -19,7 +19,7 @@ appwrite-email-function/
    - **Name**: `onsi-email-sender`
    - **Function ID**: `onsi-email-sender` 
    - **Runtime**: `Node.js 18.0` or higher
-   - **Entrypoint**: `main.js`
+   - **Entrypoint**: `main.js` (file is now at root level)
 
 ### 2. Set Environment Variables
 Add these environment variables in the Appwrite function settings:
@@ -34,10 +34,10 @@ ALLOWED_ORIGINS=https://your-domain.com
 ```
 
 ### 3. Deploy Function Code
-1. Use the provided `appwrite-email-function-deploy.tar.gz` file
-2. Upload the tar.gz file to Appwrite Console → Functions → Your Function → Deployment
+1. Create a deployment archive including: `main.js`, `package.json` (both at root level)
+2. Upload the archive to Appwrite Console → Functions → Your Function → Deployment
 3. Wait for deployment to complete
-4. Ensure the package.json points to `"main": "src/main.js"`
+4. Ensure the package.json points to `"main": "main.js"` (root level)
 
 ### 4. Set Function Permissions
 In Function Settings → Permissions:

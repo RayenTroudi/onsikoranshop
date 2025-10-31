@@ -1934,36 +1934,88 @@ async function loadDashboardStats() {
         let monthlyRevenue = 0;
         
         try {
-            // Fetch from Appwrite orders collection
-            const ordersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/orders/documents`, {
-                method: 'GET',
-                headers: {
-                    'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
-                    'Content-Type': 'application/json'
-                }
-            });
+            // Try multiple possible collection names for orders
+            const possibleOrderCollections = ['orders', 'Orders', 'order', 'Order'];
+            let ordersResponse = null;
+            let ordersData = null;
             
-            if (ordersResponse.ok) {
-                const ordersData = await ordersResponse.json();
+            for (const collectionName of possibleOrderCollections) {
+                try {
+                    console.log('📊 Trying orders collection:', collectionName);
+                    ordersResponse = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/${collectionName}/documents`, {
+                        method: 'GET',
+                        headers: {
+                            'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    console.log('📊 Response for', collectionName, '- Status:', ordersResponse.status);
+                    
+                    if (ordersResponse.ok) {
+                        ordersData = await ordersResponse.json();
+                        console.log('📊 Successfully found orders in collection:', collectionName);
+                        break;
+                    }
+                } catch (collectionError) {
+                    console.log('📊 Collection', collectionName, 'failed:', collectionError.message);
+                    continue;
+                }
+            }
+            
+            if (ordersData) {
+                console.log('📊 Orders data received:', ordersData);
                 totalOrders = ordersData.total || ordersData.documents?.length || 0;
                 
                 // Calculate total revenue and monthly revenue
-                const currentMonth = new Date().getMonth();
-                const currentYear = new Date().getFullYear();
+                const now = new Date();
+                const currentMonth = now.getMonth(); // 0-11
+                const currentYear = now.getFullYear();
                 
-                ordersData.documents?.forEach(order => {
+                console.log('📊 Current month:', currentMonth, 'Current year:', currentYear);
+                console.log('📊 Processing', ordersData.documents?.length || 0, 'orders');
+                
+                ordersData.documents?.forEach((order, index) => {
                     const orderAmount = parseFloat(order.totalAmount || order.amount || 0);
                     totalRevenue += orderAmount;
                     
                     // Check if order is from current month
-                    const orderDate = new Date(order.$createdAt || order.createdAt);
+                    const orderDateString = order.$createdAt || order.createdAt || order.date;
+                    const orderDate = new Date(orderDateString);
+                    
+                    console.log(`📊 Order ${index + 1}:`, {
+                        amount: orderAmount,
+                        dateString: orderDateString,
+                        parsedDate: orderDate,
+                        orderMonth: orderDate.getMonth(),
+                        orderYear: orderDate.getFullYear(),
+                        isCurrentMonth: orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear
+                    });
+                    
                     if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
                         monthlyRevenue += orderAmount;
+                        console.log('📊 Added to monthly revenue:', orderAmount, 'New total:', monthlyRevenue);
                     }
                 });
+                
+                console.log('📊 Final calculations - Total orders:', totalOrders, 'Total revenue:', totalRevenue, 'Monthly revenue:', monthlyRevenue);
+            } else {
+                console.log('📊 No orders collection found or no orders data available');
+                console.log('📊 Tried collections:', possibleOrderCollections.join(', '));
+                
+                // Check if ordersResponse exists and log the error
+                if (ordersResponse) {
+                    console.error('📊 Last response status:', ordersResponse.status, ordersResponse.statusText);
+                    try {
+                        const errorText = await ordersResponse.text();
+                        console.error('📊 Error response text:', errorText);
+                    } catch (e) {
+                        console.error('📊 Could not read error response');
+                    }
+                }
             }
         } catch (error) {
-            console.log('📊 Could not fetch orders data:', error);
+            console.error('📊 Error fetching orders data:', error);
         }
         
         // Fetch registered users count (customers)
@@ -1986,17 +2038,22 @@ async function loadDashboardStats() {
         }
         
         // Update dashboard with website metrics
-        document.getElementById('total-orders').textContent = totalOrders;
-        document.getElementById('total-revenue').textContent = `${monthlyRevenue.toFixed(2)} TND`;
-        document.getElementById('total-customers').textContent = totalCustomers;
+        document.getElementById('total-orders').textContent = totalOrders || 0;
+        document.getElementById('total-revenue').textContent = `${(monthlyRevenue || 0).toFixed(2)} TND`;
+        document.getElementById('total-customers').textContent = totalCustomers || 0;
         
         // Update revenue label to show it's monthly
         const revenueLabel = document.querySelector('#total-revenue').previousElementSibling;
-        if (revenueLabel && revenueLabel.textContent === 'Revenue') {
+        if (revenueLabel && (revenueLabel.textContent === 'Revenue' || revenueLabel.textContent.includes('Revenue'))) {
             revenueLabel.textContent = 'Monthly Income';
         }
         
-        console.log('✅ Dashboard stats updated - Monthly Income:', monthlyRevenue.toFixed(2), 'TND');
+        // Show status message
+        if (totalOrders === 0) {
+            console.log('💡 No orders found - Monthly Income will show 0.00 TND until orders are created');
+        } else {
+            console.log('✅ Dashboard stats updated - Monthly Income:', (monthlyRevenue || 0).toFixed(2), 'TND', `(from ${totalOrders} total orders)`);
+        }
         
     } catch (error) {
         console.error('❌ Error loading dashboard stats:', error);

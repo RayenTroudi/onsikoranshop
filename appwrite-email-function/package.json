@@ -2,7 +2,7 @@
   "name": "onsi-email-function",
   "version": "1.0.0",
   "description": "Email notification function for ONSi shop orders",
-  "main": "src/main.js",
+  "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
