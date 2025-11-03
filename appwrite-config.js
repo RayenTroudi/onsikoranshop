@@ -56,8 +56,7 @@ const APPWRITE_CONFIG = {
         users: 'users',
         products: 'products',
         orders: 'orders',
-        categories: 'categories',
-        settings: 'settings'
+        categories: 'categories'
     },
     // Storage bucket ID
     bucketId: 'onsiBucket'

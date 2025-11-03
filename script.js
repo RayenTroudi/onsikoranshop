@@ -911,7 +911,24 @@ const translations = {
 		'auth.subtitle': 'Access your account to manage orders',
 		'auth.password_requirements': 'At least 6 characters',
 		'profile.orders': 'My Orders',
-		'profile.settings': 'Settings',
+		// Orders modal translations
+		'orders.title': 'My Orders',
+		'orders.loading': 'Loading your orders...',
+		'orders.no_orders': 'No Orders Yet',
+		'orders.no_orders_desc': 'You haven\'t placed any orders yet. Start shopping to see your orders here.',
+		'orders.error': 'Error Loading Orders',
+		'orders.error_desc': 'Unable to load your orders. Please try again.',
+		'orders.retry': 'Try Again',
+		'orders.order_number': 'Order',
+		'orders.date': 'Date',
+		'orders.status': 'Status',
+		'orders.total': 'Total',
+		'orders.items': 'Items',
+		'orders.status.pending': 'Pending',
+		'orders.status.processing': 'Processing',
+		'orders.status.shipped': 'Shipped',
+		'orders.status.delivered': 'Delivered',
+		'orders.status.cancelled': 'Cancelled',
 		// Extended checkout translations
 		'checkout.order_summary': 'Order Summary',
 		'checkout.total': 'Total',
@@ -1000,7 +1017,24 @@ const translations = {
 		'auth.subtitle': 'ادخل إلى حسابك لإدارة الطلبات',
 		'auth.password_requirements': 'على الأقل 6 أحرف',
 		'profile.orders': 'طلباتي',
-		'profile.settings': 'الإعدادات',
+		// Orders modal translations
+		'orders.title': 'طلباتي',
+		'orders.loading': 'جاري تحميل طلباتك...',
+		'orders.no_orders': 'لا توجد طلبات بعد',
+		'orders.no_orders_desc': 'لم تقم بأي طلبات بعد. ابدأ التسوق لترى طلباتك هنا.',
+		'orders.error': 'خطأ في تحميل الطلبات',
+		'orders.error_desc': 'غير قادر على تحميل طلباتك. يرجى المحاولة مرة أخرى.',
+		'orders.retry': 'حاول مرة أخرى',
+		'orders.order_number': 'الطلب',
+		'orders.date': 'التاريخ',
+		'orders.status': 'الحالة',
+		'orders.total': 'الإجمالي',
+		'orders.items': 'العناصر',
+		'orders.status.pending': 'في الانتظار',
+		'orders.status.processing': 'قيد المعالجة',
+		'orders.status.shipped': 'تم الشحن',
+		'orders.status.delivered': 'تم التوصيل',
+		'orders.status.cancelled': 'ملغى',
 		// Extended checkout translations
 		'checkout.order_summary': 'ملخص الطلب',
 		'checkout.total': 'الإجمالي',
@@ -1470,6 +1504,203 @@ function handleUserAuthChange(user) {
 
 // Make the function globally available for auth module
 window.handleUserAuthChange = handleUserAuthChange;
+
+// My Orders Modal Functions
+async function openMyOrdersModal() {
+	console.log('📂 Opening My Orders modal...');
+	
+	const modal = document.getElementById('my-orders-modal');
+	modal.classList.remove('hidden');
+	
+	// Clear locale cache to force fresh load with updated translations
+	if (loadedLocales[state.language]) {
+		delete loadedLocales[state.language];
+	}
+	
+	// Force reload the current language to get updated translations
+	try {
+		await loadLocale(state.language);
+	} catch (e) {
+		console.warn('Could not reload locale:', e);
+	}
+	
+	// Apply translations to the modal immediately
+	applyTranslations();
+	
+	// Load user orders
+	await loadUserOrders();
+}
+
+function closeMyOrdersModal() {
+	const modal = document.getElementById('my-orders-modal');
+	modal.classList.add('hidden');
+}
+
+async function loadUserOrders() {
+	const loadingEl = document.getElementById('orders-loading');
+	const emptyEl = document.getElementById('orders-empty');
+	const listEl = document.getElementById('orders-list');
+	const errorEl = document.getElementById('orders-error');
+	
+	// Reset display states
+	loadingEl.classList.remove('hidden');
+	emptyEl.classList.add('hidden');
+	listEl.classList.add('hidden');
+	errorEl.classList.add('hidden');
+	
+	try {
+		// Check if user is logged in
+		if (!window.appwriteAuth) {
+			throw new Error('Authentication service not available');
+		}
+		
+		const user = await window.appwriteAuth.getCurrentUser();
+		if (!user) {
+			throw new Error('User not logged in');
+		}
+		
+		console.log('📊 Loading orders for user:', user.email);
+		
+		// Get orders from Appwrite
+		const orders = await getUserOrders(user.email);
+		
+		loadingEl.classList.add('hidden');
+		
+		if (orders.length === 0) {
+			emptyEl.classList.remove('hidden');
+		} else {
+			displayUserOrders(orders);
+			listEl.classList.remove('hidden');
+		}
+		
+		// Apply translations to the modal content
+		applyTranslations();
+		
+	} catch (error) {
+		console.error('❌ Error loading user orders:', error);
+		loadingEl.classList.add('hidden');
+		errorEl.classList.remove('hidden');
+		
+		// Apply translations to the error state
+		applyTranslations();
+	}
+}
+
+async function getUserOrders(userEmail) {
+	try {
+		const endpoint = window.ENV?.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+		const projectId = window.ENV?.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c';
+		
+		const response = await fetch(
+			`${endpoint}/databases/onsi/collections/orders/documents`,
+			{
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Appwrite-Project': projectId
+				}
+			}
+		);
+		
+		if (!response.ok) {
+			throw new Error('Failed to fetch orders');
+		}
+		
+		const data = await response.json();
+		
+		// Filter orders by user email
+		const userOrders = data.documents.filter(order => 
+			order.email && order.email.toLowerCase() === userEmail.toLowerCase()
+		);
+		
+		console.log(`✅ Found ${userOrders.length} orders for ${userEmail}`);
+		return userOrders;
+		
+	} catch (error) {
+		console.error('❌ Error fetching user orders:', error);
+		throw error;
+	}
+}
+
+function displayUserOrders(orders) {
+	const listEl = document.getElementById('orders-list');
+	
+	// Sort orders by date (newest first)
+	orders.sort((a, b) => new Date(b.$createdAt) - new Date(a.$createdAt));
+	
+	const ordersHTML = orders.map(order => {
+		const orderDate = new Date(order.$createdAt).toLocaleDateString();
+		const orderTime = new Date(order.$createdAt).toLocaleTimeString();
+		const orderStatus = order.status || 'pending';
+		const orderTotal = formatPrice(parseFloat(order.total || 0));
+		
+		// Parse items
+		let itemsDisplay = 'N/A';
+		try {
+			const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+			if (Array.isArray(items)) {
+				itemsDisplay = items.map(item => `${item.name} (x${item.quantity})`).join(', ');
+			}
+		} catch (e) {
+			console.warn('Could not parse order items:', e);
+		}
+		
+		// Status styling
+		const statusClasses = {
+			pending: 'bg-yellow-100 text-yellow-800',
+			processing: 'bg-blue-100 text-blue-800',
+			shipped: 'bg-purple-100 text-purple-800',
+			delivered: 'bg-green-100 text-green-800',
+			cancelled: 'bg-red-100 text-red-800'
+		};
+		
+		return `
+			<div class="border border-neutral-200 rounded-lg p-4 bg-white">
+				<div class="flex items-center justify-between mb-3">
+					<div>
+						<h3 class="font-semibold text-lg" data-i18n="orders.order_number">Order</h3>
+						<p class="text-sm text-neutral-600">#${order.$id.slice(-8).toUpperCase()}</p>
+					</div>
+					<span class="px-3 py-1 rounded-full text-sm font-medium ${statusClasses[orderStatus] || statusClasses.pending}" data-i18n="orders.status.${orderStatus}">
+						${orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)}
+					</span>
+				</div>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+					<div>
+						<span class="font-medium" data-i18n="orders.date">Date:</span>
+						<p class="text-neutral-600">${orderDate} ${orderTime}</p>
+					</div>
+					<div>
+						<span class="font-medium" data-i18n="orders.total">Total:</span>
+						<p class="text-neutral-600 font-semibold">${orderTotal}</p>
+					</div>
+					<div>
+						<span class="font-medium" data-i18n="orders.items">Items:</span>
+						<p class="text-neutral-600">${itemsDisplay}</p>
+					</div>
+				</div>
+				
+				${order.shipping_address ? `
+					<div class="mt-3 pt-3 border-t border-neutral-100">
+						<span class="font-medium text-sm">Shipping Address:</span>
+						<p class="text-sm text-neutral-600">${order.shipping_address}</p>
+					</div>
+				` : ''}
+			</div>
+		`;
+	}).join('');
+	
+	listEl.innerHTML = ordersHTML;
+	
+	// Re-apply translations to the new content
+	applyTranslations();
+}
+
+// Make orders functions globally available
+window.openMyOrdersModal = openMyOrdersModal;
+window.closeMyOrdersModal = closeMyOrdersModal;
+window.loadUserOrders = loadUserOrders;
 
 // Safe auth button handler
 function handleAuthButtonClick() {
