@@ -1,15 +1,26 @@
 {
-  "name": "onsi-email-function",
-  "version": "1.0.0",
-  "description": "Email notification function for ONSi shop orders",
-  "main": "main.js",
+  "name": "onsi-gmail-smtp-function",
+  "version": "2.0.0",
+  "description": "ONSi Gmail SMTP email notification function for Appwrite",
+  "main": "src/main.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "cp -r src/* .",
+    "test": "node test-email.js",
+    "deploy-check": "node deploy-check.js",
+    "deploy": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
+    "deploy-bash": "bash deploy.sh"
   },
   "dependencies": {
-    "node-appwrite": "^13.0.0",
     "nodemailer": "^6.9.7"
   },
-  "author": "",
+  "devDependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["appwrite", "function", "email", "smtp", "gmail", "onsi"],
+  "author": "ONSi Team",
   "license": "MIT"
 }

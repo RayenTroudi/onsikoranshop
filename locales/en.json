@@ -68,6 +68,17 @@
   "orders.status.shipped": "Shipped",
   "orders.status.delivered": "Delivered",
   "orders.status.cancelled": "Cancelled",
+  "testimonials.badge": "Loved by Our Community",
+  "testimonials.title": "Hearts Touched",
+  "testimonials.subtitle": "Discover how our Quranic Verses Box has brought peace, comfort, and spiritual connection to families around the world.",
+  "stats.happy_families": "Happy Families",
+  "stats.average_rating": "Average Rating", 
+  "stats.countries_shipped": "Countries Shipped",
+  "stats.handmade": "Handmade",
+  "trust.secure_payment": "Secure Payment",
+  "trust.made_with_love": "Made with Love",
+  "trust.fast_delivery": "Fast Delivery",
+  "trust.premium_quality": "Premium Quality",
   "checkout.order_summary": "Order Summary",
   "checkout.total": "Total",
   "checkout.personal_info": "Personal Information",
@@ -105,6 +116,14 @@
   "product.language_value": "Arabic & English",
   "product.origin": "Origin:",
   "product.origin_value": "Handcrafted",
-  "product.free_shipping": "Free worldwide shipping"
+  "product.free_shipping": "Free worldwide shipping",
+  "product.perfect_gifting": "Perfect for Gifting",
+  "product.gifting_description": "Each box comes beautifully wrapped in premium materials, ready to bring joy to your loved ones.",
+  "cart.subtitle": "Review your sacred collection",
+  "cart.empty_title": "Your cart is empty",
+  "cart.empty_description": "Add some divine verses to begin your spiritual journey",
+  "cart.continue_shopping": "Continue Shopping",
+  "cart.secure": "Secure Payment",
+  "cart.free_shipping": "Free Shipping"
 }
 

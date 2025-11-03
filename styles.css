@@ -76,15 +76,294 @@ button.qty:hover {
 	left: 0;
 }
 
-/* Arabic font improvements */
+/* Enhanced Arabic typography */
 [dir="rtl"] body {
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	font-family: 'Amiri', 'Traditional Arabic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 [dir="rtl"] .text-2xl,
 [dir="rtl"] .text-3xl,
 [dir="rtl"] .text-5xl {
 	font-weight: 600;
+}
+
+/* Arabic calligraphy font class */
+.font-arabic {
+	font-family: 'Amiri', 'Traditional Arabic', 'Arabic Typesetting', serif;
+	font-feature-settings: 'liga', 'kern', 'mkmk', 'mark';
+}
+
+/* Islamic aesthetic enhancements */
+.islamic-pattern-bg {
+	background-image: 
+		radial-gradient(circle at 25% 25%, rgba(180, 83, 9, 0.1) 2px, transparent 2px),
+		radial-gradient(circle at 75% 75%, rgba(180, 83, 9, 0.1) 2px, transparent 2px),
+		linear-gradient(45deg, transparent 48%, rgba(180, 83, 9, 0.05) 49%, rgba(180, 83, 9, 0.05) 51%, transparent 52%);
+	background-size: 40px 40px, 40px 40px, 20px 20px;
+}
+
+/* Enhanced card hover effects */
+.testimonial-card {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.testimonial-card:hover {
+	transform: translateY(-8px) scale(1.02);
+}
+
+/* Premium button animations - Override all Tailwind classes */
+.btn-premium {
+	position: relative !important;
+	overflow: hidden !important;
+	background: linear-gradient(135deg, #d97706 0%, #ea580c 100%) !important;
+	border: none !important;
+	color: white !important;
+	background-color: #d97706 !important;
+}
+
+.btn-premium:hover {
+	background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important;
+	background-color: #ea580c !important;
+	transform: translateY(-2px) !important;
+	box-shadow: 0 8px 25px rgba(217, 119, 6, 0.4) !important;
+}
+
+.btn-premium span,
+.btn-premium * {
+	color: white !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Ensure Arabic text visibility */
+.btn-premium [data-i18n] {
+	color: white !important;
+	font-weight: 600 !important;
+}
+
+/* Additional override for any nested elements */
+.btn-premium > span > span {
+	color: white !important;
+}
+
+.btn-premium::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+	transition: left 0.8s ease;
+}
+
+.btn-premium:hover::before {
+	left: 100%;
+}
+
+/* Geometric accent animations */
+@keyframes gentle-pulse {
+	0%, 100% { opacity: 0.4; transform: scale(1); }
+	50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.geometric-accent {
+	animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+/* Enhanced Cart Styling */
+.cart-button {
+	background: white;
+	border: 1px solid #e2e8f0;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.cart-button:hover {
+	background: #f8fafc;
+	border-color: #cbd5e1;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cart-badge {
+	animation: cart-bounce 0.3s ease-out;
+}
+
+@keyframes cart-bounce {
+	0%, 100% { transform: scale(1); }
+	50% { transform: scale(1.2); }
+}
+
+/* Cart Drawer Animations */
+.cart-overlay {
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.cart-overlay.show {
+	opacity: 1;
+	visibility: visible;
+}
+
+.cart-drawer {
+	backdrop-filter: blur(10px);
+	transform: translateX(100%) !important;
+	transition: transform 0.3s ease-out !important;
+	right: 0 !important;
+	left: auto !important;
+	position: absolute !important;
+}
+
+.cart-overlay.show .cart-drawer {
+	transform: translateX(0) !important;
+}
+
+/* Force cart to always slide from right, even in RTL - highest specificity */
+html[dir="rtl"] .cart-drawer,
+[dir="rtl"] .cart-drawer,
+body[dir="rtl"] .cart-drawer {
+	right: 0 !important;
+	left: auto !important;
+	transform: translateX(100%) !important;
+	position: absolute !important;
+}
+
+html[dir="rtl"] .cart-overlay.show .cart-drawer,
+[dir="rtl"] .cart-overlay.show .cart-drawer,
+body[dir="rtl"] .cart-overlay.show .cart-drawer {
+	transform: translateX(0) !important;
+	right: 0 !important;
+	left: auto !important;
+}
+
+/* Override any Tailwind RTL classes */
+.cart-drawer.right-0 {
+	right: 0 !important;
+	left: auto !important;
+}
+
+.cart-header {
+	background: white;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.cart-close:hover {
+	background-color: #f1f5f9;
+}
+
+/* Unified cart header styling */
+.cart-header h3,
+.cart-header p {
+	transition: text-align 0.2s ease;
+}
+
+/* Arabic text positioning at maximum right */
+[dir="rtl"] .cart-header .absolute.right-14 {
+	right: 3.5rem !important;
+}
+
+/* Ensure close button stays accessible */
+[dir="rtl"] .cart-close {
+	position: relative !important;
+	z-index: 10 !important;
+}
+
+/* Cart Items Styling */
+.cart-item {
+	background: white;
+	border: 1px solid #f1f5f9;
+	border-radius: 12px;
+	padding: 16px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+	border-color: #cbd5e1;
+}
+
+.cart-item-image {
+	width: 64px;
+	height: 64px;
+	border-radius: 8px;
+	object-fit: cover;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.cart-item-price {
+	color: #1e293b;
+	font-weight: 600;
+}
+
+/* Quantity Controls */
+.quantity-controls {
+	display: flex;
+	align-items: center;
+	background: #f8fafc;
+	border-radius: 8px;
+	padding: 4px;
+}
+
+.quantity-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: white;
+	border: 1px solid #e2e8f0;
+	color: #64748b;
+	font-size: 14px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.quantity-btn:hover {
+	background: #64748b;
+	color: white;
+	border-color: #475569;
+}
+
+.quantity-display {
+	min-width: 40px;
+	text-align: center;
+	font-weight: 600;
+	color: #1e293b;
+}
+
+/* Checkout Button Enhancement */
+.checkout-button {
+	background: white;
+	border: 1px solid #e2e8f0;
+	color: #334155;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.checkout-button:hover {
+	background: #f8fafc;
+	border-color: #cbd5e1;
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Empty State Styling */
+#empty-cart-state {
+	background: linear-gradient(135deg, rgba(248, 250, 252, 0.5) 0%, rgba(241, 245, 249, 0.5) 100%);
+	border-radius: 16px;
+	border: 1px dashed rgba(148, 163, 184, 0.3);
+}
+
+.cart-continue-shopping {
+	background: white;
+	border: 1px solid #e2e8f0;
+	color: #334155;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.cart-continue-shopping:hover {
+	background: #f8fafc;
+	border-color: #cbd5e1;
 }
 
 /* Cart drawer RTL fixes */

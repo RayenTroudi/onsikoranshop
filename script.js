@@ -196,29 +196,42 @@ function renderCart() {
 	const itemsEl = document.getElementById('cart-items');
 	const subtotalEl = document.getElementById('cart-subtotal');
 	const countEl = document.getElementById('cart-count');
+	const emptyStateEl = document.getElementById('empty-cart-state');
 	const totalQty = state.items.reduce((n, i) => n + i.qty, 0);
 	countEl.textContent = totalQty;
 
 	if (state.items.length === 0) {
-		itemsEl.innerHTML = `<p class="text-sm text-neutral-600">${t('cart.empty')}</p>`;
+		// Show empty state and hide cart items
+		if (emptyStateEl) {
+			emptyStateEl.classList.remove('hidden');
+		}
+		itemsEl.innerHTML = '';
 	} else {
+		// Hide empty state and show cart items
+		if (emptyStateEl) {
+			emptyStateEl.classList.add('hidden');
+		}
 		itemsEl.innerHTML = state.items.map(i => `
-			<div class="flex items-center justify-between gap-3 border border-neutral-200 rounded-lg p-3">
+			<div class="cart-item flex items-center justify-between gap-3 border border-neutral-200 rounded-lg p-3">
 				<div>
 					<div class="text-sm font-medium">${i.name}</div>
-					<div class="text-xs text-neutral-500">${formatCurrency(i.price)}</div>
+					<div class="text-xs text-neutral-500 cart-item-price">${formatCurrency(i.price)}</div>
 				</div>
 				<div class="flex items-center gap-2">
-					<button class="qty" data-id="${i.id}" data-delta="-1" aria-label="${t('cart.decrease')}">−</button>
-					<span class="w-6 text-center">${i.qty}</span>
-					<button class="qty" data-id="${i.id}" data-delta="1" aria-label="${t('cart.increase')}">+</button>
-					<button class="remove text-xs text-slate-700" data-id="${i.id}">${t('actions.remove')}</button>
+					<div class="quantity-controls">
+						<button class="qty quantity-btn" data-id="${i.id}" data-delta="-1" aria-label="${t('cart.decrease')}">−</button>
+						<span class="quantity-display">${i.qty}</span>
+						<button class="qty quantity-btn" data-id="${i.id}" data-delta="1" aria-label="${t('cart.increase')}">+</button>
+					</div>
+					<button class="remove text-xs text-slate-700 hover:text-red-600 transition-colors ml-2" data-id="${i.id}">${t('actions.remove')}</button>
 				</div>
 			</div>
 		`).join('');
 	}
 
-	subtotalEl.textContent = formatCurrency(subtotal());
+	if (subtotalEl) {
+		subtotalEl.textContent = formatCurrency(subtotal());
+	}
 	
 	// Save cart after rendering
 	saveCart();
@@ -290,6 +303,9 @@ function openCart() {
 		const cartEl = document.getElementById('cart');
 		if (cartEl) {
 			cartEl.classList.remove('hidden');
+			// Force reflow to ensure the element is rendered before adding show class
+			cartEl.offsetHeight;
+			cartEl.classList.add('show');
 		} else {
 			console.error('Cart element not found');
 		}
@@ -302,7 +318,11 @@ function closeCart() {
 	try {
 		const cartEl = document.getElementById('cart');
 		if (cartEl) {
-			cartEl.classList.add('hidden');
+			cartEl.classList.remove('show');
+			// Add hidden class after animation completes
+			setTimeout(() => {
+				cartEl.classList.add('hidden');
+			}, 300); // Match the transition duration
 		} else {
 			console.error('Cart element not found');
 		}
@@ -430,9 +450,9 @@ async function processOrder(formData) {
 			saveOrderToLocalStorage(orderData);
 		}
 		
-		// Send email notifications using Appwrite Email Function
+		// Send email notifications using Appwrite Gmail SMTP Function
 		try {
-			await sendOrderNotificationsAppwrite(orderData);
+			await sendOrderNotificationsGmail(orderData);
 		} catch (error) {
 			console.error('Failed to send email notifications:', error);
 			// Don't fail the order if email fails
@@ -525,12 +545,10 @@ function saveOrderToLocalStorage(orderData) {
 	}
 }
 
-// Send email notifications using Appwrite Email Function
-async function sendOrderNotificationsAppwrite(orderData) {
+// Send email notifications using Appwrite Gmail SMTP Function  
+async function sendOrderNotificationsGmail(orderData) {
 	try {
-		const functionId = '68fbb51700021c6f9655';
-		
-		// Prepare email data
+		// Prepare email data for Gmail SMTP function
 		const emailData = {
 			to: orderData.customerInfo.email,
 			customerName: orderData.customerInfo.name,
@@ -542,22 +560,20 @@ async function sendOrderNotificationsAppwrite(orderData) {
 			}),
 			items: orderData.items,
 			totalAmount: orderData.total,
-			shippingAddress: {
-				name: orderData.customerInfo.name,
+			shippingInfo: {
+				firstName: orderData.customerInfo.name.split(' ')[0] || orderData.customerInfo.name,
+				lastName: orderData.customerInfo.name.split(' ').slice(1).join(' ') || '',
+				email: orderData.customerInfo.email,
+				phone: orderData.customerInfo.phone,
 				address: orderData.customerInfo.address,
 				city: orderData.customerInfo.city,
+				governorate: orderData.customerInfo.governorate || orderData.customerInfo.city,
 				postalCode: orderData.customerInfo.postalCode,
-				country: orderData.customerInfo.country,
-				phone: orderData.customerInfo.phone
+				country: orderData.customerInfo.country
 			}
 		};
 		
-		console.log('📧 Sending order emails via Appwrite...', emailData);
-		
-		// Use Appwrite SDK's Functions service
-		if (!window.appwriteAuth) {
-			throw new Error('Appwrite not initialized');
-		}
+		console.log('📧 Sending order emails via Appwrite Gmail SMTP Function...', emailData);
 		
 		// Import Functions from Appwrite SDK
 		const { Functions } = await import('https://cdn.skypack.dev/appwrite@15.0.0');
@@ -570,31 +586,57 @@ async function sendOrderNotificationsAppwrite(orderData) {
 		
 		const functions = new Functions(client);
 		
-		// Execute the function
+		// Execute the updated Gmail SMTP function
 		const execution = await functions.createExecution(
-			functionId,
+			'68fbb51700021c6f9655', // Your function ID - now updated with Gmail SMTP
 			JSON.stringify(emailData),
-			false, // async
+			false, // sync execution
 			'/', // path
 			'POST' // method
 		);
 		
-		console.log('✅ Order emails sent successfully:', execution);
+		console.log('✅ Appwrite Gmail SMTP function executed:', execution);
 		
-		return execution;
-	} catch (error) {
-		console.error('❌ Appwrite email notification error:', error);
-		console.error('Error message:', error.message);
-		
-		// Check if it's a deployment issue
-		if (error.message && error.message.includes('Deployment not found')) {
-			console.error('⚠️ Function deployment issue - Please deploy the function in Appwrite Console');
-			console.info('💡 Go to: Functions → Your Email Function → Deploy');
+		// Parse the response body if it exists
+		let responseData = null;
+		if (execution.responseBody) {
+			try {
+				responseData = JSON.parse(execution.responseBody);
+				console.log('📧 Email function response:', responseData);
+			} catch (parseError) {
+				console.log('📧 Email function response (text):', execution.responseBody);
+			}
 		}
 		
-		// Don't throw error to prevent order failure if email fails
-		console.warn('⚠️ Order completed but email notification failed');
-		return null;
+		// Check execution status
+		if (execution.responseStatusCode === 200) {
+			console.log('🎉 Gmail SMTP emails sent successfully via Appwrite!');
+			return { success: true, execution, response: responseData };
+		} else {
+			console.error('❌ Function execution failed:', {
+				statusCode: execution.responseStatusCode,
+				errors: execution.errors,
+				logs: execution.logs
+			});
+			throw new Error(`Function execution failed with status ${execution.responseStatusCode}`);
+		}
+		
+	} catch (error) {
+		console.error('❌ Appwrite Gmail SMTP email error:', error);
+		console.error('Error details:', error.message);
+		
+		// Provide helpful debugging info
+		if (error.message && error.message.includes('Deployment not found')) {
+			console.error('⚠️ Function deployment issue - Please deploy the updated Gmail SMTP function');
+			console.info('💡 Steps: Appwrite Console → Functions → Email Function → Deploy');
+		} else if (error.message && error.message.includes('Missing required environment variables')) {
+			console.error('⚠️ Environment variables missing in Appwrite function');
+			console.info('💡 Add: SMTP_USERNAME, SMTP_PASSWORD, SUBMIT_EMAIL to function environment');
+		}
+		
+		// Don't fail the order if email fails
+		console.warn('⚠️ Order completed successfully, but email notification failed');
+		return { success: false, error: error.message };
 	}
 }
 
@@ -759,6 +801,15 @@ function initializeEventListeners() {
 		openCartBtn.addEventListener('click', (e) => {
 			e.preventDefault();
 			openCart();
+		});
+	}
+	
+	// Dedicated cart close button event listener (backup)
+	const closeCartBtn = document.querySelector('[data-close="btn"]');
+	if (closeCartBtn) {
+		closeCartBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			closeCart();
 		});
 	}
 
@@ -959,6 +1010,26 @@ const translations = {
 		'order.confirmation_message': 'Thank you for your order. You will receive a confirmation email shortly.',
 		'order.order_number': 'Order Number',
 		'actions.continue_shopping': 'Continue Shopping',
+		// Enhanced UI translations
+		'testimonials.badge': 'Loved by Our Community',
+		'testimonials.title': 'Hearts Touched',
+		'testimonials.subtitle': 'Discover how our Quranic Verses Box has brought peace, comfort, and spiritual connection to families around the world.',
+		'stats.happy_families': 'Happy Families',
+		'stats.average_rating': 'Average Rating', 
+		'stats.countries_shipped': 'Countries Shipped',
+		'stats.handmade': 'Handmade',
+		'trust.secure_payment': 'Secure Payment',
+		'trust.made_with_love': 'Made with Love',
+		'trust.fast_delivery': 'Fast Delivery',
+		'trust.premium_quality': 'Premium Quality',
+		'product.perfect_gifting': 'Perfect for Gifting',
+		'product.gifting_description': 'Each box comes beautifully wrapped in premium materials, ready to bring joy to your loved ones.',
+		'cart.subtitle': 'Review your sacred collection',
+		'cart.empty_title': 'Your cart is empty',
+		'cart.empty_description': 'Add some divine verses to begin your spiritual journey',
+		'cart.continue_shopping': 'Continue Shopping',
+		'cart.secure': 'Secure Payment',
+		'cart.free_shipping': 'Free Shipping',
 	},
 	ar: {
 		'document.title': 'أونسي | علبة آيات قرآنية',
@@ -1065,6 +1136,27 @@ const translations = {
 		'order.confirmation_message': 'شكرًا لك على طلبك. ستتلقى رسالة تأكيد قريبًا.',
 		'order.order_number': 'رقم الطلب',
 		'actions.continue_shopping': 'متابعة التسوق',
+		// Enhanced UI translations
+		'badge.handcrafted': 'مصنوع بعناية',
+		'testimonials.badge': 'محبوب من مجتمعنا',
+		'testimonials.title': 'قلوب تأثرت',
+		'testimonials.subtitle': 'اكتشف كيف جلبت علبة آياتنا القرآنية السلام والراحة والاتصال الروحي للعائلات حول العالم.',
+		'stats.happy_families': 'عائلات سعيدة',
+		'stats.average_rating': 'التقييم المتوسط',
+		'stats.countries_shipped': 'دول تم الشحن إليها',
+		'stats.handmade': 'مصنوع يدوياً',
+		'trust.secure_payment': 'دفع آمن',
+		'trust.made_with_love': 'مصنوع بحب',
+		'trust.fast_delivery': 'توصيل سريع',
+		'trust.premium_quality': 'جودة عالية',
+		'product.perfect_gifting': 'مثالي للإهداء',
+		'product.gifting_description': 'كل علبة تأتي معبأة بشكل جميل بمواد فاخرة، جاهزة لإدخال الفرح على أحبائك.',
+		'cart.subtitle': 'راجع مجموعتك المقدسة',
+		'cart.empty_title': 'سلتك فارغة',
+		'cart.empty_description': 'أضف بعض الآيات الإلهية لتبدأ رحلتك الروحية',
+		'cart.continue_shopping': 'متابعة التسوق',
+		'cart.secure': 'دفع آمن',
+		'cart.free_shipping': 'شحن مجاني',
 	}
 
 };
