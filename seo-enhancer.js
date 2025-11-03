@@ -7,7 +7,7 @@
     // SEO Configuration
     const SEO_CONFIG = {
         siteName: 'ONSi',
-        baseUrl: 'https://onsikoranshop.vercel.app',
+        baseUrl: 'https://onsi.shop',
         businessName: 'ONSi Quranic Verses Box',
         keywords: {
             en: 'quranic verses, islamic cards, quran quotes, islamic gifts, spiritual cards, quranic ayat, islamic inspiration, muslim gifts, quran verses, islamic art, religious cards, daily reflection, islamic decor',

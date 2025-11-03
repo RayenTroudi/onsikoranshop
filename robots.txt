@@ -30,7 +30,7 @@ Disallow: /.env*
 Disallow: /vite.config.js
 
 # Sitemap location
-Sitemap: https://onsikoranshop.vercel.app/sitemap.xml
+Sitemap: https://onsi.shop/sitemap.xml
 
 # Crawl delay (optional)
 Crawl-delay: 1

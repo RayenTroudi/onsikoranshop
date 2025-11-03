@@ -5,12 +5,12 @@
   
   <!-- Main Homepage -->
   <url>
-    <loc>https://onsikoranshop.vercel.app/</loc>
-    <lastmod>2025-11-03</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>https://onsi.shop/</loc>
+    <lastmod>2024-11-03</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://onsikoranshop.vercel.app/"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://onsikoranshop.vercel.app/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://onsi.shop/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://onsi.shop/?lang=ar"/>
     <image:image>
       <image:loc>https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/68fb993a0009a2d89a0d/view?project=68f8c1bc003e3d2c8f5c</image:loc>
       <image:caption>ONSi Logo - Quranic Verses Box Brand</image:caption>
@@ -25,12 +25,12 @@
   
   <!-- Arabic Version -->
   <url>
-    <loc>https://onsikoranshop.vercel.app/?lang=ar</loc>
-    <lastmod>2025-11-03</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>https://onsi.shop/?lang=ar</loc>
+    <lastmod>2024-11-03</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://onsikoranshop.vercel.app/?lang=ar"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://onsikoranshop.vercel.app/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://onsi.shop/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://onsi.shop/"/>
   </url>
   
 </urlset>
