@@ -170,7 +170,7 @@ class AdminPanel {
             const productData = {
                 name: 'Quranic Verses Box',
                 description: 'A curated set of 51 beautifully designed cards featuring uplifting ayat in Arabic with English reflections. Gift-ready velvet box.',
-                price: 39.00,
+                price: null, // Will be set dynamically
                 category: 'Islamic Cards',
                 stock: 100,
                 status: 'active',

@@ -24,7 +24,7 @@ const state = {
 const PRODUCT = {
 	id: 'default',
 	name: 'Quranic Verses Box',
-	price: 39.00, // Default price in TND, will be updated from database
+	price: null, // Will be loaded from environment or database
 };
 
 // Exchange rate: 1 EUR = ~3.3 TND (update as needed)
@@ -104,7 +104,7 @@ async function loadProductFromDatabase() {
 			
 			PRODUCT.id = product.$id;
 			PRODUCT.name = product.name;
-			PRODUCT.price = product.price;
+			PRODUCT.price = product.price || parseFloat(window.ENV?.VITE_PRODUCT_PRICE) || null;
 			
 			console.log('✅ Product loaded from database:', PRODUCT);
 			console.log('📦 Total products available:', data.documents.length);
@@ -133,10 +133,15 @@ function updatePriceDisplays() {
 	// Update all elements with data-product-price attribute
 	const priceElements = document.querySelectorAll('[data-product-price]');
 	priceElements.forEach(el => {
-		el.textContent = formatCurrency(PRODUCT.price);
+		if (PRODUCT.price !== null && PRODUCT.price !== undefined) {
+			el.textContent = formatCurrency(PRODUCT.price);
+		} else {
+			el.textContent = 'Price not available';
+		}
 	});
 	
-	console.log(`✅ Updated ${priceElements.length} price displays to: ${formatCurrency(PRODUCT.price)}`);
+	const priceText = PRODUCT.price !== null ? formatCurrency(PRODUCT.price) : 'Price not available';
+	console.log(`✅ Updated ${priceElements.length} price displays to: ${priceText}`);
 	
 	// Update prices in existing cart items
 	state.items.forEach(item => {
@@ -147,6 +152,28 @@ function updatePriceDisplays() {
 	
 	// Re-render cart to update item prices
 	renderCart();
+	
+	// Update structured data
+	updateStructuredDataPrice();
+}
+
+// Update structured data price
+function updateStructuredDataPrice() {
+	if (PRODUCT.price !== null && PRODUCT.price !== undefined) {
+		const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+		scripts.forEach(script => {
+			try {
+				const data = JSON.parse(script.textContent);
+				if (data['@type'] === 'Product' && data.offers && data.offers.price !== undefined) {
+					data.offers.price = PRODUCT.price.toString();
+					script.textContent = JSON.stringify(data, null, 2);
+					console.log('✅ Updated Product schema price');
+				}
+			} catch (error) {
+				console.warn('⚠️ Could not update structured data:', error);
+			}
+		});
+	}
 }
 
 function findItem(id) {
@@ -1862,7 +1889,7 @@ function testEmailJS() {
 			day: 'numeric'
 		}),
 		items_list: 'Quranic Verses Box (Qty: 1)',
-		total_amount: '39.00',
+		total_amount: 'TBD',
 		shipping_address: '123 Test Street\nTest City, 12345\nUnited States',
 		customer_phone: '+1234567890'
 	};
@@ -1902,8 +1929,8 @@ function testAdminEmail() {
 			hour: '2-digit',
 			minute: '2-digit'
 		}),
-		items_list: '• Quranic Verses Box x 1 = $39.00',
-		total_amount: '39.00',
+		items_list: '• Quranic Verses Box x 1 = TBD',
+		total_amount: 'TBD',
 		shipping_address: 'Test Customer\n123 Test Street\nTest City, 12345\nUnited States'
 	};
 	

@@ -21,7 +21,7 @@ const envVars = {
   VITE_EMAILJS_ADMIN_TEMPLATE_ID: process.env.VITE_EMAILJS_ADMIN_TEMPLATE_ID || 'template_lkl5yxm',
   VITE_ADMIN_EMAIL: process.env.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com',
   VITE_APP_NAME: process.env.VITE_APP_NAME || 'Onsi Koran Shop',
-  VITE_PRODUCT_PRICE: process.env.VITE_PRODUCT_PRICE || '39.00',
+  VITE_PRODUCT_PRICE: process.env.VITE_PRODUCT_PRICE || null,
   VITE_SHIPPING_COST: process.env.VITE_SHIPPING_COST || '0.00',
   VITE_TAX_RATE: process.env.VITE_TAX_RATE || '0.00'
 };

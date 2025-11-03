@@ -22,7 +22,7 @@ export default defineConfig({
     __VITE_EMAILJS_ADMIN_TEMPLATE_ID__: JSON.stringify(process.env.VITE_EMAILJS_ADMIN_TEMPLATE_ID || 'template_lkl5yxm'),
     __VITE_ADMIN_EMAIL__: JSON.stringify(process.env.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com'),
     __VITE_APP_NAME__: JSON.stringify(process.env.VITE_APP_NAME || 'Onsi Koran Shop'),
-    __VITE_PRODUCT_PRICE__: JSON.stringify(process.env.VITE_PRODUCT_PRICE || '39.00'),
+    __VITE_PRODUCT_PRICE__: JSON.stringify(process.env.VITE_PRODUCT_PRICE || null),
     __VITE_SHIPPING_COST__: JSON.stringify(process.env.VITE_SHIPPING_COST || '0.00'),
     __VITE_TAX_RATE__: JSON.stringify(process.env.VITE_TAX_RATE || '0.00')
   }
