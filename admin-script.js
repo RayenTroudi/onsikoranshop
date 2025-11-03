@@ -1965,6 +1965,7 @@ async function loadDashboardStats() {
             
             if (ordersData) {
                 console.log('📊 Orders data received:', ordersData);
+                console.log('📊 Sample order structure:', ordersData.documents?.[0]);
                 totalOrders = ordersData.total || ordersData.documents?.length || 0;
                 
                 // Calculate total revenue and monthly revenue
@@ -1976,7 +1977,8 @@ async function loadDashboardStats() {
                 console.log('📊 Processing', ordersData.documents?.length || 0, 'orders');
                 
                 ordersData.documents?.forEach((order, index) => {
-                    const orderAmount = parseFloat(order.totalAmount || order.amount || 0);
+                    // Use the correct field name from your database structure
+                    const orderAmount = parseFloat(order.total || order.totalAmount || order.amount || 0);
                     totalRevenue += orderAmount;
                     
                     // Check if order is from current month
@@ -1985,6 +1987,7 @@ async function loadDashboardStats() {
                     
                     console.log(`📊 Order ${index + 1}:`, {
                         amount: orderAmount,
+                        totalField: order.total,
                         dateString: orderDateString,
                         parsedDate: orderDate,
                         orderMonth: orderDate.getMonth(),
@@ -2107,7 +2110,8 @@ async function loadDetailedStats() {
             let lastMonthRevenue = 0;
             
             ordersData.documents?.forEach(order => {
-                const orderAmount = parseFloat(order.totalAmount || order.amount || 0);
+                // Use the correct field name from your database structure  
+                const orderAmount = parseFloat(order.total || order.totalAmount || order.amount || 0);
                 totalRevenue += orderAmount;
                 orderValues.push(orderAmount);
                 
@@ -2189,7 +2193,7 @@ async function loadTopProducts() {
                     // Extract products from order (assuming order has items array or productName field)
                     const items = order.items || order.products || [];
                     const productName = order.productName || 'Unknown Product';
-                    const orderAmount = parseFloat(order.totalAmount || order.amount || 0);
+                    const orderAmount = parseFloat(order.total || order.totalAmount || order.amount || 0);
                     
                     if (items.length > 0) {
                         items.forEach(item => {
@@ -2374,7 +2378,7 @@ async function generateRevenueChart() {
                 ordersData.documents?.forEach(order => {
                     const orderDate = new Date(order.$createdAt || order.createdAt);
                     if (orderDate.toDateString() === date.toDateString()) {
-                        revenues[dayIndex] += parseFloat(order.totalAmount || order.amount || 0);
+                        revenues[dayIndex] += parseFloat(order.total || order.totalAmount || order.amount || 0);
                     }
                 });
             }
@@ -2441,3 +2445,51 @@ window.viewUserDetails = viewUserDetails;
 window.toggleUserStatus = toggleUserStatus;
 window.loadDashboardStats = loadDashboardStats;
 window.closeDeleteModal = closeDeleteModal;
+
+// Debug function to test order data structure
+window.debugOrderData = async function() {
+    console.log('🔍 Debug: Checking order data structure...');
+    
+    try {
+        const response = await fetch(`${ENV.VITE_APPWRITE_ENDPOINT}/databases/onsi/collections/orders/documents`, {
+            method: 'GET',
+            headers: {
+                'X-Appwrite-Project': ENV.VITE_APPWRITE_PROJECT_ID,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('📊 Total orders in database:', data.total);
+            console.log('📊 Orders array length:', data.documents?.length || 0);
+            
+            if (data.documents && data.documents.length > 0) {
+                console.log('📊 First order sample:', data.documents[0]);
+                console.log('📊 Available fields in first order:', Object.keys(data.documents[0]));
+                
+                // Check all orders for total amounts
+                let totalRevenue = 0;
+                data.documents.forEach((order, index) => {
+                    const amount = parseFloat(order.total || order.totalAmount || order.amount || 0);
+                    totalRevenue += amount;
+                    console.log(`Order ${index + 1}: total=${order.total}, amount=${amount}`);
+                });
+                
+                console.log('📊 Calculated total revenue:', totalRevenue, 'TND');
+            } else {
+                console.log('📊 No orders found in database');
+            }
+        } else {
+            console.error('❌ Failed to fetch orders:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('❌ Debug error:', error);
+    }
+};
+
+// Quick refresh function
+window.refreshDashboard = function() {
+    console.log('🔄 Refreshing dashboard...');
+    loadDashboardStats();
+};
