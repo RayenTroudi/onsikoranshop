@@ -1249,12 +1249,63 @@ function applyTranslations() {
 	html.dir = state.language === 'ar' ? 'rtl' : 'ltr';
 	// align body when RTL
 	document.body.classList.toggle('rtl', state.language === 'ar');
-	// document title and meta description
+	
+	// Update document title and meta tags
 	document.title = t('document.title');
+	
+	// Update meta description
 	const metaDesc = document.querySelector('meta[name="description"]');
 	if (metaDesc) {
 		metaDesc.content = t('document.description');
 	}
+	
+	// Update keywords meta tag
+	const metaKeywords = document.querySelector('meta[name="keywords"]');
+	if (metaKeywords && translations[state.language]['document.keywords']) {
+		metaKeywords.content = t('document.keywords');
+	}
+	
+	// Update Open Graph meta tags for better social sharing
+	const ogTitle = document.querySelector('meta[property="og:title"]');
+	if (ogTitle) {
+		ogTitle.content = t('document.title');
+	}
+	
+	const ogDesc = document.querySelector('meta[property="og:description"]');
+	if (ogDesc) {
+		ogDesc.content = t('document.description');
+	}
+	
+	// Update Twitter meta tags
+	const twitterTitle = document.querySelector('meta[property="twitter:title"]');
+	if (twitterTitle) {
+		twitterTitle.content = t('document.title');
+	}
+	
+	const twitterDesc = document.querySelector('meta[property="twitter:description"]');
+	if (twitterDesc) {
+		twitterDesc.content = t('document.description');
+	}
+	
+	// Update language and locale meta tags
+	const htmlLang = document.documentElement;
+	htmlLang.setAttribute('lang', state.language);
+	
+	const ogLocale = document.querySelector('meta[property="og:locale"]');
+	if (ogLocale) {
+		ogLocale.content = state.language === 'ar' ? 'ar_AR' : 'en_US';
+	}
+	
+	// Update canonical URL with language parameter
+	const canonical = document.querySelector('link[rel="canonical"]');
+	if (canonical) {
+		const baseUrl = 'https://onsi.shop/';
+		canonical.href = state.language === 'ar' ? `${baseUrl}?lang=ar` : baseUrl;
+	}
+	
+	// Update hreflang alternate links dynamically
+	updateHreflangTags();
+	
 	// product name in cart items should reflect language for new additions only
 	PRODUCT.name = t('product.name');
 	// update visible strings that are rendered dynamically
@@ -1283,6 +1334,40 @@ function updateLanguageDisplay(lang) {
 	langOptions.forEach(option => {
 		option.classList.toggle('active', option.dataset.lang === lang);
 	});
+}
+
+// Update hreflang tags for SEO
+function updateHreflangTags() {
+	const baseUrl = 'https://onsi.shop/';
+	
+	// Remove existing hreflang tags
+	document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(link => link.remove());
+	
+	// Create head element reference
+	const head = document.head;
+	
+	// Add English hreflang
+	const enLink = document.createElement('link');
+	enLink.rel = 'alternate';
+	enLink.hreflang = 'en';
+	enLink.href = baseUrl;
+	head.appendChild(enLink);
+	
+	// Add Arabic hreflang
+	const arLink = document.createElement('link');
+	arLink.rel = 'alternate';
+	arLink.hreflang = 'ar';
+	arLink.href = `${baseUrl}?lang=ar`;
+	head.appendChild(arLink);
+	
+	// Add x-default hreflang
+	const defaultLink = document.createElement('link');
+	defaultLink.rel = 'alternate';
+	defaultLink.hreflang = 'x-default';
+	defaultLink.href = baseUrl;
+	head.appendChild(defaultLink);
+	
+	console.log('✅ Updated hreflang tags for language:', state.language);
 }
 
 // Handle language change

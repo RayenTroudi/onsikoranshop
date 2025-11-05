@@ -226,19 +226,19 @@
         const logoSchema = {
             "@context": "https://schema.org",
             "@type": "ImageObject",
-            "url": "https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/68fb993a0009a2d89a0d/view?project=68f8c1bc003e3d2c8f5c",
+            "url": "https://onsi.shop/assets/logo.png",
             "width": 512,
             "height": 512,
             "name": "ONSi Logo",
             "description": "Official logo of ONSi Quranic Verses Box - Islamic inspiration cards",
-            "contentUrl": "https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/68fb993a0009a2d89a0d/view?project=68f8c1bc003e3d2c8f5c"
+            "contentUrl": "https://onsi.shop/assets/logo.png"
         };
         
         addJsonLdScript(logoSchema);
     }
     
     function ensureLogoMetas() {
-        const logoUrl = "https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/68fb993a0009a2d89a0d/view?project=68f8c1bc003e3d2c8f5c";
+        const logoUrl = "https://onsi.shop/assets/logo.png";
         
         // Ensure favicon is set
         let favicon = document.querySelector('link[rel="icon"]') || document.querySelector('link[rel="shortcut icon"]');
