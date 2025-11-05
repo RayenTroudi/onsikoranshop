@@ -69,7 +69,7 @@ try {
   }
 
   // Copy other static files
-  const staticFiles = ['styles.css', 'admin-styles.css', 'script.js', 'admin-script.js', 'appwrite-config.js'];
+  const staticFiles = ['styles.css', 'admin-styles.css', 'script.js', 'admin-script.js', 'appwrite-config.js', 'seo-enhancer.js', 'sitemap.xml', 'robots.txt'];
   staticFiles.forEach(file => {
     if (fs.existsSync(file)) {
       fs.copyFileSync(file, `./dist/${file}`);
