@@ -14,7 +14,7 @@
   <meta name="description" content="Discover ONSi Quranic Verses Box - beautifully crafted Islamic inspiration cards featuring uplifting Quranic ayat in Arabic & English. Perfect for daily reflection, gifts & spiritual growth. Free worldwide shipping.">
   <meta name="keywords" content="quranic verses, islamic cards, quran quotes, islamic gifts, spiritual cards, quranic ayat, islamic inspiration, muslim gifts, quran verses, islamic art, religious cards, daily reflection, islamic decor">
   <meta name="author" content="ONSi">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-video-preview:-1, max-image-preview:large">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-video-preview:30, max-image-preview:large">
   <link rel="canonical" href="https://onsi.shop/">
   
   <!-- Open Graph / Facebook -->
@@ -51,15 +51,19 @@
   <meta name="theme-color" content="#d97706">
   <meta name="msapplication-TileColor" content="#d97706">
   
-  <!-- Logo Meta Tags for Google Search -->
+  <!-- Logo Meta Tags for Google Search - High Quality -->
   <meta name="logo" content="https://onsi.shop/assets/logo.png">
   <meta property="og:logo" content="https://onsi.shop/assets/logo.png">
-  <link rel="apple-touch-icon" href="/assets/logo.png">
-  <link rel="shortcut icon" href="/assets/logo.png">
+  
+  <!-- High-resolution favicon and touch icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
   <link rel="icon" type="image/png" sizes="512x512" href="/assets/logo.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/logo.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/logo.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+  <link rel="shortcut icon" href="/assets/logo.png">
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   
   <!-- Structured Data - Product Schema -->
   <script type="application/ld+json">
@@ -153,11 +157,21 @@
     "logo": {
       "@type": "ImageObject",
       "url": "https://onsi.shop/assets/logo.png",
-      "width": 512,
-      "height": 512,
-      "caption": "ONSi Logo - Quranic Verses Box"
+      "contentUrl": "https://onsi.shop/assets/logo.png",
+      "width": "512",
+      "height": "512",
+      "caption": "ONSi Logo - Quranic Verses Box",
+      "encodingFormat": "image/png",
+      "inLanguage": "en",
+      "representativeOfPage": true
     },
-    "image": "https://onsi.shop/assets/logo.png",
+    "image": {
+      "@type": "ImageObject",
+      "url": "https://onsi.shop/assets/logo.png",
+      "width": "512",
+      "height": "512",
+      "caption": "ONSi Logo"
+    },
     "description": "ONSi offers beautifully crafted Islamic inspiration cards featuring Quranic verses in Arabic and English for daily reflection and spiritual growth.",
     "foundingDate": "2024",
     "sameAs": [],
@@ -199,6 +213,45 @@
         "urlTemplate": "https://onsi.shop/?search={search_term_string}"
       },
       "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  
+  <!-- VideoObject Schema for Product Video SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": "ONSi Quranic Verses Box - Product Overview",
+    "description": "Discover the ONSi Quranic Verses Box - a beautifully crafted collection of Islamic inspiration cards featuring uplifting Quranic ayat in Arabic and English. Perfect for daily reflection, gifts, and spiritual growth.",
+    "thumbnailUrl": "https://onsi.shop/assets/video-thumbnail.jpg",
+    "uploadDate": "2024-01-01T00:00:00Z",
+    "duration": "PT1M30S",
+    "contentUrl": "https://onsi.shop/assets/ons.mp4",
+    "embedUrl": "https://onsi.shop/",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ONSi",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://onsi.shop/assets/logo.png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    "inLanguage": "en",
+    "isFamilyFriendly": true,
+    "potentialAction": {
+      "@type": "WatchAction",
+      "target": "https://onsi.shop/"
+    },
+    "about": {
+      "@type": "Product",
+      "name": "ONSi Quranic Verses Box",
+      "brand": {
+        "@type": "Brand",
+        "name": "ONSi"
+      }
     }
   }
   </script>
