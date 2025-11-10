@@ -604,6 +604,41 @@
             </div>
           </div>
           
+          <!-- Video Section -->
+          <div class="max-w-3xl mx-auto pt-12 pb-8">
+            <!-- Video Container with Enhanced Design -->
+            <div class="relative group">
+              <!-- Subtle glow effect -->
+              <div class="absolute -inset-1 bg-gradient-to-r from-slate-200 via-neutral-100 to-slate-200 rounded-xl blur-sm opacity-30 group-hover:opacity-50 transition duration-500"></div>
+              
+              <!-- Video wrapper -->
+              <div class="relative bg-white rounded-xl p-2 shadow-xl">
+                <div class="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-slate-50 to-neutral-100 relative">
+                  <video 
+                    id="product-video"
+                    class="w-full h-full object-cover rounded-xl" 
+                    controls 
+                    preload="metadata"
+                    poster=""
+                    aria-label="Product explanation video">
+                    <source src="" type="video/mp4" id="video-source">
+                    <div class="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-xl">
+                      <div class="text-center space-y-3">
+                        <div class="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center shadow-lg">
+                          <svg class="w-6 h-6 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                          </svg>
+                        </div>
+                        <p class="text-slate-600 font-medium">Loading video...</p>
+                        <a href="" class="text-slate-500 hover:text-slate-700 text-sm underline transition-colors" id="video-download">Download video</a>
+                      </div>
+                    </div>
+                  </video>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <!-- Enhanced Purchase Section -->
           <div class="max-w-lg mx-auto pt-8">
             <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-amber-100/50 p-8 hover:shadow-2xl transition-all duration-500 relative overflow-hidden">
@@ -873,65 +908,6 @@
             <div class="space-y-2">
               <div class="text-3xl font-light text-slate-900">100%</div>
               <div class="text-sm text-slate-600 font-medium" data-i18n="stats.handmade">Handmade</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Product Experience Section -->
-    <section class="bg-gradient-to-b from-white to-neutral-50 py-16">
-      <div class="mx-auto max-w-5xl px-4">
-        
-        <!-- Section Header -->
-        <div class="text-center mb-10 space-y-3">
-          <h2 class="text-2xl md:text-3xl font-light text-slate-900" data-i18n="video.title">
-            Discover the <span class="font-medium text-slate-700">Beauty</span>
-          </h2>
-          <p class="text-base text-slate-600 max-w-xl mx-auto leading-relaxed" data-i18n="video.subtitle">
-            Watch our video to learn more about this special collection
-          </p>
-          
-          <!-- Decorative element -->
-          <div class="flex items-center justify-center space-x-2 pt-2">
-            <div class="w-1 h-1 rounded-full bg-slate-300"></div>
-            <div class="w-6 h-px bg-slate-200"></div>
-            <div class="w-1 h-1 rounded-full bg-slate-400"></div>
-            <div class="w-6 h-px bg-slate-200"></div>
-            <div class="w-1 h-1 rounded-full bg-slate-300"></div>
-          </div>
-        </div>
-        
-        <!-- Video Container with Enhanced Design -->
-        <div class="relative max-w-3xl mx-auto">
-          <div class="relative group">
-            <!-- Subtle glow effect -->
-            <div class="absolute -inset-1 bg-gradient-to-r from-slate-200 via-neutral-100 to-slate-200 rounded-xl blur-sm opacity-30 group-hover:opacity-50 transition duration-500"></div>
-            
-            <!-- Video wrapper -->
-            <div class="relative bg-white rounded-xl p-2 shadow-xl">
-              <div class="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-slate-50 to-neutral-100 relative">
-                <video 
-                  id="product-video"
-                  class="w-full h-full object-cover rounded-xl" 
-                  controls 
-                  preload="metadata"
-                  poster=""
-                  aria-label="Product explanation video">
-                  <source src="" type="video/mp4" id="video-source">
-                  <div class="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-xl">
-                    <div class="text-center space-y-3">
-                      <div class="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <svg class="w-6 h-6 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
-                        </svg>
-                      </div>
-                      <p class="text-slate-600 font-medium">Loading video...</p>
-                      <a href="" class="text-slate-500 hover:text-slate-700 text-sm underline transition-colors" id="video-download">Download video</a>
-                    </div>
-                  </div>
-                </video>
-              </div>
             </div>
           </div>
         </div>
