@@ -442,4 +442,609 @@ body[dir="rtl"] .cart-overlay.show .cart-drawer {
 	}
 }
 
+/* ========================================
+   COMPREHENSIVE MOBILE OPTIMIZATIONS
+   ======================================== */
+
+/* Base Mobile Adjustments */
+@media (max-width: 768px) {
+	/* Improve text readability on mobile */
+	body {
+		font-size: 16px;
+		line-height: 1.6;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	/* Prevent horizontal scroll */
+	html, body {
+		overflow-x: hidden;
+		max-width: 100vw;
+	}
+
+	/* Optimize touch targets - minimum 44x44px */
+	button, a, input, select, textarea {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}
+
+/* Header Mobile Optimizations */
+@media (max-width: 640px) {
+	header {
+		padding-top: 0.5rem !important;
+		padding-bottom: 0.5rem !important;
+	}
+
+	header .mx-auto {
+		padding-left: 1rem !important;
+		padding-right: 1rem !important;
+	}
+
+	/* Logo sizing */
+	#header-logo {
+		height: 2.5rem !important;
+		max-height: 2.5rem !important;
+	}
+
+	/* Compact header buttons */
+	#currency-toggle,
+	#lang-toggle,
+	#auth-button {
+		padding: 0.5rem !important;
+		font-size: 0.75rem !important;
+	}
+
+	#currency-label,
+	#current-lang {
+		font-size: 0.75rem !important;
+	}
+
+	/* Cart button mobile optimization */
+	.cart-button {
+		padding: 0.5rem 0.75rem !important;
+	}
+
+	#cart-count {
+		width: 1.25rem !important;
+		height: 1.25rem !important;
+		font-size: 0.625rem !important;
+	}
+}
+
+/* Hero Section Mobile Optimizations */
+@media (max-width: 768px) {
+	/* Hero padding */
+	section.relative.overflow-hidden {
+		padding-top: 2rem !important;
+		padding-bottom: 2rem !important;
+	}
+
+	section.relative.overflow-hidden .mx-auto {
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Arabic Bismillah text */
+	.font-arabic {
+		font-size: 1rem !important;
+		line-height: 1.8 !important;
+	}
+
+	/* Hero title sizing */
+	h1.text-4xl {
+		font-size: 2rem !important;
+		line-height: 1.2 !important;
+	}
+
+	h1.text-4xl span {
+		font-size: 2rem !important;
+	}
+
+	/* Storytelling card mobile */
+	.max-w-4xl {
+		max-width: 100% !important;
+	}
+
+	.relative.group .relative.bg-white\/95 {
+		padding: 1.5rem !important;
+	}
+
+	/* Adjust decorative corners for mobile */
+	.absolute.top-4.left-4,
+	.absolute.bottom-4.right-4 {
+		width: 1.5rem !important;
+		height: 1.5rem !important;
+	}
+
+	/* Arabic and English text in hero */
+	.relative.group p {
+		font-size: 0.875rem !important;
+		line-height: 1.6 !important;
+	}
+
+	/* Video section mobile */
+	.max-w-3xl.mx-auto {
+		padding-top: 2rem !important;
+		padding-bottom: 1.5rem !important;
+	}
+}
+
+/* Product Gallery Mobile Optimizations */
+@media (max-width: 1024px) {
+	/* Product Gallery Section */
+	.bg-gradient-to-b.from-slate-50\/30 {
+		padding-top: 3rem !important;
+		padding-bottom: 3rem !important;
+	}
+
+	/* Gallery grid spacing */
+	.grid.lg\:grid-cols-12 {
+		gap: 2rem !important;
+	}
+
+	/* Gallery images - optimize aspect ratios */
+	.aspect-\[4\/3\] {
+		aspect-ratio: 4/3 !important;
+	}
+
+	.aspect-square {
+		aspect-ratio: 1/1 !important;
+	}
+
+	/* Gallery gap adjustments */
+	.grid.grid-cols-2.gap-3 {
+		gap: 0.75rem !important;
+	}
+}
+
+@media (max-width: 640px) {
+	/* Section header mobile */
+	.space-y-4.pb-6 h3 {
+		font-size: 1.75rem !important;
+		line-height: 1.3 !important;
+	}
+
+	.space-y-4.pb-6 p {
+		font-size: 0.875rem !important;
+	}
+
+	/* Trust indicators below gallery */
+	.flex.flex-wrap.items-center.gap-4 {
+		gap: 0.5rem !important;
+		font-size: 0.75rem !important;
+	}
+
+	/* Gallery thumbnails - 2 column grid on mobile */
+	.grid.grid-cols-2 {
+		grid-template-columns: repeat(2, 1fr) !important;
+	}
+
+	/* Premium badge mobile */
+	.absolute.top-6.left-6 div {
+		font-size: 0.625rem !important;
+		padding: 0.375rem 0.625rem !important;
+	}
+
+	/* View All button mobile */
+	.flex.items-center.justify-center.aspect-square p {
+		font-size: 0.625rem !important;
+	}
+}
+
+/* Product Details Sidebar Mobile */
+@media (max-width: 1024px) {
+	/* Sidebar becomes full width on mobile */
+	.lg\:col-span-5 {
+		margin-top: 2rem;
+	}
+
+	/* Sticky behavior removed on mobile */
+	.lg\:sticky {
+		position: relative !important;
+		top: auto !important;
+	}
+
+	/* Product card mobile */
+	.product-details-card {
+		padding: 1.5rem !important;
+	}
+
+	/* Product title mobile */
+	.text-2xl.md\:text-3xl {
+		font-size: 1.5rem !important;
+		line-height: 1.3 !important;
+	}
+
+	/* Price mobile */
+	.text-3xl.font-light {
+		font-size: 2rem !important;
+	}
+
+	/* Rating display mobile */
+	.flex.items-center.gap-2 {
+		font-size: 0.75rem !important;
+	}
+
+	.flex.items-center.gap-2 svg {
+		width: 0.875rem !important;
+		height: 0.875rem !important;
+	}
+
+	/* Features list mobile */
+	.space-y-3 ul {
+		font-size: 0.875rem !important;
+	}
+
+	/* CTA button mobile - full width always */
+	.add-to-cart {
+		padding: 1rem 1.5rem !important;
+		font-size: 1rem !important;
+	}
+
+	/* Trust badges mobile */
+	.flex.items-center.justify-center.gap-4 {
+		flex-wrap: wrap !important;
+		gap: 0.75rem !important;
+		font-size: 0.75rem !important;
+	}
+}
+
+@media (max-width: 640px) {
+	/* Product details adjustments */
+	.space-y-6 {
+		gap: 1.25rem !important;
+	}
+
+	/* Icon sizing mobile */
+	.w-10.h-10 {
+		width: 2rem !important;
+		height: 2rem !important;
+	}
+
+	.w-10.h-10 svg {
+		width: 1.25rem !important;
+		height: 1.25rem !important;
+	}
+
+	/* Gift highlight mobile */
+	.bg-gradient-to-br.from-amber-50 {
+		padding: 1rem !important;
+	}
+
+	.bg-gradient-to-br.from-amber-50 p {
+		font-size: 0.75rem !important;
+	}
+}
+
+/* Testimonials Section Mobile */
+@media (max-width: 768px) {
+	/* Testimonials section */
+	.bg-gradient-to-br.from-amber-50\/30 {
+		padding-top: 3rem !important;
+		padding-bottom: 3rem !important;
+	}
+
+	/* Section title mobile */
+	.text-center.space-y-3 h3 {
+		font-size: 1.5rem !important;
+	}
+
+	.text-center.space-y-3 p {
+		font-size: 0.875rem !important;
+	}
+
+	/* Testimonial cards mobile - stack vertically */
+	.grid.md\:grid-cols-3 {
+		grid-template-columns: 1fr !important;
+		gap: 1.5rem !important;
+	}
+
+	/* Testimonial card mobile */
+	.bg-white\/80.backdrop-blur-sm {
+		padding: 1.25rem !important;
+	}
+
+	/* Star rating mobile */
+	.flex.items-center.space-x-1 svg {
+		width: 1rem !important;
+		height: 1rem !important;
+	}
+
+	/* Testimonial text mobile */
+	.text-slate-700.leading-relaxed {
+		font-size: 0.875rem !important;
+	}
+
+	/* Trust statistics mobile */
+	.grid.md\:grid-cols-4 {
+		grid-template-columns: repeat(2, 1fr) !important;
+		gap: 1.5rem !important;
+	}
+
+	.grid.md\:grid-cols-4 .text-3xl {
+		font-size: 1.75rem !important;
+	}
+
+	.grid.md\:grid-cols-4 .text-sm {
+		font-size: 0.75rem !important;
+	}
+}
+
+/* Cart Drawer Mobile Optimizations */
+@media (max-width: 640px) {
+	/* Cart drawer full width on mobile */
+	.cart-drawer {
+		max-width: 100% !important;
+		width: 100% !important;
+	}
+
+	/* Cart header mobile */
+	.cart-header {
+		padding: 1rem !important;
+	}
+
+	.cart-header h3 {
+		font-size: 1.125rem !important;
+	}
+
+	.cart-header p {
+		font-size: 0.75rem !important;
+	}
+
+	/* Cart items mobile */
+	#cart-items {
+		padding: 1rem !important;
+	}
+
+	.cart-item {
+		padding: 1rem !important;
+	}
+
+	.cart-item-image {
+		width: 3.5rem !important;
+		height: 3.5rem !important;
+	}
+
+	/* Cart footer mobile */
+	.cart-footer {
+		padding: 1rem !important;
+	}
+
+	#cart-subtotal {
+		font-size: 1.25rem !important;
+	}
+
+	/* Checkout button mobile */
+	.checkout-button {
+		padding: 0.875rem 1.25rem !important;
+		font-size: 0.875rem !important;
+	}
+
+	/* Quantity controls mobile */
+	.quantity-btn {
+		width: 2rem !important;
+		height: 2rem !important;
+		font-size: 0.875rem !important;
+	}
+
+	.quantity-display {
+		min-width: 2.5rem !important;
+		font-size: 0.875rem !important;
+	}
+}
+
+/* Form Elements Mobile Optimization */
+@media (max-width: 640px) {
+	input[type="text"],
+	input[type="email"],
+	input[type="tel"],
+	textarea,
+	select {
+		font-size: 16px !important; /* Prevents zoom on iOS */
+		padding: 0.75rem !important;
+	}
+
+	/* Modal mobile optimization */
+	.fixed.inset-0 > div {
+		max-width: 95% !important;
+		max-height: 90vh !important;
+		overflow-y: auto !important;
+	}
+}
+
+/* Improved Touch Interactions */
+@media (hover: none) and (pointer: coarse) {
+	/* Remove hover effects on touch devices */
+	.group:hover .group-hover\:scale-105,
+	.group:hover .group-hover\:scale-110,
+	.group:hover .group-hover\:scale-\[1\.03\],
+	.group:hover .group-hover\:scale-\[1\.08\] {
+		transform: none !important;
+	}
+
+	/* Improve button feedback on touch */
+	button:active,
+	.add-to-cart:active {
+		transform: scale(0.95) !important;
+		transition: transform 0.1s ease !important;
+	}
+
+	/* Remove hover shadows on touch */
+	.hover\:shadow-xl:hover,
+	.hover\:shadow-2xl:hover {
+		box-shadow: inherit !important;
+	}
+}
+
+/* Performance Optimizations for Mobile */
+@media (max-width: 768px) {
+	/* Reduce animation complexity on mobile */
+	* {
+		will-change: auto !important;
+	}
+
+	.product-gallery-main,
+	.product-gallery-thumb {
+		will-change: transform !important;
+	}
+
+	/* Optimize transitions for mobile */
+	.transition-all {
+		transition-duration: 200ms !important;
+	}
+
+	.duration-300,
+	.duration-500,
+	.duration-700 {
+		transition-duration: 200ms !important;
+	}
+}
+
+/* Landscape Orientation Mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+	/* Reduce vertical padding in landscape */
+	section {
+		padding-top: 2rem !important;
+		padding-bottom: 2rem !important;
+	}
+
+	/* Header more compact */
+	header {
+		padding-top: 0.5rem !important;
+		padding-bottom: 0.5rem !important;
+	}
+
+	/* Hero section landscape */
+	.relative.overflow-hidden {
+		padding-top: 1.5rem !important;
+		padding-bottom: 1.5rem !important;
+	}
+}
+
+/* Very Small Screens (iPhone SE, etc.) */
+@media (max-width: 375px) {
+	/* Extra compact header */
+	header .flex.items-center.gap-2 {
+		gap: 0.375rem !important;
+	}
+
+	/* Smaller text sizes */
+	h1.text-4xl {
+		font-size: 1.75rem !important;
+	}
+
+	.text-2xl {
+		font-size: 1.25rem !important;
+	}
+
+	.text-xl {
+		font-size: 1.125rem !important;
+	}
+
+	/* Compact padding */
+	.px-4 {
+		padding-left: 0.75rem !important;
+		padding-right: 0.75rem !important;
+	}
+
+	.py-16 {
+		padding-top: 2rem !important;
+		padding-bottom: 2rem !important;
+	}
+}
+
+/* Tablet Optimizations (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+	/* Optimize for tablet portrait/landscape */
+	.mx-auto {
+		max-width: 720px !important;
+	}
+
+	/* Gallery grid - show 3 columns on tablet */
+	.grid.grid-cols-2 {
+		grid-template-columns: repeat(2, 1fr) !important;
+	}
+
+	/* Product details - slightly more compact */
+	.product-details-card {
+		padding: 2rem !important;
+	}
+
+	/* Testimonials - 2 columns on tablet */
+	.grid.md\:grid-cols-3 {
+		grid-template-columns: repeat(2, 1fr) !important;
+	}
+}
+
+/* Prevent Layout Shift (CLS) */
+img, video {
+	height: auto;
+	max-width: 100%;
+}
+
+/* Image placeholders to prevent CLS */
+img[src=""],
+img:not([src]) {
+	visibility: hidden;
+}
+
+/* Reserve space for images */
+.aspect-video,
+.aspect-square,
+.aspect-\[4\/3\] {
+	position: relative;
+}
+
+.aspect-video::before,
+.aspect-square::before,
+.aspect-\[4\/3\]::before {
+	content: "";
+	display: block;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* Font Loading Optimization */
+.font-arabic {
+	font-display: swap;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* Safe Area Insets for Notched Devices */
+@supports (padding: max(0px)) {
+	header {
+		padding-left: max(1rem, env(safe-area-inset-left));
+		padding-right: max(1rem, env(safe-area-inset-right));
+	}
+
+	.cart-drawer {
+		padding-left: max(1.5rem, env(safe-area-inset-left));
+		padding-right: max(1.5rem, env(safe-area-inset-right));
+		padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+	}
+}
+
+/* Focus Indicators for Accessibility */
+@media (max-width: 768px) {
+	button:focus-visible,
+	a:focus-visible,
+	input:focus-visible {
+		outline: 2px solid #3b82f6 !important;
+		outline-offset: 2px !important;
+	}
+}
+
+
+
 
