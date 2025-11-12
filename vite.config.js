@@ -16,6 +16,7 @@ export default defineConfig({
     __VITE_APPWRITE_ENDPOINT__: JSON.stringify(process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1'),
     __VITE_APPWRITE_PROJECT_ID__: JSON.stringify(process.env.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c'),
     __VITE_APPWRITE_PROJECT_NAME__: JSON.stringify(process.env.VITE_APPWRITE_PROJECT_NAME || 'onsi'),
+    __VITE_UPLOADTHING_APP_ID__: JSON.stringify(process.env.VITE_UPLOADTHING_APP_ID || '9v6fd3xlqu'),
     __VITE_EMAILJS_PUBLIC_KEY__: JSON.stringify(process.env.VITE_EMAILJS_PUBLIC_KEY || 'ryB3eYn0HP-iAfl2E'),
     __VITE_EMAILJS_SERVICE_ID__: JSON.stringify(process.env.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we'),
     __VITE_EMAILJS_CUSTOMER_TEMPLATE_ID__: JSON.stringify(process.env.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || 'template_3m8gczh'),
