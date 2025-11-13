@@ -23,6 +23,9 @@
   ],
   "routes": [
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/api/video-config",
       "dest": "/api/video-config-get.js"
     },
@@ -35,9 +38,6 @@
       "src": "/api/upload-file",
       "dest": "/api/upload-file.js",
       "methods": ["POST", "OPTIONS"]
-    },
-    {
-      "handle": "filesystem"
     },
     {
       "src": "/admin.html",
@@ -57,7 +57,10 @@
     },
     {
       "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp4))",
-      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "headers": { 
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "public, max-age=31536000, immutable" 
+      },
       "dest": "/$1"
     },
     {
