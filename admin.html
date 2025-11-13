@@ -1501,9 +1501,6 @@ class VideoManager {
                 
                 this.showElement(progressContainer);
 
-                // Get authentication token
-                const jwt = await this.getAuthToken();
-
                 // Create FormData
                 const formData = new FormData();
                 formData.append('file', file);
@@ -1558,9 +1555,8 @@ class VideoManager {
                     ));
                 });
 
-                // Send request to backend API
+                // Send request to backend API (no auth needed - admin already logged in)
                 xhr.open('POST', '/api/upload-file');
-                xhr.setRequestHeader('Authorization', `Bearer ${jwt}`);
                 xhr.send(formData);
 
             } catch (error) {
@@ -1575,14 +1571,10 @@ class VideoManager {
         try {
             console.log('💾 Updating video configuration...');
 
-            // Get authentication token
-            const jwt = await this.getAuthToken();
-
             const response = await fetch('/api/replace-video', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${jwt}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     videoUrl,
@@ -1603,20 +1595,6 @@ class VideoManager {
             console.error('❌ Error updating configuration:', error);
             throw error;
         }
-    }
-
-    async getAuthToken() {
-        // Get JWT from Appwrite session
-        if (window.appwriteAuth && window.appwriteAuth.account) {
-            try {
-                const jwt = await window.appwriteAuth.account.createJWT();
-                return jwt.jwt;
-            } catch (error) {
-                console.error('Failed to create JWT:', error);
-                throw new Error('Authentication required');
-            }
-        }
-        throw new Error('Not authenticated');
     }
 
     resetForm() {

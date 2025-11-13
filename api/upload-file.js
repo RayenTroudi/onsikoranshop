@@ -4,7 +4,6 @@
  * This avoids CORS issues and keeps API keys secure
  */
 
-import { Client, Account } from 'node-appwrite';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 
@@ -14,39 +13,6 @@ const CORS_HEADERS = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
-
-/**
- * Verify admin authentication
- */
-async function verifyAdmin(authHeader) {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return { valid: false, error: 'No authorization token provided' };
-    }
-
-    const jwt = authHeader.substring(7);
-    
-    try {
-        const client = new Client();
-        client
-            .setEndpoint(process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1')
-            .setProject(process.env.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c')
-            .setJWT(jwt);
-        
-        const account = new Account(client);
-        const user = await account.get();
-        
-        // Check if user is admin
-        const adminEmail = 'onsmaitii@gmail.com';
-        if (user.email !== adminEmail) {
-            return { valid: false, error: 'Unauthorized: Admin access required' };
-        }
-        
-        return { valid: true, user };
-    } catch (error) {
-        console.error('Auth verification error:', error);
-        return { valid: false, error: 'Invalid or expired token' };
-    }
-}
 
 /**
  * Upload file to UploadThing
@@ -132,17 +98,6 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Verify admin authentication
-        const authResult = await verifyAdmin(req.headers.authorization);
-        if (!authResult.valid) {
-            res.writeHead(401, { ...CORS_HEADERS, 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ 
-                success: false, 
-                error: authResult.error 
-            }));
-            return;
-        }
-
         // Parse multipart form data
         const busboy = require('busboy');
         const bb = busboy({ headers: req.headers });

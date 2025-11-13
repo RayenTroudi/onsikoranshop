@@ -4,7 +4,6 @@
  * Vercel Serverless Function
  */
 
-import { Client, Account } from 'https://cdn.skypack.dev/appwrite@15.0.0';
 import { getVideoConfig, updateVideoConfig } from './video-config.js';
 
 // CORS headers
@@ -13,39 +12,6 @@ const CORS_HEADERS = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
-
-/**
- * Verify admin authentication
- */
-async function verifyAdmin(authHeader) {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return { valid: false, error: 'No authorization token provided' };
-    }
-
-    const jwt = authHeader.substring(7);
-    
-    try {
-        const client = new Client();
-        client
-            .setEndpoint('https://fra.cloud.appwrite.io/v1')
-            .setProject('68f8c1bc003e3d2c8f5c')
-            .setJWT(jwt);
-        
-        const account = new Account(client);
-        const user = await account.get();
-        
-        // Check if user is admin (you can customize this check)
-        const adminEmail = 'onsmaitii@gmail.com';
-        if (user.email !== adminEmail) {
-            return { valid: false, error: 'Unauthorized: Admin access required' };
-        }
-        
-        return { valid: true, user };
-    } catch (error) {
-        console.error('Auth verification error:', error);
-        return { valid: false, error: 'Invalid or expired token' };
-    }
-}
 
 /**
  * Delete file from UploadThing
@@ -103,15 +69,6 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Verify admin authentication
-        const authResult = await verifyAdmin(req.headers.authorization);
-        if (!authResult.valid) {
-            return res.status(401).json({ 
-                success: false, 
-                error: authResult.error 
-            });
-        }
-
         const { videoUrl, thumbnailUrl } = req.body;
 
         // Validate input
