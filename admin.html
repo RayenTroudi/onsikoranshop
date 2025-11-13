@@ -1234,18 +1234,12 @@ class VideoManager {
         this.currentConfig = null;
         this.uploadingVideo = false;
         this.uploadingThumbnail = false;
-        this.uploadThingAppId = '9v6fd3xlqu';
-        this.uploadThingToken = null;
         
         this.init();
     }
 
     async init() {
         console.log('🎬 Video Manager initializing...');
-        
-        // Get UploadThing token from environment
-        this.uploadThingToken = window.ENV?.VITE_UPLOADTHING_TOKEN || 
-            'eyJhcGlLZXkiOiJza19saXZlX2Q4MzYxM2Y5NGM5YzViM2YxZWMwYjY5N2IzM2VlZjMzOWRkMzVlNWQwMzgwNTkxYjdlMTUzOGE0NzA4OWIyZjEiLCJhcHBJZCI6Ijl2NmZkM3hscXUiLCJyZWdpb25zIjpbInNlYTEiXX0=';
         
         this.bindEvents();
         await this.loadCurrentVideo();
@@ -1492,7 +1486,7 @@ class VideoManager {
     async uploadToUploadThing(file, type) {
         return new Promise(async (resolve, reject) => {
             try {
-                console.log(`📤 Uploading ${type} to UploadThing...`);
+                console.log(`📤 Uploading ${type} directly to UploadThing...`);
 
                 // Show progress bar
                 const progressContainer = document.getElementById(`${type}-upload-progress`);
@@ -1501,12 +1495,49 @@ class VideoManager {
                 
                 this.showElement(progressContainer);
 
-                // Create FormData
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('type', type);
+                // Step 1: Get presigned URL from UploadThing
+                const uploadThingSecret = __VITE_UPLOADTHING_SECRET__;
+                
+                if (!uploadThingSecret) {
+                    throw new Error('UploadThing secret not configured. Please set VITE_UPLOADTHING_SECRET in Vercel environment variables.');
+                }
+                
+                const prepareResponse = await fetch('https://api.uploadthing.com/v6/uploadFiles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Uploadthing-Api-Key': uploadThingSecret,
+                        'X-Uploadthing-Version': '6.4.0'
+                    },
+                    body: JSON.stringify({
+                        files: [{
+                            name: file.name,
+                            size: file.size,
+                            type: file.type
+                        }],
+                        metadata: {
+                            uploadType: type
+                        }
+                    })
+                });
 
-                // Upload via backend API
+                if (!prepareResponse.ok) {
+                    const errorText = await prepareResponse.text();
+                    console.error('UploadThing prepare error:', errorText);
+                    throw new Error(`Failed to prepare upload: ${prepareResponse.status}`);
+                }
+
+                const prepareData = await prepareResponse.json();
+                console.log('UploadThing prepare response:', prepareData);
+
+                if (!prepareData.data || !prepareData.data[0]) {
+                    throw new Error('Invalid response from UploadThing');
+                }
+
+                const uploadData = prepareData.data[0];
+                const { url: uploadUrl, key: fileKey } = uploadData;
+
+                // Step 2: Upload file to presigned URL
                 const xhr = new XMLHttpRequest();
 
                 // Progress tracking
@@ -1520,46 +1551,31 @@ class VideoManager {
 
                 // Success
                 xhr.addEventListener('load', () => {
-                    if (xhr.status === 200) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            
-                            if (!response.success || !response.url) {
-                                reject(new Error(response.error || 'Upload failed'));
-                                return;
-                            }
-
-                            console.log(`✅ ${type} uploaded:`, response.url);
-                            this.hideElement(progressContainer);
-                            resolve(response.url);
-                        } catch (parseError) {
-                            reject(new Error('Invalid response from server'));
-                        }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        // Construct the final URL
+                        const finalUrl = `https://utfs.io/f/${fileKey}`;
+                        console.log(`✅ ${type} uploaded:`, finalUrl);
+                        this.hideElement(progressContainer);
+                        resolve(finalUrl);
                     } else {
-                        try {
-                            const error = JSON.parse(xhr.responseText);
-                            reject(new Error(error.error || `Upload failed with status ${xhr.status}`));
-                        } catch (e) {
-                            reject(new Error(`Upload failed with status ${xhr.status}`));
-                        }
+                        console.error('Upload error:', xhr.status, xhr.responseText);
+                        reject(new Error(`Upload failed with status ${xhr.status}`));
                     }
                 });
 
                 // Error
                 xhr.addEventListener('error', () => {
                     this.hideElement(progressContainer);
-                    reject(new Error(
-                        'Upload failed - network error.\n\n' +
-                        'This feature requires deployment to Vercel.\n' +
-                        'Please deploy the site first (git push origin main).'
-                    ));
+                    reject(new Error('Upload failed - network error'));
                 });
 
-                // Send request to backend API (no auth needed - admin already logged in)
-                xhr.open('POST', '/api/upload-file');
-                xhr.send(formData);
+                // Upload the file
+                xhr.open('PUT', uploadUrl);
+                xhr.setRequestHeader('Content-Type', file.type);
+                xhr.send(file);
 
             } catch (error) {
+                console.error('Upload error:', error);
                 const progressContainer = document.getElementById(`${type}-upload-progress`);
                 this.hideElement(progressContainer);
                 reject(error);
