@@ -208,6 +208,13 @@
             </svg>
             Storage
           </button>
+          
+          <button class="nav-item w-full flex items-center px-4 py-3 text-white rounded-lg hover:bg-slate-600 transition-colors" data-section="video">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Video Manager
+          </button>
         </nav>
         
         <div class="mt-auto pt-6">
@@ -494,6 +501,273 @@
               <p class="text-sm text-gray-500 mt-2">Users will appear here when they register on your site</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Video Manager Section -->
+      <div id="video-section" class="section hidden flex-1 p-4 lg:p-6 overflow-y-auto">
+        <div class="max-w-5xl mx-auto space-y-6">
+          
+          <!-- Current Video Card -->
+          <div class="admin-card">
+            <div class="p-6 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Current Website Video</h3>
+                  <p class="text-gray-600 text-sm mt-1">This video is displayed on the main homepage</p>
+                </div>
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span id="video-last-updated">Loading...</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="p-6">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Video Preview -->
+                <div>
+                  <h4 class="text-sm font-medium text-gray-700 mb-3">Video Preview</h4>
+                  <div class="relative bg-gray-900 rounded-lg overflow-hidden shadow-lg aspect-video">
+                    <video 
+                      id="current-video-preview" 
+                      class="w-full h-full object-cover"
+                      controls
+                      poster="">
+                      <source src="" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
+                    <div id="video-loading-preview" class="absolute inset-0 bg-gray-900 flex items-center justify-center">
+                      <div class="text-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-3"></div>
+                        <p class="text-white text-sm">Loading video...</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Video Info -->
+                  <div class="mt-4 space-y-2 text-sm">
+                    <div class="flex items-center justify-between">
+                      <span class="text-gray-500">File:</span>
+                      <a id="current-video-link" href="#" target="_blank" class="text-blue-600 hover:underline truncate max-w-xs">Loading...</a>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-gray-500">Status:</span>
+                      <span id="current-video-status" class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Active</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Thumbnail Preview -->
+                <div>
+                  <h4 class="text-sm font-medium text-gray-700 mb-3">Thumbnail Preview</h4>
+                  <div class="relative bg-gray-100 rounded-lg overflow-hidden shadow-lg aspect-video">
+                    <img 
+                      id="current-thumbnail-preview" 
+                      src="" 
+                      alt="Video Thumbnail"
+                      class="w-full h-full object-cover">
+                    <div id="thumbnail-loading-preview" class="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                      <div class="text-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-700 mx-auto mb-3"></div>
+                        <p class="text-gray-600 text-sm">Loading thumbnail...</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Thumbnail Info -->
+                  <div class="mt-4 space-y-2 text-sm">
+                    <div class="flex items-center justify-between">
+                      <span class="text-gray-500">File:</span>
+                      <a id="current-thumbnail-link" href="#" target="_blank" class="text-blue-600 hover:underline truncate max-w-xs">Loading...</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload New Video Card -->
+          <div class="admin-card">
+            <div class="p-6 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Upload New Video</h3>
+                  <p class="text-gray-600 text-sm mt-1">Replace the current video and thumbnail</p>
+                </div>
+                <div class="flex items-center space-x-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span class="text-sm text-blue-700">Max: 200 MB</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="p-6">
+              <form id="video-upload-form" class="space-y-6">
+                
+                <!-- Video Upload -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-3">
+                    New Video File *
+                    <span class="text-gray-500 font-normal ml-2">(MP4 format recommended)</span>
+                  </label>
+                  
+                  <div class="relative">
+                    <input 
+                      type="file" 
+                      id="new-video-upload" 
+                      accept="video/mp4,video/quicktime,video/*"
+                      class="hidden"
+                      required>
+                    
+                    <button 
+                      type="button"
+                      onclick="document.getElementById('new-video-upload').click()"
+                      class="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-slate-400 transition-colors">
+                      <div id="video-upload-placeholder">
+                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-gray-600 font-medium">Click to select video file</p>
+                        <p class="text-gray-500 text-sm mt-1">or drag and drop here</p>
+                      </div>
+                      
+                      <div id="video-upload-preview" class="hidden">
+                        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4">
+                          <div class="flex items-center space-x-3">
+                            <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                            </svg>
+                            <div class="text-left">
+                              <p id="video-file-name" class="text-gray-900 font-medium"></p>
+                              <p id="video-file-size" class="text-gray-500 text-sm"></p>
+                            </div>
+                          </div>
+                          <button 
+                            type="button"
+                            onclick="clearVideoUpload()"
+                            class="text-red-600 hover:text-red-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <!-- Upload Progress -->
+                    <div id="video-upload-progress" class="hidden mt-3">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600">Uploading video...</span>
+                        <span id="video-upload-percent" class="text-sm font-medium text-slate-700">0%</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="video-progress-bar" class="bg-slate-700 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Thumbnail Upload -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-3">
+                    New Thumbnail Image *
+                    <span class="text-gray-500 font-normal ml-2">(JPG, PNG, or WebP)</span>
+                  </label>
+                  
+                  <div class="relative">
+                    <input 
+                      type="file" 
+                      id="new-thumbnail-upload" 
+                      accept="image/jpeg,image/png,image/webp,image/*"
+                      class="hidden"
+                      required>
+                    
+                    <button 
+                      type="button"
+                      onclick="document.getElementById('new-thumbnail-upload').click()"
+                      class="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-slate-400 transition-colors">
+                      <div id="thumbnail-upload-placeholder">
+                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-gray-600 font-medium">Click to select thumbnail image</p>
+                        <p class="text-gray-500 text-sm mt-1">or drag and drop here</p>
+                      </div>
+                      
+                      <div id="thumbnail-upload-preview" class="hidden">
+                        <img id="thumbnail-preview-img" src="" alt="Thumbnail preview" class="max-h-48 mx-auto rounded-lg shadow-md">
+                        <button 
+                          type="button"
+                          onclick="clearThumbnailUpload()"
+                          class="mt-3 text-red-600 hover:text-red-800 text-sm font-medium">
+                          Remove
+                        </button>
+                      </div>
+                    </button>
+                    
+                    <!-- Upload Progress -->
+                    <div id="thumbnail-upload-progress" class="hidden mt-3">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600">Uploading thumbnail...</span>
+                        <span id="thumbnail-upload-percent" class="text-sm font-medium text-slate-700">0%</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="thumbnail-progress-bar" class="bg-slate-700 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Confirmation Notice -->
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div class="flex items-start">
+                    <svg class="w-5 h-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3l-6.928-12c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div class="flex-1">
+                      <h4 class="text-sm font-medium text-amber-900 mb-1">Important Notice</h4>
+                      <ul class="text-sm text-amber-800 space-y-1">
+                        <li>• The current video and thumbnail will be replaced immediately</li>
+                        <li>• Old files will be deleted after 7 days (for recovery purposes)</li>
+                        <li>• Website visitors will see the new video within 1 minute</li>
+                        <li>• Make sure both video and thumbnail are correct before submitting</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <button 
+                    type="button"
+                    id="cancel-video-upload"
+                    onclick="resetVideoForm()"
+                    class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    id="submit-video-upload"
+                    class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="submit-video-text">Replace Video & Thumbnail</span>
+                    <span id="submit-video-loading" class="hidden flex items-center">
+                      <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -947,5 +1221,8 @@
   
   <!-- Admin Panel JavaScript -->
   <script type="module" src="admin-script.js"></script>
+  
+  <!-- Video Manager -->
+  <script type="module" src="video-manager.js"></script>
 </body>
 </html>

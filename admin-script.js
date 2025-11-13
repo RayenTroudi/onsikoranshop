@@ -2442,7 +2442,7 @@ window.closeUploadModal = closeUploadModal;
 window.loadUsersSection = loadUsersSection;
 window.loadStatsSection = loadStatsSection;
 window.viewUserDetails = viewUserDetails;
-window.toggleUserStatus = toggleUserStatus;
+// window.toggleUserStatus = toggleUserStatus; // Function not defined
 window.loadDashboardStats = loadDashboardStats;
 window.closeDeleteModal = closeDeleteModal;
 

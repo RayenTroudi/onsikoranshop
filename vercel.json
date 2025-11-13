@@ -7,9 +7,35 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "api/video-config-get.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/replace-video.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/upload-file.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/video-config",
+      "dest": "/api/video-config-get.js"
+    },
+    {
+      "src": "/api/replace-video",
+      "dest": "/api/replace-video.js",
+      "methods": ["POST", "OPTIONS"]
+    },
+    {
+      "src": "/api/upload-file",
+      "dest": "/api/upload-file.js",
+      "methods": ["POST", "OPTIONS"]
+    },
     {
       "handle": "filesystem"
     },

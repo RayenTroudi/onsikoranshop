@@ -233,49 +233,66 @@
   
   <!-- VideoObject Schema for Product Video SEO (dynamically generated) -->
   <script>
-    // Generate VideoObject schema with UploadThing URLs
-    const videoObjectSchema = {
-      "@context": "https://schema.org",
-      "@type": "VideoObject",
-      "name": "ONSi Quranic Verses Box - Product Overview",
-      "description": "Discover the ONSi Quranic Verses Box - a beautifully crafted collection of Islamic inspiration cards featuring uplifting Quranic ayat in Arabic and English. Perfect for daily reflection, gifts, and spiritual growth.",
-      "thumbnailUrl": "https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o",
-      "uploadDate": "2025-11-13T00:00:00Z",
-      "duration": "PT5M17S",
-      "contentUrl": "https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0",
-      "encodingFormat": "video/mp4",
-      "embedUrl": "https://onsi.shop/",
-      "publisher": {
-        "@type": "Organization",
-        "name": "ONSi",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://onsi.shop/assets/logo.png",
-          "width": 512,
-          "height": 512
-        }
-      },
-      "inLanguage": "en",
-      "isFamilyFriendly": true,
-      "potentialAction": {
-        "@type": "WatchAction",
-        "target": "https://onsi.shop/"
-      },
-      "about": {
-        "@type": "Product",
-        "name": "ONSi Quranic Verses Box",
-        "brand": {
-          "@type": "Brand",
-          "name": "ONSi"
-        }
+    // Fetch and generate VideoObject schema with dynamic URLs
+    async function initializeVideoSchema() {
+      try {
+        const response = await fetch('/api/video-config');
+        const config = await response.json();
+        
+        const videoObjectSchema = {
+          "@context": "https://schema.org",
+          "@type": "VideoObject",
+          "name": "ONSi Quranic Verses Box - Product Overview",
+          "description": "Discover the ONSi Quranic Verses Box - a beautifully crafted collection of Islamic inspiration cards featuring uplifting Quranic ayat in Arabic and English. Perfect for daily reflection, gifts, and spiritual growth.",
+          "thumbnailUrl": config.thumbnailUrl,
+          "uploadDate": "2025-11-13T00:00:00Z",
+          "duration": "PT5M17S",
+          "contentUrl": config.videoUrl,
+          "encodingFormat": "video/mp4",
+          "embedUrl": "https://onsi.shop/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "ONSi",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://onsi.shop/assets/logo.png",
+              "width": 512,
+              "height": 512
+            }
+          },
+          "inLanguage": "en",
+          "isFamilyFriendly": true,
+          "potentialAction": {
+            "@type": "WatchAction",
+            "target": "https://onsi.shop/"
+          },
+          "about": {
+            "@type": "Product",
+            "name": "ONSi Quranic Verses Box",
+            "brand": {
+              "@type": "Brand",
+              "name": "ONSi"
+            }
+          }
+        };
+        
+        // Inject schema into document head
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.textContent = JSON.stringify(videoObjectSchema);
+        document.head.appendChild(script);
+        
+      } catch (error) {
+        console.warn('Failed to load dynamic video schema:', error);
       }
-    };
+    }
     
-    // Inject schema into document head
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(videoObjectSchema);
-    document.head.appendChild(script);
+    // Initialize schema when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeVideoSchema);
+    } else {
+      initializeVideoSchema();
+    }
   </script>
   <link rel="icon" href="" id="favicon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1575,79 +1592,109 @@
         console.log('🎥 Initializing UploadThing MP4 video...');
         console.log('Video element found:', !!productVideo);
         
-        // UploadThing direct URLs (MP4 format for best browser compatibility)
-        const uploadThingVideoUrl = 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0';
-        const uploadThingThumbnailUrl = 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o';
-        
-        console.log('📹 Video URL (MP4):', uploadThingVideoUrl);
-        console.log('🖼️ Thumbnail URL:', uploadThingThumbnailUrl);
-        
-        if (productVideo) {
-          // Set video source directly on video element
-          productVideo.src = uploadThingVideoUrl;
-          productVideo.type = 'video/mp4'; // MP4 format for universal browser support
-          
-          // Set thumbnail poster image
-          productVideo.poster = uploadThingThumbnailUrl;
-          console.log('✅ Video and poster URLs set successfully');
-          
-          // Add error event listeners for debugging
-          productVideo.addEventListener('error', function(e) {
-            console.error('❌ Video error:', e);
-            const error = productVideo.error;
-            if (error) {
-              console.error('Video error code:', error.code);
-              console.error('Video error message:', error.message);
-              
-              // Error codes explanation
-              const errorMessages = {
-                1: 'MEDIA_ERR_ABORTED - Video loading was aborted',
-                2: 'MEDIA_ERR_NETWORK - Network error while loading video',
-                3: 'MEDIA_ERR_DECODE - Video decoding failed (codec not supported)',
-                4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Video format not supported by browser'
-              };
-              console.error('Error explanation:', errorMessages[error.code] || 'Unknown error');
+        // Fetch video configuration dynamically from API
+        async function loadVideoConfig() {
+          try {
+            console.log('📡 Fetching video configuration from API...');
+            const response = await fetch('/api/video-config');
+            
+            if (!response.ok) {
+              throw new Error('Failed to fetch video configuration');
             }
-            console.error('Video error details:', {
-              networkState: productVideo.networkState,
-              readyState: productVideo.readyState,
-              currentSrc: productVideo.currentSrc
-            });
-          });
-          
-          productVideo.addEventListener('loadstart', function() {
-            console.log('📥 Video loading started...');
-          });
-          
-          productVideo.addEventListener('loadedmetadata', function() {
-            console.log('✅ Video metadata loaded');
-            console.log('Video duration:', productVideo.duration);
-            console.log('Video dimensions:', productVideo.videoWidth + 'x' + productVideo.videoHeight);
-          });
-          
-          productVideo.addEventListener('canplay', function() {
-            console.log('✅ Video can play');
-          });
-          
-          productVideo.addEventListener('canplaythrough', function() {
-            console.log('✅ Video can play through');
-          });
-          
-          // Load the video
-          productVideo.load();
-          console.log('▶️ Video load() called');
-          
-          // Ensure video starts from 0:00 when played
-          productVideo.addEventListener('play', function() {
-            if (this.currentTime > 1) {
-              console.log('🎬 Resetting video to start from 0:00');
-              this.currentTime = 0;
-            }
-          });
-        } else {
-          console.error('❌ Video element not found!');
+            
+            const config = await response.json();
+            console.log('✅ Video config loaded:', config);
+            
+            return {
+              videoUrl: config.videoUrl,
+              thumbnailUrl: config.thumbnailUrl
+            };
+          } catch (error) {
+            console.warn('⚠️ Failed to fetch video config, using fallback URLs:', error);
+            // Fallback to default URLs if API fails
+            return {
+              videoUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0',
+              thumbnailUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o'
+            };
+          }
         }
-        if (videoDownload) videoDownload.href = uploadThingVideoUrl;
+        
+        // Load and set video
+        loadVideoConfig().then(({ videoUrl, thumbnailUrl }) => {
+          console.log('📹 Video URL (MP4):', videoUrl);
+          console.log('🖼️ Thumbnail URL:', thumbnailUrl);
+          
+          if (productVideo) {
+            // Set video source directly on video element
+            productVideo.src = videoUrl;
+            productVideo.type = 'video/mp4'; // MP4 format for universal browser support
+            
+            // Set thumbnail poster image
+            productVideo.poster = thumbnailUrl;
+            console.log('✅ Video and poster URLs set successfully');
+            
+            // Add error event listeners for debugging
+            productVideo.addEventListener('error', function(e) {
+              console.error('❌ Video error:', e);
+              const error = productVideo.error;
+              if (error) {
+                console.error('Video error code:', error.code);
+                console.error('Video error message:', error.message);
+                
+                // Error codes explanation
+                const errorMessages = {
+                  1: 'MEDIA_ERR_ABORTED - Video loading was aborted',
+                  2: 'MEDIA_ERR_NETWORK - Network error while loading video',
+                  3: 'MEDIA_ERR_DECODE - Video decoding failed (codec not supported)',
+                  4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Video format not supported by browser'
+                };
+                console.error('Error explanation:', errorMessages[error.code] || 'Unknown error');
+              }
+              console.error('Video error details:', {
+                networkState: productVideo.networkState,
+                readyState: productVideo.readyState,
+                currentSrc: productVideo.currentSrc
+              });
+            });
+            
+            productVideo.addEventListener('loadstart', function() {
+              console.log('📥 Video loading started...');
+            });
+            
+            productVideo.addEventListener('loadedmetadata', function() {
+              console.log('✅ Video metadata loaded');
+              console.log('Video duration:', productVideo.duration);
+              console.log('Video dimensions:', productVideo.videoWidth + 'x' + productVideo.videoHeight);
+            });
+            
+            productVideo.addEventListener('canplay', function() {
+              console.log('✅ Video can play');
+            });
+            
+            productVideo.addEventListener('canplaythrough', function() {
+              console.log('✅ Video can play through');
+            });
+            
+            // Load the video
+            productVideo.load();
+            console.log('▶️ Video load() called');
+            
+            // Ensure video starts from 0:00 when played
+            productVideo.addEventListener('play', function() {
+              if (this.currentTime > 1) {
+                console.log('🎬 Resetting video to start from 0:00');
+                this.currentTime = 0;
+              }
+            });
+            
+            // Update download link if it exists
+            if (videoDownload) {
+              videoDownload.href = videoUrl;
+            }
+          } else {
+            console.error('❌ Video element not found!');
+          }
+        });
         
       } catch (error) {
         console.error('❌ Failed to load Appwrite images:', error);
