@@ -226,9 +226,10 @@
       "name": "ONSi Quranic Verses Box - Product Overview",
       "description": "Discover the ONSi Quranic Verses Box - a beautifully crafted collection of Islamic inspiration cards featuring uplifting Quranic ayat in Arabic and English. Perfect for daily reflection, gifts, and spiritual growth.",
       "thumbnailUrl": "https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o",
-      "uploadDate": "2025-11-12T15:51:00Z",
+      "uploadDate": "2025-11-13T00:00:00Z",
       "duration": "PT5M17S",
-      "contentUrl": "https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj032ISnEIQTMjXHRnPoA8hBUF7ftDzWE0r12b3c",
+      "contentUrl": "https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0",
+      "encodingFormat": "video/mp4",
       "embedUrl": "https://onsi.shop/",
       "publisher": {
         "@type": "Organization",
@@ -1553,23 +1554,24 @@
           console.warn('⚠️ No files found in Appwrite bucket');
         }
         
-        // Video elements - Using UploadThing (ALWAYS LOAD, independent of Appwrite)
+        // Video elements - Using UploadThing MP4 (ALWAYS LOAD, independent of Appwrite)
         const productVideo = document.getElementById('product-video');
         const videoDownload = document.getElementById('video-download');
         
-        console.log('🎥 Initializing UploadThing video...');
+        console.log('🎥 Initializing UploadThing MP4 video...');
         console.log('Video element found:', !!productVideo);
         
-        // UploadThing direct URLs
-        const uploadThingVideoUrl = 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj032ISnEIQTMjXHRnPoA8hBUF7ftDzWE0r12b3c';
+        // UploadThing direct URLs (MP4 format for best browser compatibility)
+        const uploadThingVideoUrl = 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0';
         const uploadThingThumbnailUrl = 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o';
         
-        console.log('📹 Video URL:', uploadThingVideoUrl);
+        console.log('📹 Video URL (MP4):', uploadThingVideoUrl);
         console.log('🖼️ Thumbnail URL:', uploadThingThumbnailUrl);
         
         if (productVideo) {
-          // Set video source directly on video element (better MOV support)
+          // Set video source directly on video element
           productVideo.src = uploadThingVideoUrl;
+          productVideo.type = 'video/mp4'; // MP4 format for universal browser support
           
           // Set thumbnail poster image
           productVideo.poster = uploadThingThumbnailUrl;
