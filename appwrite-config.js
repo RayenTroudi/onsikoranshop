@@ -1069,7 +1069,9 @@ window.appwriteAuth = {
     deleteImage,
     getFileUrl,
     getFilePreviewUrl,
-    listImages
+    listImages,
+    // Account object for JWT creation
+    account
 };
 
 // Debug: confirm window.appwriteAuth is set
