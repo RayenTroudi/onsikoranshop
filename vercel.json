@@ -19,6 +19,10 @@
     {
       "src": "api/upload-file.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/get-upload-url.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -37,6 +41,11 @@
     {
       "src": "/api/upload-file",
       "dest": "/api/upload-file.js",
+      "methods": ["POST", "OPTIONS"]
+    },
+    {
+      "src": "/api/get-upload-url",
+      "dest": "/api/get-upload-url.js",
       "methods": ["POST", "OPTIONS"]
     },
     {
