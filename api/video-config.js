@@ -102,10 +102,7 @@ export async function updateVideoConfig(newConfig, adminEmail) {
             DATABASE_ID,
             COLLECTION_ID,
             ID.unique(),
-            configData,
-            [
-                Permission.read(Role.any())
-            ]
+            configData
         );
         
         return {
