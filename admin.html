@@ -1486,7 +1486,7 @@ class VideoManager {
     async uploadToUploadThing(file, type) {
         return new Promise(async (resolve, reject) => {
             try {
-                console.log(`📤 Uploading ${type} using UploadThing presigned URL...`);
+                console.log(`📤 Uploading ${type} to UploadThing via backend...`);
 
                 // Show progress bar
                 const progressContainer = document.getElementById(`${type}-upload-progress`);
@@ -1495,77 +1495,66 @@ class VideoManager {
                 
                 this.showElement(progressContainer);
 
-                // Step 1: Get presigned URL from our backend
-                console.log('Step 1: Requesting presigned URL from /api/get-upload-url');
-                const presignedResponse = await fetch('/api/get-upload-url', {
+                // Read file as base64
+                console.log('Reading file as base64...');
+                const reader = new FileReader();
+                
+                const fileData = await new Promise((res, rej) => {
+                    reader.onload = () => {
+                        // Remove data:*/*;base64, prefix
+                        const base64 = reader.result.split(',')[1];
+                        res(base64);
+                    };
+                    reader.onerror = rej;
+                    reader.readAsDataURL(file);
+                });
+
+                console.log('File read complete. Size:', fileData.length, 'chars');
+
+                // Upload via backend API
+                console.log('Uploading to /api/get-upload-url...');
+                
+                // Simulate progress since we're uploading via backend
+                if (progressBar) progressBar.style.width = '50%';
+                if (progressPercent) progressPercent.textContent = '50%';
+
+                const response = await fetch('/api/get-upload-url', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
+                        fileData: fileData,
                         fileName: file.name,
-                        fileSize: file.size,
                         fileType: file.type
                     })
                 });
 
-                console.log('Presigned URL response status:', presignedResponse.status);
+                console.log('Upload response status:', response.status);
 
-                if (!presignedResponse.ok) {
-                    const errorText = await presignedResponse.text();
-                    console.error('Failed to get upload URL:', presignedResponse.status, errorText);
-                    throw new Error(`Failed to get upload URL: ${presignedResponse.status} - ${errorText}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Upload failed:', response.status, errorText);
+                    throw new Error(`Upload failed: ${response.status} - ${errorText}`);
                 }
 
-                const responseData = await presignedResponse.json();
-                console.log('Presigned URL response:', responseData);
+                const responseData = await response.json();
+                console.log('Upload response:', responseData);
 
-                const { success, presignedUrl, fileKey, fileUrl, error } = responseData;
+                const { success, fileUrl, fileKey, error } = responseData;
 
-                if (!success || !presignedUrl || !fileUrl) {
-                    throw new Error(error || 'Invalid response from server - missing upload URL');
+                if (!success || !fileUrl) {
+                    throw new Error(error || 'Upload failed - no file URL returned');
                 }
 
-                console.log('Step 2: Uploading file to presigned URL:', presignedUrl);
+                // Complete progress
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressPercent) progressPercent.textContent = '100%';
 
-                // Step 2: Upload directly to the presigned URL
-                const xhr = new XMLHttpRequest();
-
-                // Progress tracking
-                xhr.upload.addEventListener('progress', (e) => {
-                    if (e.lengthComputable) {
-                        const percent = Math.round((e.loaded / e.total) * 100);
-                        if (progressBar) progressBar.style.width = `${percent}%`;
-                        if (progressPercent) progressPercent.textContent = `${percent}%`;
-                        console.log(`Upload progress: ${percent}%`);
-                    }
-                });
-
-                // Success
-                xhr.addEventListener('load', () => {
-                    console.log('Upload complete. Status:', xhr.status);
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        console.log(`✅ ${type} uploaded successfully:`, fileUrl);
-                        this.hideElement(progressContainer);
-                        resolve(fileUrl);
-                    } else {
-                        console.error('Upload error:', xhr.status, xhr.responseText);
-                        reject(new Error(`Upload failed with status ${xhr.status}`));
-                    }
-                });
-
-                // Error
-                xhr.addEventListener('error', (e) => {
-                    console.error('Upload network error:', e);
-                    this.hideElement(progressContainer);
-                    reject(new Error('Upload failed - network error'));
-                });
-
-                // Upload to presigned URL
-                xhr.open('PUT', presignedUrl);
-                xhr.setRequestHeader('Content-Type', file.type);
-                xhr.send(file);
+                console.log(`✅ ${type} uploaded successfully:`, fileUrl);
+                this.hideElement(progressContainer);
+                resolve(fileUrl);
 
             } catch (error) {
                 console.error('Upload error:', error);
