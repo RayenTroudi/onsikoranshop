@@ -1332,30 +1332,43 @@ class VideoManager {
             const thumbnailLink = document.getElementById('current-thumbnail-link');
             const lastUpdated = document.getElementById('video-last-updated');
 
+            console.log('Video config loaded:', config);
+
             if (videoElement && config.videoUrl) {
+                console.log('Setting video URL:', config.videoUrl);
                 videoElement.src = config.videoUrl;
                 videoElement.poster = config.thumbnailUrl;
+                videoElement.load(); // Force reload the video
+                
                 // Hide loading state when video can play
                 videoElement.addEventListener('loadeddata', () => {
+                    console.log('✅ Video loaded successfully');
                     this.hideElement('video-loading-preview');
                 }, { once: true });
+                
                 // Also hide on error
-                videoElement.addEventListener('error', () => {
+                videoElement.addEventListener('error', (e) => {
                     this.hideElement('video-loading-preview');
-                    console.warn('Video failed to load:', config.videoUrl);
+                    console.error('❌ Video failed to load:', config.videoUrl, e);
                 }, { once: true });
             } else {
+                console.warn('No video URL or element:', { hasElement: !!videoElement, videoUrl: config.videoUrl });
                 this.hideElement('video-loading-preview');
             }
 
             if (thumbnailElement && config.thumbnailUrl) {
+                console.log('Setting thumbnail URL:', config.thumbnailUrl);
                 thumbnailElement.src = config.thumbnailUrl;
-                thumbnailElement.onload = () => this.hideElement('thumbnail-loading-preview');
-                thumbnailElement.onerror = () => {
+                thumbnailElement.onload = () => {
+                    console.log('✅ Thumbnail loaded successfully');
                     this.hideElement('thumbnail-loading-preview');
-                    console.warn('Thumbnail failed to load:', config.thumbnailUrl);
+                };
+                thumbnailElement.onerror = (e) => {
+                    this.hideElement('thumbnail-loading-preview');
+                    console.error('❌ Thumbnail failed to load:', config.thumbnailUrl, e);
                 };
             } else {
+                console.warn('No thumbnail URL or element:', { hasElement: !!thumbnailElement, thumbnailUrl: config.thumbnailUrl });
                 this.hideElement('thumbnail-loading-preview');
             }
 
