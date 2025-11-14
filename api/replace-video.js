@@ -91,30 +91,29 @@ export default async function handler(req, res) {
 
         console.log('Config updated:', updateResult);
 
-        // Schedule deletion of old files (after 7 days for safety)
-        // For now, we'll just log them - you can implement delayed deletion later
+        // Delete old files immediately
+        const deletionResults = {
+            video: { deleted: false, fileId: currentConfig?.videoFileId },
+            thumbnail: { deleted: false, fileId: currentConfig?.thumbnailFileId }
+        };
+
         if (currentConfig?.videoFileId && currentConfig.videoFileId !== videoFileId) {
-            console.log('Old video file to be deleted:', currentConfig.videoFileId);
-            // TODO: Schedule deletion after 7 days
-            // For immediate deletion, uncomment:
-            // await deleteFromAppwrite(currentConfig.videoFileId);
+            console.log('Deleting old video file:', currentConfig.videoFileId);
+            const videoDeleteResult = await deleteFromAppwrite(currentConfig.videoFileId);
+            deletionResults.video.deleted = videoDeleteResult.success;
         }
 
         if (currentConfig?.thumbnailFileId && currentConfig.thumbnailFileId !== thumbnailFileId) {
-            console.log('Old thumbnail file to be deleted:', currentConfig.thumbnailFileId);
-            // TODO: Schedule deletion after 7 days
-            // For immediate deletion, uncomment:
-            // await deleteFromAppwrite(currentConfig.thumbnailFileId);
+            console.log('Deleting old thumbnail file:', currentConfig.thumbnailFileId);
+            const thumbnailDeleteResult = await deleteFromAppwrite(currentConfig.thumbnailFileId);
+            deletionResults.thumbnail.deleted = thumbnailDeleteResult.success;
         }
 
         return res.status(200).json({
             success: true,
             message: 'Video and thumbnail replaced successfully',
             config: updateResult,
-            oldFiles: {
-                videoFileId: currentConfig?.videoFileId,
-                thumbnailFileId: currentConfig?.thumbnailFileId
-            }
+            deletedFiles: deletionResults
         });
 
     } catch (error) {
