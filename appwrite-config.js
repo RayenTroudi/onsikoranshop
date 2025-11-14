@@ -59,7 +59,7 @@ const APPWRITE_CONFIG = {
         categories: 'categories'
     },
     // Storage bucket ID
-    bucketId: 'onsiBucket'
+    bucketId: '691735da003dc83b3baf'
 };
 
 // Initialize Appwrite client
@@ -875,16 +875,21 @@ async function uploadImage(file, onProgress) {
     try {
         console.log('📤 Starting Appwrite Storage upload for:', file.name);
         
-        // Validate file type
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        // Validate file type (support both images and videos)
+        const validTypes = [
+            'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+            'video/mp4', 'video/webm', 'video/quicktime'
+        ];
         if (!validTypes.includes(file.type)) {
-            throw new Error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
+            throw new Error('Invalid file type. Please upload an image (JPEG, PNG, WebP, GIF) or video (MP4, WebM, MOV).');
         }
         
-        // Validate file size (max 10MB)
-        const maxSize = 10 * 1024 * 1024; // 10MB
+        // Validate file size (max 100MB for videos, 10MB for images)
+        const isVideo = file.type.startsWith('video/');
+        const maxSize = isVideo ? (100 * 1024 * 1024) : (10 * 1024 * 1024);
         if (file.size > maxSize) {
-            throw new Error('File is too large. Maximum size is 10MB.');
+            const maxSizeMB = isVideo ? '100MB' : '10MB';
+            throw new Error(`File is too large. Maximum size is ${maxSizeMB}.`);
         }
         
         // Generate unique file ID
