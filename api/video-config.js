@@ -99,9 +99,7 @@ export async function updateVideoConfig(newConfig, adminEmail) {
             ID.unique(),
             configData,
             [
-                Permission.read(Role.any()),
-                Permission.update(Role.users()),
-                Permission.delete(Role.users())
+                Permission.read(Role.any())
             ]
         );
         
