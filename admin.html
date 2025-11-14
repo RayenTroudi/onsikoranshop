@@ -1332,22 +1332,39 @@ class VideoManager {
             const thumbnailLink = document.getElementById('current-thumbnail-link');
             const lastUpdated = document.getElementById('video-last-updated');
 
-            if (videoElement) {
+            if (videoElement && config.videoUrl) {
                 videoElement.src = config.videoUrl;
                 videoElement.poster = config.thumbnailUrl;
+                // Hide loading state when video can play
+                videoElement.addEventListener('loadeddata', () => {
+                    this.hideElement('video-loading-preview');
+                }, { once: true });
+                // Also hide on error
+                videoElement.addEventListener('error', () => {
+                    this.hideElement('video-loading-preview');
+                    console.warn('Video failed to load:', config.videoUrl);
+                }, { once: true });
+            } else {
+                this.hideElement('video-loading-preview');
             }
 
-            if (thumbnailElement) {
+            if (thumbnailElement && config.thumbnailUrl) {
                 thumbnailElement.src = config.thumbnailUrl;
                 thumbnailElement.onload = () => this.hideElement('thumbnail-loading-preview');
+                thumbnailElement.onerror = () => {
+                    this.hideElement('thumbnail-loading-preview');
+                    console.warn('Thumbnail failed to load:', config.thumbnailUrl);
+                };
+            } else {
+                this.hideElement('thumbnail-loading-preview');
             }
 
-            if (videoLink) {
+            if (videoLink && config.videoUrl) {
                 videoLink.href = config.videoUrl;
                 videoLink.textContent = this.truncateUrl(config.videoUrl);
             }
 
-            if (thumbnailLink) {
+            if (thumbnailLink && config.thumbnailUrl) {
                 thumbnailLink.href = config.thumbnailUrl;
                 thumbnailLink.textContent = this.truncateUrl(config.thumbnailUrl);
             }
@@ -1355,11 +1372,6 @@ class VideoManager {
             if (lastUpdated && config.uploadedAt) {
                 lastUpdated.textContent = `Updated ${this.formatDate(config.uploadedAt)}`;
             }
-
-            // Hide loading state when video can play
-            videoElement.addEventListener('loadeddata', () => {
-                this.hideElement('video-loading-preview');
-            });
 
             console.log('✅ Current video loaded successfully');
         } catch (error) {

@@ -36,14 +36,19 @@ export async function getVideoConfig() {
         
         if (response.documents && response.documents.length > 0) {
             const config = response.documents[0];
-            return {
-                videoUrl: config.videoUrl,
-                thumbnailUrl: config.thumbnailUrl,
-                videoFileId: config.videoFileId || '',
-                thumbnailFileId: config.thumbnailFileId || '',
-                uploadedAt: config.$createdAt,
-                uploadedBy: config.uploadedBy || 'system'
-            };
+            // If config has empty URLs, use defaults instead
+            const hasValidUrls = config.videoUrl && config.thumbnailUrl;
+            
+            if (hasValidUrls) {
+                return {
+                    videoUrl: config.videoUrl,
+                    thumbnailUrl: config.thumbnailUrl,
+                    videoFileId: config.videoFileId || '',
+                    thumbnailFileId: config.thumbnailFileId || '',
+                    uploadedAt: config.$createdAt,
+                    uploadedBy: config.uploadedBy || 'system'
+                };
+            }
         }
         
         // Return default configuration if none exists
