@@ -1301,15 +1301,27 @@ class VideoManager {
             this.showElement('video-loading-preview');
             this.showElement('thumbnail-loading-preview');
 
-            // Use default config (API will be available after Vercel deployment)
-            const config = {
-                videoUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0',
-                thumbnailUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o',
-                videoFileKey: '1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0',
-                thumbnailFileKey: '1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o',
-                uploadedAt: new Date().toISOString(),
-                uploadedBy: 'system'
-            };
+            // Fetch current video config from API
+            let config;
+            try {
+                const response = await fetch('/api/video-config');
+                if (response.ok) {
+                    config = await response.json();
+                } else {
+                    throw new Error('Failed to fetch config');
+                }
+            } catch (error) {
+                console.warn('Failed to fetch video config, using defaults:', error);
+                // Use default config as fallback
+                config = {
+                    videoUrl: '',
+                    thumbnailUrl: '',
+                    videoFileId: '',
+                    thumbnailFileId: '',
+                    uploadedAt: new Date().toISOString(),
+                    uploadedBy: 'system'
+                };
+            }
             
             this.currentConfig = config;
 
@@ -1455,14 +1467,14 @@ class VideoManager {
 
             console.log('🚀 Starting video replacement process...');
 
-            // Step 1: Upload video to UploadThing
-            const videoUrl = await this.uploadToUploadThing(videoFile, 'video');
+            // Step 1: Upload video to Appwrite
+            const videoResult = await this.uploadToAppwrite(videoFile, 'video');
 
-            // Step 2: Upload thumbnail to UploadThing
-            const thumbnailUrl = await this.uploadToUploadThing(thumbnailFile, 'thumbnail');
+            // Step 2: Upload thumbnail to Appwrite
+            const thumbnailResult = await this.uploadToAppwrite(thumbnailFile, 'thumbnail');
 
             // Step 3: Update configuration via API
-            await this.updateVideoConfiguration(videoUrl, thumbnailUrl);
+            await this.updateVideoConfiguration(videoResult.url, thumbnailResult.url, videoResult.fileId, thumbnailResult.fileId);
 
             // Step 4: Reload current video
             await this.loadCurrentVideo();
@@ -1483,10 +1495,10 @@ class VideoManager {
         }
     }
 
-    async uploadToUploadThing(file, type) {
+    async uploadToAppwrite(file, type) {
         return new Promise(async (resolve, reject) => {
             try {
-                console.log(`📤 Uploading ${type} to UploadThing via backend...`);
+                console.log(`📤 Uploading ${type} to Appwrite storage...`);
 
                 // Show progress bar
                 const progressContainer = document.getElementById(`${type}-upload-progress`);
@@ -1495,66 +1507,38 @@ class VideoManager {
                 
                 this.showElement(progressContainer);
 
-                // Read file as base64
-                console.log('Reading file as base64...');
-                const reader = new FileReader();
-                
-                const fileData = await new Promise((res, rej) => {
-                    reader.onload = () => {
-                        // Remove data:*/*;base64, prefix
-                        const base64 = reader.result.split(',')[1];
-                        res(base64);
-                    };
-                    reader.onerror = rej;
-                    reader.readAsDataURL(file);
-                });
+                // Use Appwrite's uploadImage function
+                if (!window.appwriteAuth || !window.appwriteAuth.uploadImage) {
+                    throw new Error('Appwrite storage not available');
+                }
 
-                console.log('File read complete. Size:', fileData.length, 'chars');
-
-                // Upload via backend API
-                console.log('Uploading to /api/get-upload-url...');
+                console.log('Uploading to Appwrite bucket: OnsiBucket (691735da003dc83b3baf)...');
                 
-                // Simulate progress since we're uploading via backend
+                // Update progress
                 if (progressBar) progressBar.style.width = '50%';
                 if (progressPercent) progressPercent.textContent = '50%';
 
-                const response = await fetch('/api/get-upload-url', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        fileData: fileData,
-                        fileName: file.name,
-                        fileType: file.type
-                    })
-                });
+                // Upload to Appwrite
+                const result = await window.appwriteAuth.uploadImage(file);
 
-                console.log('Upload response status:', response.status);
+                console.log('Appwrite upload result:', result);
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Upload failed:', response.status, errorText);
-                    throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+                if (!result || !result.fileId) {
+                    throw new Error('Upload failed - no file ID returned');
                 }
 
-                const responseData = await response.json();
-                console.log('Upload response:', responseData);
-
-                const { success, fileUrl, fileKey, error } = responseData;
-
-                if (!success || !fileUrl) {
-                    throw new Error(error || 'Upload failed - no file URL returned');
-                }
-
+                // Get file URL
+                const fileUrl = window.appwriteAuth.getFileUrl(result.fileId);
+                
                 // Complete progress
                 if (progressBar) progressBar.style.width = '100%';
                 if (progressPercent) progressPercent.textContent = '100%';
 
                 console.log(`✅ ${type} uploaded successfully:`, fileUrl);
+                console.log('File ID:', result.fileId);
+                
                 this.hideElement(progressContainer);
-                resolve(fileUrl);
+                resolve({ url: fileUrl, fileId: result.fileId });
 
             } catch (error) {
                 console.error('Upload error:', error);
@@ -1565,7 +1549,7 @@ class VideoManager {
         });
     }
 
-    async updateVideoConfiguration(videoUrl, thumbnailUrl) {
+    async updateVideoConfiguration(videoUrl, thumbnailUrl, videoFileId, thumbnailFileId) {
         try {
             console.log('💾 Updating video configuration...');
 
@@ -1576,7 +1560,9 @@ class VideoManager {
                 },
                 body: JSON.stringify({
                     videoUrl,
-                    thumbnailUrl
+                    thumbnailUrl,
+                    videoFileId,
+                    thumbnailFileId
                 })
             });
 

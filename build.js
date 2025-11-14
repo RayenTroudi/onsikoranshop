@@ -23,9 +23,7 @@ const envVars = {
   VITE_APP_NAME: process.env.VITE_APP_NAME || 'Onsi Koran Shop',
   VITE_PRODUCT_PRICE: process.env.VITE_PRODUCT_PRICE || null,
   VITE_SHIPPING_COST: process.env.VITE_SHIPPING_COST || '0.00',
-  VITE_TAX_RATE: process.env.VITE_TAX_RATE || '0.00',
-  VITE_UPLOADTHING_SECRET: process.env.VITE_UPLOADTHING_SECRET || '',
-  VITE_UPLOADTHING_TOKEN: process.env.VITE_UPLOADTHING_TOKEN || ''
+  VITE_TAX_RATE: process.env.VITE_TAX_RATE || '0.00'
 };
 
 console.log('🌍 Environment variables:');

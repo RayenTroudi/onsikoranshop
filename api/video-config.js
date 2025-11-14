@@ -39,8 +39,8 @@ export async function getVideoConfig() {
             return {
                 videoUrl: config.videoUrl,
                 thumbnailUrl: config.thumbnailUrl,
-                videoFileKey: config.videoFileKey,
-                thumbnailFileKey: config.thumbnailFileKey,
+                videoFileId: config.videoFileId || '',
+                thumbnailFileId: config.thumbnailFileId || '',
                 uploadedAt: config.$createdAt,
                 uploadedBy: config.uploadedBy || 'system'
             };
@@ -50,8 +50,8 @@ export async function getVideoConfig() {
         return {
             videoUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0',
             thumbnailUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o',
-            videoFileKey: '1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0',
-            thumbnailFileKey: '1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o',
+            videoFileId: '',
+            thumbnailFileId: '',
             uploadedAt: new Date().toISOString(),
             uploadedBy: 'system'
         };
@@ -61,8 +61,8 @@ export async function getVideoConfig() {
         return {
             videoUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0',
             thumbnailUrl: 'https://9v6fd3xlqu.ufs.sh/f/1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o',
-            videoFileKey: '1rEveYHUVj03jFCh0C995pnTJ3AOCxrqDRdPvIKeGwNhS6c0',
-            thumbnailFileKey: '1rEveYHUVj03R431BcSBJN3sMh2mZC8waHSkeVQ4qnIU0c6o',
+            videoFileId: '',
+            thumbnailFileId: '',
             uploadedAt: new Date().toISOString(),
             uploadedBy: 'system'
         };
@@ -80,11 +80,11 @@ export async function updateVideoConfig(newConfig, adminEmail) {
         const configData = {
             videoUrl: newConfig.videoUrl,
             thumbnailUrl: newConfig.thumbnailUrl,
-            videoFileKey: newConfig.videoFileKey,
-            thumbnailFileKey: newConfig.thumbnailFileKey,
-            uploadedBy: adminEmail || 'admin',
-            previousVideoFileKey: newConfig.previousVideoFileKey || null,
-            previousThumbnailFileKey: newConfig.previousThumbnailFileKey || null
+            videoFileId: newConfig.videoFileId || '',
+            thumbnailFileId: newConfig.thumbnailFileId || '',
+            uploadedBy: adminEmail || newConfig.uploadedBy || 'admin',
+            previousVideoFileId: newConfig.previousVideoFileId || '',
+            previousThumbnailFileId: newConfig.previousThumbnailFileId || ''
         };
         
         // Create new document (we keep history by creating new documents)
@@ -105,8 +105,8 @@ export async function updateVideoConfig(newConfig, adminEmail) {
             config: {
                 videoUrl: response.videoUrl,
                 thumbnailUrl: response.thumbnailUrl,
-                videoFileKey: response.videoFileKey,
-                thumbnailFileKey: response.thumbnailFileKey,
+                videoFileId: response.videoFileId,
+                thumbnailFileId: response.thumbnailFileId,
                 uploadedAt: response.$createdAt,
                 uploadedBy: response.uploadedBy
             }
@@ -133,8 +133,8 @@ export async function getVideoConfigHistory(limit = 10) {
         return response.documents.map(doc => ({
             videoUrl: doc.videoUrl,
             thumbnailUrl: doc.thumbnailUrl,
-            videoFileKey: doc.videoFileKey,
-            thumbnailFileKey: doc.thumbnailFileKey,
+            videoFileId: doc.videoFileId || '',
+            thumbnailFileId: doc.thumbnailFileId || '',
             uploadedAt: doc.$createdAt,
             uploadedBy: doc.uploadedBy,
             id: doc.$id

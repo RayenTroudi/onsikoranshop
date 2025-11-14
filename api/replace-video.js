@@ -1,10 +1,11 @@
 /**
  * Video Replace API Endpoint
- * Handles video and thumbnail replacement with UploadThing
+ * Handles video and thumbnail replacement with Appwrite Storage
  * Vercel Serverless Function
  */
 
 import { getVideoConfig, updateVideoConfig } from './video-config.js';
+import { Client, Storage } from 'node-appwrite';
 
 // CORS headers
 const CORS_HEADERS = {
@@ -14,41 +15,32 @@ const CORS_HEADERS = {
 };
 
 /**
- * Delete file from UploadThing
+ * Delete file from Appwrite Storage
  */
-async function deleteFromUploadThing(fileKey) {
+async function deleteFromAppwrite(fileId) {
     try {
-        const uploadThingSecret = process.env.VITE_UPLOADTHING_SECRET;
-        
-        const response = await fetch(`https://api.uploadthing.com/v6/deleteFile`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Uploadthing-Api-Key': uploadThingSecret,
-            },
-            body: JSON.stringify({ fileKey })
-        });
-
-        if (!response.ok) {
-            const error = await response.text();
-            console.error('UploadThing delete error:', error);
-            return { success: false, error };
+        if (!fileId) {
+            console.log('No file ID provided, skipping deletion');
+            return { success: true };
         }
+
+        const client = new Client();
+        client
+            .setEndpoint(process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1')
+            .setProject(process.env.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c')
+            .setKey(process.env.APPWRITE_API_KEY);
+        
+        const storage = new Storage(client);
+        const bucketId = '691735da003dc83b3baf'; // OnsiBucket
+
+        await storage.deleteFile(bucketId, fileId);
+        console.log('File deleted from Appwrite:', fileId);
 
         return { success: true };
     } catch (error) {
-        console.error('Error deleting from UploadThing:', error);
+        console.error('Error deleting from Appwrite:', error);
         return { success: false, error: error.message };
     }
-}
-
-/**
- * Extract file key from UploadThing URL
- */
-function extractFileKey(url) {
-    // URL format: https://9v6fd3xlqu.ufs.sh/f/FILE_KEY
-    const match = url.match(/\/f\/([^/?]+)/);
-    return match ? match[1] : null;
 }
 
 /**
@@ -69,7 +61,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { videoUrl, thumbnailUrl } = req.body;
+        const { videoUrl, thumbnailUrl, videoFileId, thumbnailFileId } = req.body;
 
         // Validate input
         if (!videoUrl || !thumbnailUrl) {
@@ -79,68 +71,57 @@ export default async function handler(req, res) {
             });
         }
 
-        // Validate URLs are from UploadThing
-        if (!videoUrl.includes('ufs.sh') || !thumbnailUrl.includes('ufs.sh')) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Invalid URLs: must be UploadThing URLs' 
-            });
-        }
-
         // Get current config to know what to delete
         const currentConfig = await getVideoConfig();
         
-        // Extract file keys from new URLs
-        const newVideoFileKey = extractFileKey(videoUrl);
-        const newThumbnailFileKey = extractFileKey(thumbnailUrl);
-
-        if (!newVideoFileKey || !newThumbnailFileKey) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Could not extract file keys from URLs' 
-            });
-        }
+        console.log('Current config:', currentConfig);
+        console.log('New files:', { videoFileId, thumbnailFileId });
 
         // Update configuration first (before deleting old files)
         const updateResult = await updateVideoConfig({
             videoUrl,
             thumbnailUrl,
-            videoFileKey: newVideoFileKey,
-            thumbnailFileKey: newThumbnailFileKey,
-            previousVideoFileKey: currentConfig.videoFileKey,
-            previousThumbnailFileKey: currentConfig.thumbnailFileKey
-        }, authResult.user.email);
+            videoFileId: videoFileId || '',
+            thumbnailFileId: thumbnailFileId || '',
+            uploadedAt: new Date().toISOString(),
+            uploadedBy: 'admin',
+            previousVideoFileId: currentConfig?.videoFileId || '',
+            previousThumbnailFileId: currentConfig?.thumbnailFileId || ''
+        });
+
+        console.log('Config updated:', updateResult);
 
         // Schedule deletion of old files (after 7 days for safety)
-        // For now, we'll mark them for deletion but not delete immediately
-        const deletionResults = {
-            video: { scheduled: true, fileKey: currentConfig.videoFileKey },
-            thumbnail: { scheduled: true, fileKey: currentConfig.thumbnailFileKey }
-        };
-
-        // Optional: Delete immediately (uncomment if you want immediate deletion)
-        /*
-        if (currentConfig.videoFileKey !== newVideoFileKey) {
-            deletionResults.video = await deleteFromUploadThing(currentConfig.videoFileKey);
+        // For now, we'll just log them - you can implement delayed deletion later
+        if (currentConfig?.videoFileId && currentConfig.videoFileId !== videoFileId) {
+            console.log('Old video file to be deleted:', currentConfig.videoFileId);
+            // TODO: Schedule deletion after 7 days
+            // For immediate deletion, uncomment:
+            // await deleteFromAppwrite(currentConfig.videoFileId);
         }
-        if (currentConfig.thumbnailFileKey !== newThumbnailFileKey) {
-            deletionResults.thumbnail = await deleteFromUploadThing(currentConfig.thumbnailFileKey);
-        }
-        */
 
-        return res.status(200).json({ 
-            success: true, 
-            message: 'Video and thumbnail updated successfully',
-            config: updateResult.config,
-            oldFiles: deletionResults,
-            note: 'Old files are scheduled for deletion after 7 days'
+        if (currentConfig?.thumbnailFileId && currentConfig.thumbnailFileId !== thumbnailFileId) {
+            console.log('Old thumbnail file to be deleted:', currentConfig.thumbnailFileId);
+            // TODO: Schedule deletion after 7 days
+            // For immediate deletion, uncomment:
+            // await deleteFromAppwrite(currentConfig.thumbnailFileId);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Video and thumbnail replaced successfully',
+            config: updateResult,
+            oldFiles: {
+                videoFileId: currentConfig?.videoFileId,
+                thumbnailFileId: currentConfig?.thumbnailFileId
+            }
         });
 
     } catch (error) {
-        console.error('Video replace error:', error);
+        console.error('Error replacing video:', error);
         return res.status(500).json({ 
             success: false, 
-            error: error.message || 'Internal server error' 
+            error: error.message 
         });
     }
 }
