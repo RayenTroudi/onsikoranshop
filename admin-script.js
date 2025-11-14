@@ -1583,7 +1583,7 @@ function renderStorageFiles(files) {
 }
 
 function getFileUrl(fileId) {
-    return `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${fileId}/view?project=68f8c1bc003e3d2c8f5c`;
+    return `https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/${fileId}/view?project=68f8c1bc003e3d2c8f5c`;
 }
 
 function formatFileSize(bytes) {

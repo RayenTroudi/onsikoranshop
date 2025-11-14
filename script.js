@@ -6,7 +6,7 @@ let appwriteAuth = null;
 const APPWRITE_STORAGE = {
 	endpoint: 'https://fra.cloud.appwrite.io/v1',
 	projectId: '68f8c1bc003e3d2c8f5c',
-	bucketId: 'onsiBucket'
+	bucketId: '691735da003dc83b3baf'
 };
 
 // Helper function to get file URL from Appwrite Storage
