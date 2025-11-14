@@ -163,10 +163,10 @@ class AdminPanel {
     async createInitialProduct() {
         try {
             // Get the file ID for product-main.jpg from the file map
-            // If not found, use empty string (will show placeholder)
+            // If not found, use the actual uploaded file ID
             const imageFileId = window.fileIdMap && window.fileIdMap['product-main.jpg'] 
                 ? window.fileIdMap['product-main.jpg'] 
-                : '';
+                : '691736fb003c4b20ad53';
 
             const productData = {
                 name: 'Quranic Verses Box',
