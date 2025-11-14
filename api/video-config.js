@@ -19,6 +19,11 @@ client
     .setEndpoint(APPWRITE_ENDPOINT)
     .setProject(APPWRITE_PROJECT_ID);
 
+// Set API key for server-side operations if available
+if (process.env.APPWRITE_API_KEY) {
+    client.setKey(process.env.APPWRITE_API_KEY);
+}
+
 const databases = new Databases(client);
 
 /**
