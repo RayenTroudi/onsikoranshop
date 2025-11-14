@@ -574,7 +574,7 @@ class AdminPanel {
             orders: { title: 'Orders Management', subtitle: 'Track and manage customer orders' },
             users: { title: 'Users Management', subtitle: 'View and manage your customers' },
             stats: { title: 'Statistics & Analytics', subtitle: 'Detailed insights and performance metrics' },
-            storage: { title: 'Storage Management', subtitle: 'Manage your media files in onsiBucket' }
+            storage: { title: 'Storage Management', subtitle: 'Manage your media files in OnsiBucket' }
         };
 
         const pageInfo = titles[section];
@@ -663,7 +663,7 @@ class AdminPanel {
             tbody.innerHTML = this.products.map(product => {
                 // Get image URL from Appwrite using imageFileId
                 const imageUrl = product.imageFileId 
-                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
+                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
                     : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
                 
                 return `
@@ -716,7 +716,7 @@ class AdminPanel {
             mobileList.innerHTML = this.products.map(product => {
                 // Get image URL from Appwrite using imageFileId
                 const imageUrl = product.imageFileId 
-                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/onsiBucket/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
+                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
                     : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
                 
                 return `
@@ -1493,7 +1493,7 @@ async function showStorageSection() {
     
     // Update header
     document.getElementById('page-title').textContent = 'Storage Management';
-    document.getElementById('page-subtitle').textContent = 'Manage your media files in onsiBucket';
+    document.getElementById('page-subtitle').textContent = 'Manage your media files in OnsiBucket';
     
     // Hide add product button
     document.getElementById('add-product-btn')?.classList.add('hidden');
@@ -1514,7 +1514,7 @@ async function loadStorageFiles() {
     try {
         const endpoint = 'https://fra.cloud.appwrite.io/v1';
         const projectId = '68f8c1bc003e3d2c8f5c';
-        const bucketId = 'onsiBucket';
+        const bucketId = '691735da003dc83b3baf';
         
         const response = await fetch(`${endpoint}/storage/buckets/${bucketId}/files?project=${projectId}`, {
             method: 'GET',
