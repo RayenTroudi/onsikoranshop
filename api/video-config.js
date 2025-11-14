@@ -98,6 +98,9 @@ export async function updateVideoConfig(newConfig, adminEmail) {
             thumbnailUrl: newConfig.thumbnailUrl,
             videoFileId: newConfig.videoFileId || '',
             thumbnailFileId: newConfig.thumbnailFileId || '',
+            // Keep old field names for backward compatibility
+            videoFileKey: newConfig.videoFileId || '',
+            thumbnailFileKey: newConfig.thumbnailFileId || '',
             uploadedBy: adminEmail || newConfig.uploadedBy || 'admin',
             previousVideoFileId: newConfig.previousVideoFileId || '',
             previousThumbnailFileId: newConfig.previousThumbnailFileId || ''
