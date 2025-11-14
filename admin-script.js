@@ -662,18 +662,10 @@ class AdminPanel {
         // Render desktop table
         if (tbody) {
             tbody.innerHTML = this.products.map(product => {
-                // Get image URL from Appwrite using imageFileId
-                const imageUrl = product.imageFileId 
-                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
-                    : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
-                
                 return `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-lg object-cover" src="${imageUrl}" alt="${product.name}">
-                            </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">${product.name}</div>
                                 <div class="text-sm text-gray-500">${product.description.substring(0, 50)}...</div>
@@ -715,15 +707,9 @@ class AdminPanel {
         // Render mobile cards
         if (mobileList) {
             mobileList.innerHTML = this.products.map(product => {
-                // Get image URL from Appwrite using imageFileId
-                const imageUrl = product.imageFileId 
-                    ? `https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/${product.imageFileId}/view?project=68f8c1bc003e3d2c8f5c`
-                    : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23ddd%22 width=%2240%22 height=%2240%22/%3E%3C/svg%3E';
-                
                 return `
                 <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
                     <div class="flex items-start space-x-4">
-                        <img class="h-16 w-16 rounded-lg object-cover flex-shrink-0" src="${imageUrl}" alt="${product.name}">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
