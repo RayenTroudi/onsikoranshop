@@ -22,6 +22,9 @@ client
 // Set API key for server-side operations if available
 if (process.env.APPWRITE_API_KEY) {
     client.setKey(process.env.APPWRITE_API_KEY);
+    console.log('✅ Appwrite API key configured');
+} else {
+    console.warn('⚠️ No APPWRITE_API_KEY found in environment variables');
 }
 
 const databases = new Databases(client);
@@ -87,6 +90,9 @@ export async function getVideoConfig() {
  */
 export async function updateVideoConfig(newConfig, adminEmail) {
     try {
+        console.log('📝 Updating video config with:', newConfig);
+        console.log('🔑 API Key available:', !!process.env.APPWRITE_API_KEY);
+        
         const configData = {
             videoUrl: newConfig.videoUrl,
             thumbnailUrl: newConfig.thumbnailUrl,
@@ -97,6 +103,8 @@ export async function updateVideoConfig(newConfig, adminEmail) {
             previousThumbnailFileId: newConfig.previousThumbnailFileId || ''
         };
         
+        console.log('💾 Creating document in collection:', COLLECTION_ID);
+        
         // Create new document (we keep history by creating new documents)
         const response = await databases.createDocument(
             DATABASE_ID,
@@ -104,6 +112,8 @@ export async function updateVideoConfig(newConfig, adminEmail) {
             ID.unique(),
             configData
         );
+        
+        console.log('✅ Document created successfully:', response.$id);
         
         return {
             success: true,
