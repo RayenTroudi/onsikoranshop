@@ -17,6 +17,27 @@ Allow: *.webp
 Allow: *.svg
 Allow: *.ico
 
+# Allow Google image crawlers
+User-agent: Googlebot-Image
+Allow: /
+
+# Allow Bingbot
+User-agent: Bingbot
+Allow: /
+
+# Allow other search engines
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
 # Block admin areas
 Disallow: /admin.html
 Disallow: /admin/
