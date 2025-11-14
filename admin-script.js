@@ -162,10 +162,11 @@ class AdminPanel {
     // Create initial product if collection is empty
     async createInitialProduct() {
         try {
-            // Get the file ID for product-main.jpg
+            // Get the file ID for product-main.jpg from the file map
+            // If not found, use empty string (will show placeholder)
             const imageFileId = window.fileIdMap && window.fileIdMap['product-main.jpg'] 
                 ? window.fileIdMap['product-main.jpg'] 
-                : '68fb982a0028272869bc';
+                : '';
 
             const productData = {
                 name: 'Quranic Verses Box',
