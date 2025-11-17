@@ -1,0 +1,21 @@
+{
+  "name": "onsi-structured-data-validation",
+  "version": "1.0.0",
+  "description": "Validation tools for Google Merchant Center structured data compliance",
+  "scripts": {
+    "validate": "node validate-structured-data.js dist/index.html",
+    "validate:dev": "node validate-structured-data.js index.html",
+    "test:schema": "jest country-validator.test.js",
+    "test:all": "jest",
+    "lint:schema": "node validate-structured-data.js dist/index.html && echo '✅ Schema validation passed'"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}
