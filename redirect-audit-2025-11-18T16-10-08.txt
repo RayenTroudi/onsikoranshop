@@ -1,0 +1,92 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+  REDIRECT CONFIGURATION AUDIT - onsi.shop (Local Analysis)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Analysis Date: 2025-11-18T16:10:08.807Z
+Domain: onsi.shop
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+VERCEL CONFIGURATION (vercel.json)
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Route Rules: 8
+Explicit Redirects: 0
+Potential Issues: 1
+
+Issues Found:
+  1. Catch-all route - ensure it returns 200 for valid URLs
+     Destination: /index.html
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+HTML META REFRESH REDIRECTS
+────────────────────────────────────────────────────────────────────────────────────────────────────
+✅ No meta refresh redirects found
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+JAVASCRIPT REDIRECTS
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Total: 5
+High Severity (Unconditional): 4
+Low Severity (Conditional/User-triggered): 1
+
+HIGH SEVERITY (Action Required):
+  1. admin-script.js:457
+     Target: index.html
+     Code: window.location.href = 'index.html';
+     Issue: Unconditional JavaScript redirect may prevent indexing
+     Recommendation: If this runs on page load, replace with server-side 301
+
+  2. admin-script.js:506
+     Target: index.html
+     Code: window.location.href = 'index.html';
+     Issue: Unconditional JavaScript redirect may prevent indexing
+     Recommendation: If this runs on page load, replace with server-side 301
+
+  3. appwrite-config.js:520
+     Target: admin.html
+     Code: window.location.href = 'admin.html';
+     Issue: Unconditional JavaScript redirect may prevent indexing
+     Recommendation: If this runs on page load, replace with server-side 301
+
+  4. appwrite-config.js:1017
+     Target: admin.html
+     Code: window.location.href = 'admin.html';
+     Issue: Unconditional JavaScript redirect may prevent indexing
+     Recommendation: If this runs on page load, replace with server-side 301
+
+LOW SEVERITY (Likely Acceptable):
+  1. admin-script.js:473 - index.html?admin=true
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+SITEMAP ANALYSIS
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Total URLs: 2
+Protocols: {"https":2}
+
+URLs:
+  ✅ https://onsi.shop/
+  ✅ https://onsi.shop/?lang=ar
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+RECOMMENDATIONS
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+HIGH PRIORITY (1):
+  1. [JAVASCRIPT-REDIRECT] 4 unconditional JavaScript redirect(s) found
+     Recommendation: Review and replace with server-side redirects if they run on page load
+
+
+MEDIUM PRIORITY (1):
+  1. [VERCEL-CONFIG] Catch-all route may mask 404 errors
+     Recommendation: Ensure catch-all returns proper 200 for valid pages and 404 for missing pages
+     File: vercel.json
+     Test: curl -I https://onsi.shop/nonexistent-page (should return 404)
+
+
+LOW PRIORITY (1):
+  1. [SEO-BEST-PRACTICE] Ongoing monitoring
+     Recommendation: Regularly check Google Search Console for "Page with redirect" warnings
+     Test: Visit: https://search.google.com/search-console → Coverage → Excluded
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+END OF REPORT
+════════════════════════════════════════════════════════════════════════════════════════════════════

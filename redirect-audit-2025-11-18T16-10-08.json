@@ -1,0 +1,187 @@
+{
+  "timestamp": "2025-11-18T16:10:08.807Z",
+  "domain": "onsi.shop",
+  "analysis": {
+    "vercel_config": {
+      "has_redirects": false,
+      "redirect_rules": [],
+      "route_rules": [
+        {
+          "index": 0,
+          "type": "route"
+        },
+        {
+          "index": 1,
+          "source": "/api/video-config",
+          "destination": "/api/video-config-get.js",
+          "type": "route"
+        },
+        {
+          "index": 2,
+          "source": "/api/replace-video",
+          "destination": "/api/replace-video.js",
+          "type": "route"
+        },
+        {
+          "index": 3,
+          "source": "/admin.html",
+          "destination": "/admin.html",
+          "type": "route"
+        },
+        {
+          "index": 4,
+          "source": "/admin",
+          "destination": "/admin.html",
+          "type": "route"
+        },
+        {
+          "index": 5,
+          "source": "/(sitemap\\.xml|robots\\.txt)",
+          "destination": "/$1",
+          "type": "route"
+        },
+        {
+          "index": 6,
+          "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp4))",
+          "destination": "/$1",
+          "type": "route"
+        },
+        {
+          "index": 7,
+          "source": "/(.*)",
+          "destination": "/index.html",
+          "type": "route",
+          "is_catchall": true
+        }
+      ],
+      "potential_issues": [
+        {
+          "rule_index": 7,
+          "issue": "Catch-all route - ensure it returns 200 for valid URLs",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    "html_redirects": [],
+    "javascript_redirects": [
+      {
+        "file": "admin-script.js",
+        "line": 457,
+        "target": "index.html",
+        "code": "window.location.href = 'index.html';",
+        "conditional": false,
+        "user_triggered": false,
+        "severity": "HIGH",
+        "issue": "Unconditional JavaScript redirect may prevent indexing",
+        "recommendation": "If this runs on page load, replace with server-side 301"
+      },
+      {
+        "file": "admin-script.js",
+        "line": 473,
+        "target": "index.html?admin=true",
+        "code": "window.location.href = 'index.html?admin=true';",
+        "conditional": true,
+        "user_triggered": false,
+        "severity": "LOW",
+        "issue": "Conditional/user-triggered redirect (likely acceptable)",
+        "recommendation": "Monitor to ensure it doesn't run on initial page load"
+      },
+      {
+        "file": "admin-script.js",
+        "line": 506,
+        "target": "index.html",
+        "code": "window.location.href = 'index.html';",
+        "conditional": false,
+        "user_triggered": false,
+        "severity": "HIGH",
+        "issue": "Unconditional JavaScript redirect may prevent indexing",
+        "recommendation": "If this runs on page load, replace with server-side 301"
+      },
+      {
+        "file": "appwrite-config.js",
+        "line": 520,
+        "target": "admin.html",
+        "code": "window.location.href = 'admin.html';",
+        "conditional": false,
+        "user_triggered": false,
+        "severity": "HIGH",
+        "issue": "Unconditional JavaScript redirect may prevent indexing",
+        "recommendation": "If this runs on page load, replace with server-side 301"
+      },
+      {
+        "file": "appwrite-config.js",
+        "line": 1017,
+        "target": "admin.html",
+        "code": "window.location.href = 'admin.html';",
+        "conditional": false,
+        "user_triggered": false,
+        "severity": "HIGH",
+        "issue": "Unconditional JavaScript redirect may prevent indexing",
+        "recommendation": "If this runs on page load, replace with server-side 301"
+      }
+    ],
+    "sitemap_urls": [
+      {
+        "url": "https://onsi.shop/",
+        "is_absolute": true,
+        "protocol": "https",
+        "domain": "onsi.shop"
+      },
+      {
+        "url": "https://onsi.shop/?lang=ar",
+        "is_absolute": true,
+        "protocol": "https",
+        "domain": "onsi.shop"
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": "MEDIUM",
+        "category": "vercel-config",
+        "issue": "Catch-all route may mask 404 errors",
+        "recommendation": "Ensure catch-all returns proper 200 for valid pages and 404 for missing pages",
+        "file": "vercel.json",
+        "test_command": "curl -I https://onsi.shop/nonexistent-page (should return 404)"
+      },
+      {
+        "priority": "HIGH",
+        "category": "javascript-redirect",
+        "issue": "4 unconditional JavaScript redirect(s) found",
+        "recommendation": "Review and replace with server-side redirects if they run on page load",
+        "affected_files": [
+          "admin-script.js",
+          "appwrite-config.js"
+        ],
+        "details": [
+          {
+            "file": "admin-script.js",
+            "line": 457,
+            "target": "index.html"
+          },
+          {
+            "file": "admin-script.js",
+            "line": 506,
+            "target": "index.html"
+          },
+          {
+            "file": "appwrite-config.js",
+            "line": 520,
+            "target": "admin.html"
+          },
+          {
+            "file": "appwrite-config.js",
+            "line": 1017,
+            "target": "admin.html"
+          }
+        ]
+      },
+      {
+        "priority": "LOW",
+        "category": "seo-best-practice",
+        "issue": "Ongoing monitoring",
+        "recommendation": "Regularly check Google Search Console for \"Page with redirect\" warnings",
+        "test_command": "Visit: https://search.google.com/search-console → Coverage → Excluded"
+      }
+    ]
+  }
+}
