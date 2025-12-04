@@ -18,6 +18,7 @@ export default async ({ req, res, log, error }) => {
     const emailData = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     
     log('📧 Received email request for order:', emailData.orderNumber);
+    log('📧 Order data:', JSON.stringify(emailData, null, 2));
 
     const resendApiKey = process.env.RESEND_API_KEY;
     const adminEmail = process.env.ADMIN_EMAIL || 'onsmaitii@gmail.com';
@@ -26,9 +27,21 @@ export default async ({ req, res, log, error }) => {
       throw new Error('RESEND_API_KEY not configured');
     }
 
+    // Extract customer info
+    const customerInfo = emailData.customerInfo || {};
+    const customerName = customerInfo.name || 'Customer';
+    const customerEmail = customerInfo.email || emailData.customerEmail;
+    const customerPhone = customerInfo.phone || emailData.customerPhone;
+    
+    // Build shipping address
+    const shippingAddress = `${customerInfo.address || ''}<br>
+      ${customerInfo.city || ''}, ${customerInfo.postalCode || ''}<br>
+      ${customerInfo.governorate || customerInfo.city || ''}<br>
+      ${customerInfo.country || ''}`;
+
     // Format items list
     const itemsList = emailData.items
-      .map(item => `• ${item.name} x ${item.quantity} = ${item.total.toFixed(2)} TND`)
+      .map(item => `• ${item.name || item.nameAr || 'Product'} x ${item.quantity} = ${(item.total || 0).toFixed(2)} TND`)
       .join('\n');
 
     const orderDate = new Date(emailData.createdAt).toLocaleDateString('en-US', {
@@ -57,7 +70,7 @@ export default async ({ req, res, log, error }) => {
         <div class="container">
           <div class="header">
             <h1>✅ Order Confirmed!</h1>
-            <p>Thank you for your order, ${emailData.customerName}!</p>
+            <p>Thank you for your order, ${customerName}!</p>
           </div>
           <div class="content">
             <div class="order-details">
@@ -68,9 +81,9 @@ export default async ({ req, res, log, error }) => {
                 <h3>Items:</h3>
                 ${itemsList}
               </div>
-              <p class="total">Total: ${emailData.total.toFixed(2)} TND</p>
+              <p class="total">Total: ${(emailData.total || 0).toFixed(2)} TND</p>
               <h3>Shipping Address:</h3>
-              <p>${emailData.shippingAddress}</p>
+              <p>${shippingAddress}</p>
             </div>
             <div class="footer">
               <p>We'll process your order shortly and keep you updated.</p>
@@ -104,15 +117,15 @@ export default async ({ req, res, log, error }) => {
           <div class="content">
             <div class="order-details">
               <h2>Order #${emailData.orderNumber}</h2>
-              <p><strong>Customer:</strong> ${emailData.customerName}</p>
-              <p><strong>Email:</strong> ${emailData.customerEmail}</p>
-              <p><strong>Phone:</strong> ${emailData.customerPhone}</p>
+              <p><strong>Customer:</strong> ${customerName}</p>
+              <p><strong>Email:</strong> ${customerEmail}</p>
+              <p><strong>Phone:</strong> ${customerPhone}</p>
               <p><strong>Date:</strong> ${orderDate}</p>
               <h3>Items:</h3>
               <div class="items">${itemsList}</div>
-              <p><strong>Total:</strong> ${emailData.total.toFixed(2)} TND</p>
+              <p><strong>Total:</strong> ${(emailData.total || 0).toFixed(2)} TND</p>
               <h3>Shipping Address:</h3>
-              <p>${emailData.shippingAddress}</p>
+              <p>${shippingAddress}</p>
             </div>
           </div>
         </div>
@@ -121,7 +134,7 @@ export default async ({ req, res, log, error }) => {
     `;
 
     // Send customer email
-    log('Sending customer email to:', emailData.customerInfo.email);
+    log('Sending customer email to:', customerEmail);
     const customerResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -130,7 +143,7 @@ export default async ({ req, res, log, error }) => {
       },
       body: JSON.stringify({
         from: 'ONSi Koran Shop <noreply@onsi.shop>',
-        to: [emailData.customerInfo.email],
+        to: [customerEmail],
         subject: `Order Confirmation - ${emailData.orderNumber}`,
         html: customerEmailHtml
       })
