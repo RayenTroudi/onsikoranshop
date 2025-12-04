@@ -477,11 +477,17 @@ async function processOrder(formData) {
 			saveOrderToLocalStorage(orderData);
 		}
 		
-		// Send email notifications using Appwrite Gmail SMTP Function
+		// Send email notifications using Resend
 		try {
-			await sendOrderNotificationsGmail(orderData);
+			console.log('🚀 Attempting to send order notification emails...');
+			const emailResult = await sendOrderNotificationsGmail(orderData);
+			console.log('📧 Email result:', emailResult);
+			if (!emailResult.success) {
+				console.warn('⚠️ Email sending failed but order was saved:', emailResult.error);
+			}
 		} catch (error) {
-			console.error('Failed to send email notifications:', error);
+			console.error('❌ Failed to send email notifications:', error);
+			console.error('❌ Error stack:', error.stack);
 			// Don't fail the order if email fails
 		}
 		
@@ -572,174 +578,194 @@ function saveOrderToLocalStorage(orderData) {
 	}
 }
 
-// Send email notifications using Appwrite Gmail SMTP Function  
+// Send email notifications using Resend
 async function sendOrderNotificationsGmail(orderData) {
 	try {
-		// Prepare email data for Gmail SMTP function
-		const emailData = {
-			to: orderData.customerInfo.email,
-			customerName: orderData.customerInfo.name,
-			orderNumber: orderData.orderNumber,
-			orderDate: new Date(orderData.createdAt).toLocaleDateString('en-US', {
-				year: 'numeric',
-				month: 'long',
-				day: 'numeric'
-			}),
-			items: orderData.items,
-			totalAmount: orderData.total,
-			shippingInfo: {
-				firstName: orderData.customerInfo.name.split(' ')[0] || orderData.customerInfo.name,
-				lastName: orderData.customerInfo.name.split(' ').slice(1).join(' ') || '',
-				email: orderData.customerInfo.email,
-				phone: orderData.customerInfo.phone,
-				address: orderData.customerInfo.address,
-				city: orderData.customerInfo.city,
-				governorate: orderData.customerInfo.governorate || orderData.customerInfo.city,
-				postalCode: orderData.customerInfo.postalCode,
-				country: orderData.customerInfo.country
-			}
-		};
+		const resendApiKey = window.ENV?.VITE_RESEND_API_KEY || 're_4mqwvFap_LqaRLWYajRPUiFEE5zu1BUF8';
+		const adminEmail = window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com';
 		
-		console.log('📧 Sending order emails via Appwrite Gmail SMTP Function...', emailData);
+		if (!resendApiKey) {
+			throw new Error('Resend API key not configured');
+		}
 		
-		// Import Functions from Appwrite SDK
-		const { Functions } = await import('https://cdn.skypack.dev/appwrite@15.0.0');
-		const { Client } = await import('https://cdn.skypack.dev/appwrite@15.0.0');
+		console.log('📧 Sending order emails via Resend...');
+		console.log('📧 Customer email:', orderData.customerInfo.email);
+		console.log('📧 Admin email:', adminEmail);
 		
-		// Create Appwrite client for functions
-		const client = new Client()
-			.setEndpoint('https://fra.cloud.appwrite.io/v1')
-			.setProject('69319f7f003127073ff3');
+		// Format items list
+		const itemsList = orderData.items.map(item => 
+			`• ${item.name || item.nameAr} x ${item.quantity} = ${item.total.toFixed(2)} TND`
+		).join('\n');
 		
-		const functions = new Functions(client);
+		const orderDate = new Date(orderData.createdAt).toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		});
 		
-		// Execute the updated Gmail SMTP function
-		const execution = await functions.createExecution(
-			'68fbb51700021c6f9655', // Your function ID - now updated with Gmail SMTP
-			JSON.stringify(emailData),
-			false, // sync execution
-			'/', // path
-			'POST' // method
-		);
+		// Customer email HTML
+		const customerEmailHtml = `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<style>
+					body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+					.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+					.header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+					.content { background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+					.order-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+					.items { margin: 15px 0; }
+					.total { font-size: 1.2em; font-weight: bold; color: #1e293b; margin-top: 15px; }
+					.footer { text-align: center; margin-top: 30px; color: #666; font-size: 0.9em; }
+				</style>
+			</head>
+			<body>
+				<div class="container">
+					<div class="header">
+						<h1>✅ Order Confirmed!</h1>
+						<p>Thank you for your order, ${orderData.customerInfo.name}!</p>
+					</div>
+					<div class="content">
+						<div class="order-details">
+							<h2>Order Details</h2>
+							<p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+							<p><strong>Order Date:</strong> ${orderDate}</p>
+							<div class="items">
+								<h3>Items:</h3>
+								<pre>${itemsList}</pre>
+							</div>
+							<p class="total">Total: ${orderData.total.toFixed(2)} TND</p>
+							<h3>Shipping Address:</h3>
+							<p>${orderData.customerInfo.address}<br>
+							${orderData.customerInfo.city}, ${orderData.customerInfo.postalCode}<br>
+							${orderData.customerInfo.country}</p>
+						</div>
+						<div class="footer">
+							<p>We'll process your order shortly and keep you updated.</p>
+							<p>© 2025 ONSi Koran Shop. All rights reserved.</p>
+						</div>
+					</div>
+				</div>
+			</body>
+			</html>
+		`;
 		
-		console.log('✅ Appwrite Gmail SMTP function executed:', execution);
+		// Admin email HTML
+		const adminEmailHtml = `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<style>
+					body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+					.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+					.header { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+					.content { background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+					.order-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+				</style>
+			</head>
+			<body>
+				<div class="container">
+					<div class="header">
+						<h1>🔔 New Order Received!</h1>
+					</div>
+					<div class="content">
+						<div class="order-details">
+							<h2>Order #${orderData.orderNumber}</h2>
+							<p><strong>Customer:</strong> ${orderData.customerInfo.name}</p>
+							<p><strong>Email:</strong> ${orderData.customerInfo.email}</p>
+							<p><strong>Phone:</strong> ${orderData.customerInfo.phone}</p>
+							<p><strong>Date:</strong> ${orderDate}</p>
+							<h3>Items:</h3>
+							<pre>${itemsList}</pre>
+							<p><strong>Total:</strong> ${orderData.total.toFixed(2)} TND</p>
+							<h3>Shipping Address:</h3>
+							<p>${orderData.customerInfo.address}<br>
+							${orderData.customerInfo.city}, ${orderData.customerInfo.postalCode}<br>
+							${orderData.customerInfo.governorate || orderData.customerInfo.city}<br>
+							${orderData.customerInfo.country}</p>
+						</div>
+					</div>
+				</div>
+			</body>
+			</html>
+		`;
 		
-		// Parse the response body if it exists
-		let responseData = null;
-		if (execution.responseBody) {
+		// Send customer email
+		console.log('📤 Sending customer email to:', orderData.customerInfo.email);
+		const customerEmailResponse = await fetch('https://api.resend.com/emails', {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${resendApiKey}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				from: 'ONSi Koran Shop <noreply@onsi.shop>',
+				to: [orderData.customerInfo.email],
+				subject: `Order Confirmation - ${orderData.orderNumber}`,
+				html: customerEmailHtml
+			})
+		});
+		
+		console.log('📥 Customer email response status:', customerEmailResponse.status);
+		
+		if (!customerEmailResponse.ok) {
+			const errorText = await customerEmailResponse.text();
+			console.error('❌ Customer email error response:', errorText);
+			let error;
 			try {
-				responseData = JSON.parse(execution.responseBody);
-				console.log('📧 Email function response:', responseData);
-			} catch (parseError) {
-				console.log('📧 Email function response (text):', execution.responseBody);
+				error = JSON.parse(errorText);
+			} catch (e) {
+				error = { message: errorText };
 			}
+			throw new Error(`Customer email failed (${customerEmailResponse.status}): ${JSON.stringify(error)}`);
 		}
 		
-		// Check execution status
-		if (execution.responseStatusCode === 200) {
-			console.log('🎉 Gmail SMTP emails sent successfully via Appwrite!');
-			return { success: true, execution, response: responseData };
+		const customerResult = await customerEmailResponse.json();
+		console.log('✅ Customer email sent successfully:', customerResult);
+		
+		// Send admin notification email
+		console.log('📤 Sending admin notification to:', adminEmail);
+		const adminEmailResponse = await fetch('https://api.resend.com/emails', {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${resendApiKey}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				from: 'ONSi Koran Shop <orders@onsi.shop>',
+				to: [adminEmail],
+				subject: `New Order: ${orderData.orderNumber}`,
+				html: adminEmailHtml
+			})
+		});
+		
+		console.log('📥 Admin email response status:', adminEmailResponse.status);
+		
+		if (!adminEmailResponse.ok) {
+			const errorText = await adminEmailResponse.text();
+			console.warn('⚠️ Admin email error response:', errorText);
+			let error;
+			try {
+				error = JSON.parse(errorText);
+			} catch (e) {
+				error = { message: errorText };
+			}
+			console.warn('⚠️ Admin email failed:', error);
 		} else {
-			console.error('❌ Function execution failed:', {
-				statusCode: execution.responseStatusCode,
-				errors: execution.errors,
-				logs: execution.logs
-			});
-			throw new Error(`Function execution failed with status ${execution.responseStatusCode}`);
+			const adminResult = await adminEmailResponse.json();
+			console.log('✅ Admin email sent successfully:', adminResult);
 		}
+		
+		console.log('🎉 Order emails sent successfully via Resend!');
+		return { success: true, customerEmail: customerResult, adminEmail: adminResult };
 		
 	} catch (error) {
-		console.error('❌ Appwrite Gmail SMTP email error:', error);
+		console.error('❌ Resend email error:', error);
 		console.error('Error details:', error.message);
-		
-		// Provide helpful debugging info
-		if (error.message && error.message.includes('Deployment not found')) {
-			console.error('⚠️ Function deployment issue - Please deploy the updated Gmail SMTP function');
-			console.info('💡 Steps: Appwrite Console → Functions → Email Function → Deploy');
-		} else if (error.message && error.message.includes('Missing required environment variables')) {
-			console.error('⚠️ Environment variables missing in Appwrite function');
-			console.info('💡 Add: SMTP_USERNAME, SMTP_PASSWORD, SUBMIT_EMAIL to function environment');
-		}
 		
 		// Don't fail the order if email fails
 		console.warn('⚠️ Order completed successfully, but email notification failed');
 		return { success: false, error: error.message };
-	}
-}
-
-// Send email notifications using EmailJS (free service) - DEPRECATED
-async function sendOrderNotificationsEmailJS(orderData) {
-	// Check if EmailJS is loaded
-	if (typeof emailjs === 'undefined') {
-		console.warn('EmailJS not loaded, skipping email notifications');
-		return;
-	}
-	
-	try {
-		// Customer confirmation email parameters (matching template variables)
-		// Note: In EmailJS templates, use {{customer_name}}, {{order_number}}, etc.
-		const customerEmailParams = {
-			to_email: orderData.customerInfo.email,
-			customer_name: orderData.customerInfo.name,
-			order_number: orderData.orderNumber,
-			order_date: new Date(orderData.createdAt).toLocaleDateString('en-US', {
-				year: 'numeric',
-				month: 'long',
-				day: 'numeric'
-			}),
-			items_list: orderData.items.map(item => 
-				`${item.name} (Qty: ${item.quantity})`
-			).join(', '),
-			total_amount: orderData.total.toFixed(2),
-			shipping_address: `${orderData.customerInfo.address}\n${orderData.customerInfo.city}, ${orderData.customerInfo.postalCode}\n${orderData.customerInfo.country}`,
-			customer_phone: orderData.customerInfo.phone
-		};
-		
-		// Send customer confirmation email
-		await emailjs.send(
-			window.ENV?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we', // Your actual EmailJS service ID
-			window.ENV?.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || 'template_3m8gczh', // Your customer order confirmation template ID
-			customerEmailParams
-		);
-		
-		
-		
-		// Admin notification email parameters
-		// Note: In EmailJS templates, use {{customer_email}}, {{customer_name}}, {{order_number}}, etc.
-		const adminEmailParams = {
-			to_email: window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com', // Your admin email for notifications
-			order_number: orderData.orderNumber,
-			customer_name: orderData.customerInfo.name,
-			customer_email: orderData.customerInfo.email,
-			customer_phone: orderData.customerInfo.phone,
-			order_date: new Date(orderData.createdAt).toLocaleDateString('en-US', {
-				year: 'numeric',
-				month: 'long',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit'
-			}),
-			items_list: orderData.items.map(item => 
-				`• ${item.name} x ${item.quantity} = $${item.total.toFixed(2)}`
-			).join('\n'),
-			total_amount: orderData.total.toFixed(2),
-			shipping_address: `${orderData.customerInfo.name}\n${orderData.customerInfo.address}\n${orderData.customerInfo.city}, ${orderData.customerInfo.postalCode}\n${orderData.customerInfo.country}`
-		};
-		
-		// Send admin notification email
-		await emailjs.send(
-			window.ENV?.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we', // Your actual EmailJS service ID
-			window.ENV?.VITE_EMAILJS_ADMIN_TEMPLATE_ID || 'template_lkl5yxm', // Your admin order notification template ID
-			adminEmailParams
-		);
-		
-		
-		
-		
-	} catch (error) {
-		console.error('EmailJS notification error:', error);
-		// Don't throw error to prevent order failure if email fails
-		console.warn('Order completed but email notification failed');
 	}
 }
 
@@ -1471,9 +1497,6 @@ function initializeApp() {
 	// Load product data from database first
 	loadProductFromDatabase();
 	
-	// Initialize EmailJS (free email service)
-	initializeEmailJS();
-	
 	// Initialize currency button
 	updateCurrencyButton();
 	
@@ -1500,19 +1523,6 @@ function initializeApp() {
 	}).catch(error => {
 		console.error('Failed to initialize app:', error);
 	});
-}
-
-// Initialize EmailJS with your actual configuration
-function initializeEmailJS() {
-	if (typeof emailjs !== 'undefined') {
-		// EmailJS Public Key configured
-		const publicKey = window.ENV?.VITE_EMAILJS_PUBLIC_KEY || 'ryB3eYn0HP-iAfl2E';
-		
-		emailjs.init(publicKey);
-		
-	} else {
-		console.warn('EmailJS not loaded - email notifications will be disabled');
-	}
 }
 
 // Load Appwrite authentication module

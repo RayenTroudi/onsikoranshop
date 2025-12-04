@@ -1,0 +1,14 @@
+{
+  "name": "onsi-resend-email-function",
+  "version": "1.0.0",
+  "description": "ONSi Resend email notification function for Appwrite",
+  "main": "src/main.js",
+  "type": "module",
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["appwrite", "function", "email", "resend", "onsi"],
+  "author": "ONSi Team",
+  "license": "MIT"
+}

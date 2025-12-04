@@ -1,0 +1,24 @@
+{
+  "projectId": "69319f7f003127073ff3",
+  "functions": [
+    {
+      "$id": "onsi-resend-email",
+      "name": "ONSi Resend Email Function",
+      "runtime": "node-22",
+      "entrypoint": "src/main.js",
+      "execute": ["any"],
+      "events": [],
+      "schedule": "",
+      "timeout": 15,
+      "enabled": true,
+      "logging": true,
+      "scopes": [],
+      "commands": "npm install",
+      "variables": {
+        "RESEND_API_KEY": "re_4mqwvFap_LqaRLWYajRPUiFEE5zu1BUF8",
+        "ADMIN_EMAIL": "onsmaitii@gmail.com",
+        "ALLOWED_ORIGINS": "*"
+      }
+    }
+  ]
+}

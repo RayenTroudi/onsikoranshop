@@ -6,7 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.skypack.dev https://cdn.jsdelivr.net https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run; connect-src 'self' https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run https://utfs.io https://9v6fd3xlqu.ufs.sh; img-src 'self' data: https://fra.cloud.appwrite.io https://utfs.io https://9v6fd3xlqu.ufs.sh; media-src 'self' https://fra.cloud.appwrite.io https://utfs.io https://9v6fd3xlqu.ufs.sh; object-src 'none';">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.skypack.dev https://cdn.jsdelivr.net https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run; connect-src 'self' https://fra.cloud.appwrite.io https://68fbb517001023f2105a.fra.appwrite.run https://utfs.io https://9v6fd3xlqu.ufs.sh https://api.resend.com; img-src 'self' data: https://fra.cloud.appwrite.io https://utfs.io https://9v6fd3xlqu.ufs.sh; media-src 'self' https://fra.cloud.appwrite.io https://utfs.io https://9v6fd3xlqu.ufs.sh; object-src 'none';">
   
   <!-- Primary SEO Meta Tags -->
   <title>ONSi Quranic Verses Box | Islamic Inspiration Cards</title>
@@ -1636,11 +1636,8 @@
       VITE_APPWRITE_ENDPOINT: typeof __VITE_APPWRITE_ENDPOINT__ !== 'undefined' ? __VITE_APPWRITE_ENDPOINT__ : 'https://fra.cloud.appwrite.io/v1',
       VITE_APPWRITE_PROJECT_ID: typeof __VITE_APPWRITE_PROJECT_ID__ !== 'undefined' ? __VITE_APPWRITE_PROJECT_ID__ : '69319f7f003127073ff3',
       VITE_APPWRITE_PROJECT_NAME: typeof __VITE_APPWRITE_PROJECT_NAME__ !== 'undefined' ? __VITE_APPWRITE_PROJECT_NAME__ : 'onsi',
-      // EmailJS configuration  
-      VITE_EMAILJS_PUBLIC_KEY: typeof __VITE_EMAILJS_PUBLIC_KEY__ !== 'undefined' ? __VITE_EMAILJS_PUBLIC_KEY__ : 'ryB3eYn0HP-iAfl2E',
-      VITE_EMAILJS_SERVICE_ID: typeof __VITE_EMAILJS_SERVICE_ID__ !== 'undefined' ? __VITE_EMAILJS_SERVICE_ID__ : 'service_j4hv4we',
-      VITE_EMAILJS_CUSTOMER_TEMPLATE_ID: typeof __VITE_EMAILJS_CUSTOMER_TEMPLATE_ID__ !== 'undefined' ? __VITE_EMAILJS_CUSTOMER_TEMPLATE_ID__ : 'template_3m8gczh',
-      VITE_EMAILJS_ADMIN_TEMPLATE_ID: typeof __VITE_EMAILJS_ADMIN_TEMPLATE_ID__ !== 'undefined' ? __VITE_EMAILJS_ADMIN_TEMPLATE_ID__ : 'template_lkl5yxm',
+      // Resend Email Service
+      VITE_RESEND_API_KEY: typeof __VITE_RESEND_API_KEY__ !== 'undefined' ? __VITE_RESEND_API_KEY__ : 're_4mqwvFap_LqaRLWYajRPUiFEE5zu1BUF8',
       VITE_ADMIN_EMAIL: typeof __VITE_ADMIN_EMAIL__ !== 'undefined' ? __VITE_ADMIN_EMAIL__ : 'onsmaitii@gmail.com',
       VITE_APP_NAME: typeof __VITE_APP_NAME__ !== 'undefined' ? __VITE_APP_NAME__ : 'Onsi Koran Shop',
       VITE_PRODUCT_PRICE: typeof __VITE_PRODUCT_PRICE__ !== 'undefined' ? __VITE_PRODUCT_PRICE__ : null,
