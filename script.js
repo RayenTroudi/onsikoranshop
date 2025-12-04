@@ -723,20 +723,9 @@ async function sendOrderNotificationsGmail(orderData) {
 		
 		console.log('✅ Order emails sent successfully!');
 		return { success: true, result };
-			} catch (e) {
-				error = { message: errorText };
-			}
-			console.warn('⚠️ Admin email failed:', error);
-		} else {
-			const adminResult = await adminEmailResponse.json();
-			console.log('✅ Admin email sent successfully:', adminResult);
-		}
-		
-		console.log('🎉 Order emails sent successfully via Resend!');
-		return { success: true, customerEmail: customerResult, adminEmail: adminResult };
 		
 	} catch (error) {
-		console.error('❌ Resend email error:', error);
+		console.error('❌ Email function error:', error);
 		console.error('Error details:', error.message);
 		
 		// Don't fail the order if email fails
