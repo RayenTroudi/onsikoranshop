@@ -27,7 +27,7 @@ async function deleteFromAppwrite(fileId) {
         const client = new Client();
         client
             .setEndpoint(process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1')
-            .setProject(process.env.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c')
+            .setProject(process.env.VITE_APPWRITE_PROJECT_ID || '69319f7f003127073ff3')
             .setKey(process.env.APPWRITE_API_KEY);
         
         const storage = new Storage(client);

@@ -23,7 +23,7 @@
   <meta property="og:url" content="https://onsi.shop/">
   <meta property="og:title" content="ONSi Quranic Verses Box | Islamic Inspiration Cards">
   <meta property="og:description" content="Beautiful Islamic inspiration cards with Quranic verses in Arabic & English. Perfect for daily reflection and spiritual growth. Order your ONSi Quranic Verses Box today.">
-  <meta property="og:image" content="https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/691736f50024bee46fe2/view?project=68f8c1bc003e3d2c8f5c">
+  <meta property="og:image" content="https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/691736f50024bee46fe2/view?project=69319f7f003127073ff3">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="ONSi Quranic Verses Box - Islamic Inspiration Cards">
@@ -88,7 +88,7 @@
   <meta property="twitter:url" content="https://onsi.shop/">
   <meta property="twitter:title" content="ONSi Quranic Verses Box | Islamic Inspiration Cards">
   <meta property="twitter:description" content="Beautiful Islamic inspiration cards with Quranic verses in Arabic & English. Perfect for daily reflection and spiritual growth.">
-  <meta property="twitter:image" content="https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/691736f50024bee46fe2/view?project=68f8c1bc003e3d2c8f5c">
+  <meta property="twitter:image" content="https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/691736f50024bee46fe2/view?project=69319f7f003127073ff3">
   <meta property="twitter:image:alt" content="ONSi Quranic Verses Box">
   
   <!-- Additional SEO Meta Tags -->
@@ -146,7 +146,7 @@
     "name": "ONSi Quranic Verses Box",
     "description": "Beautifully crafted Islamic inspiration cards featuring uplifting Quranic ayat in Arabic and English. Perfect for daily reflection, gifts, and spiritual growth.",
     "image": [
-      "https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/691736f50024bee46fe2/view?project=68f8c1bc003e3d2c8f5c"
+      "https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/691736f50024bee46fe2/view?project=69319f7f003127073ff3"
     ],
     "brand": {
       "@type": "Brand",
@@ -699,7 +699,6 @@
         <span class="text-lg sm:text-xl md:text-2xl font-semibold tracking-wide hidden" id="logo-fallback">ONSi</span>
       </a>
 
-      <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3"
       <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3">
         <!-- Currency Switcher -->
         <button id="currency-toggle" class="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2 sm:px-2.5 md:px-3 py-1.5 md:py-2 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 text-xs md:text-sm font-medium group touch-manipulation" aria-label="Switch currency" title="Switch currency">
@@ -1635,7 +1634,7 @@
     window.ENV = {
       // Appwrite configuration
       VITE_APPWRITE_ENDPOINT: typeof __VITE_APPWRITE_ENDPOINT__ !== 'undefined' ? __VITE_APPWRITE_ENDPOINT__ : 'https://fra.cloud.appwrite.io/v1',
-      VITE_APPWRITE_PROJECT_ID: typeof __VITE_APPWRITE_PROJECT_ID__ !== 'undefined' ? __VITE_APPWRITE_PROJECT_ID__ : '68f8c1bc003e3d2c8f5c',
+      VITE_APPWRITE_PROJECT_ID: typeof __VITE_APPWRITE_PROJECT_ID__ !== 'undefined' ? __VITE_APPWRITE_PROJECT_ID__ : '69319f7f003127073ff3',
       VITE_APPWRITE_PROJECT_NAME: typeof __VITE_APPWRITE_PROJECT_NAME__ !== 'undefined' ? __VITE_APPWRITE_PROJECT_NAME__ : 'onsi',
       // EmailJS configuration  
       VITE_EMAILJS_PUBLIC_KEY: typeof __VITE_EMAILJS_PUBLIC_KEY__ !== 'undefined' ? __VITE_EMAILJS_PUBLIC_KEY__ : 'ryB3eYn0HP-iAfl2E',
@@ -1665,6 +1664,84 @@
     // Map of filenames to their Appwrite file IDs
     // You need to replace these with actual file IDs from your Appwrite bucket
     window.fileIdMap = {};
+
+    // Load product gallery images from database
+    async function loadProductGallery() {
+      try {
+        console.log('🖼️ Loading product gallery from database...');
+        const endpoint = window.ENV.VITE_APPWRITE_ENDPOINT;
+        const projectId = window.ENV.VITE_APPWRITE_PROJECT_ID;
+        
+        const response = await fetch(`${endpoint}/databases/onsi/collections/products/documents`, {
+          method: 'GET',
+          headers: {
+            'X-Appwrite-Project': projectId,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          console.warn('⚠️ Could not load products for gallery');
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('📦 Products loaded:', data);
+        
+        if (data.documents && data.documents.length > 0) {
+          // Collect all gallery images from all products
+          const allGalleryImages = [];
+          
+          data.documents.forEach(product => {
+            if (product.galleryImages) {
+              try {
+                const gallery = typeof product.galleryImages === 'string' 
+                  ? JSON.parse(product.galleryImages) 
+                  : product.galleryImages;
+                
+                if (Array.isArray(gallery)) {
+                  gallery.forEach(img => {
+                    if (img.fileId) {
+                      allGalleryImages.push({
+                        fileId: img.fileId,
+                        order: img.order || 0,
+                        caption: img.caption || product.name
+                      });
+                    }
+                  });
+                }
+              } catch (e) {
+                console.warn('Failed to parse gallery for product:', product.name, e);
+              }
+            }
+          });
+          
+          // Sort by order and display in gallery
+          allGalleryImages.sort((a, b) => a.order - b.order);
+          
+          console.log('🖼️ Gallery images found:', allGalleryImages.length);
+          
+          // Update gallery image elements
+          const gallerySlots = [
+            { id: 'gallery-img-0' },
+            { id: 'gallery-img-1' },
+            { id: 'gallery-img-2' },
+            { id: 'gallery-img-3' }
+          ];
+          
+          gallerySlots.forEach((slot, index) => {
+            const element = document.getElementById(slot.id);
+            if (element && allGalleryImages[index]) {
+              element.src = window.getAppwriteFileUrl(allGalleryImages[index].fileId);
+              element.alt = allGalleryImages[index].caption;
+              console.log(`   ✅ Gallery slot ${index} loaded`);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error loading product gallery:', error);
+      }
+    }
 
     // Fetch file list from Appwrite and initialize images
     async function initializeAppwriteImages() {
@@ -1744,20 +1821,8 @@
             productMainImg.src = window.getAppwriteFileUrl(fileMap['product-main.jpg']);
           }
           
-          // Gallery images
-          const galleryImages = [
-            { id: 'gallery-img-0', file: 'gallery-3.jpg' },
-            { id: 'gallery-img-1', file: 'gallery-4.jpg' },
-            { id: 'gallery-img-2', file: 'gallery-5.jpg' },
-            { id: 'gallery-img-3', file: 'gallery-8.jpg' }
-          ];
-          
-          galleryImages.forEach(function(img) {
-            const element = document.getElementById(img.id);
-            if (element && fileMap[img.file]) {
-              element.src = window.getAppwriteFileUrl(fileMap[img.file]);
-            }
-          });
+          // Load gallery images from products collection
+          await loadProductGallery();
           
           console.log('✅ All Appwrite images initialized successfully');
           
@@ -1765,6 +1830,8 @@
           window.dispatchEvent(new Event('appwriteFilesLoaded'));
         } else {
           console.warn('⚠️ No files found in Appwrite bucket');
+          // Still try to load product gallery
+          await loadProductGallery();
         }
         
         // Video elements - Using UploadThing MP4 (ALWAYS LOAD, independent of Appwrite)

@@ -100,7 +100,7 @@ class AdminPanel {
                 {
                     method: 'GET',
                     headers: {
-                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'X-Appwrite-Project': '69319f7f003127073ff3',
                         'Content-Type': 'application/json'
                     },
                     credentials: 'include'
@@ -184,7 +184,7 @@ class AdminPanel {
                 {
                     method: 'POST',
                     headers: {
-                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'X-Appwrite-Project': '69319f7f003127073ff3',
                         'Content-Type': 'application/json'
                     },
                     credentials: 'include',
@@ -232,7 +232,7 @@ class AdminPanel {
                 {
                     method: 'GET',
                     headers: {
-                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'X-Appwrite-Project': '69319f7f003127073ff3',
                         'Content-Type': 'application/json'
                     },
                     credentials: 'include'
@@ -312,10 +312,18 @@ class AdminPanel {
         }
 
         // Image preview
-        const productImage = document.getElementById('product-image');
-        if (productImage) {
-            productImage.addEventListener('change', (e) => {
-                this.previewImage(e.target.files[0]);
+        const productImages = document.getElementById('product-images');
+        if (productImages) {
+            productImages.addEventListener('change', (e) => {
+                this.handleGalleryImages(e.target.files);
+            });
+        }
+
+        // Clear gallery button
+        const clearGallery = document.getElementById('clear-gallery');
+        if (clearGallery) {
+            clearGallery.addEventListener('click', () => {
+                this.clearGallery();
             });
         }
 
@@ -608,27 +616,83 @@ class AdminPanel {
 
     // Dashboard
     updateDashboardStats() {
+        // Basic stats
         document.getElementById('total-products').textContent = this.products.length;
         document.getElementById('total-orders').textContent = this.orders.length;
         
         const revenue = this.orders.reduce((sum, order) => sum + order.total, 0);
         document.getElementById('total-revenue').textContent = `${revenue.toFixed(2)} TND`;
         
-        document.getElementById('total-customers').textContent = new Set(this.orders.map(o => o.customerEmail)).size;
+        const uniqueCustomers = new Set(this.orders.map(o => o.customerEmail)).size;
+        document.getElementById('total-customers').textContent = uniqueCustomers;
 
-        // Update recent activity
-        const recentActivity = document.getElementById('recent-activity');
+        // Pending orders count
+        const pendingOrders = this.orders.filter(o => o.status === 'pending').length;
+        document.getElementById('pending-orders').textContent = pendingOrders;
+
+        // Average order value
+        const avgOrderValue = this.orders.length > 0 ? revenue / this.orders.length : 0;
+        document.getElementById('avg-order-value').textContent = `${avgOrderValue.toFixed(2)} TND`;
+
+        // Low stock items (stock < 10)
+        const lowStockItems = this.products.filter(p => p.stock < 10).length;
+        document.getElementById('low-stock-items').textContent = lowStockItems;
+
+        // Recent orders list
+        const recentOrdersList = document.getElementById('recent-orders-list');
         if (this.orders.length > 0) {
-            const recent = this.orders.slice(-3).reverse();
-            recentActivity.innerHTML = recent.map(order => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                        <p class="font-medium text-gray-900">New order from ${order.customerName}</p>
-                        <p class="text-sm text-gray-600">${this.formatDate(order.date)}</p>
+            const recent = this.orders.slice(-5).reverse();
+            recentOrdersList.innerHTML = recent.map(order => {
+                const statusColors = {
+                    pending: 'bg-yellow-100 text-yellow-800',
+                    processing: 'bg-blue-100 text-blue-800',
+                    shipped: 'bg-purple-100 text-purple-800',
+                    delivered: 'bg-green-100 text-green-800',
+                    cancelled: 'bg-red-100 text-red-800'
+                };
+                const statusColor = statusColors[order.status] || 'bg-gray-100 text-gray-800';
+                
+                return `
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">${order.customerName}</p>
+                            <p class="text-sm text-gray-600">${order.customerEmail}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-900">${order.total.toFixed(2)} TND</p>
+                            <span class="inline-block mt-1 px-2 py-1 text-xs font-medium rounded ${statusColor}">
+                                ${this.capitalizeFirst(order.status)}
+                            </span>
+                        </div>
                     </div>
-                    <span class="text-green-600 font-semibold">${order.total.toFixed(2)} TND</span>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        } else {
+            recentOrdersList.innerHTML = '<p class="text-gray-500 text-center py-8">No recent orders</p>';
+        }
+
+        // Top products (by stock or first 5)
+        const topProductsList = document.getElementById('top-products-list');
+        if (this.products.length > 0) {
+            // Sort by stock (descending) and take top 5
+            const topProducts = [...this.products].sort((a, b) => b.stock - a.stock).slice(0, 5);
+            topProductsList.innerHTML = topProducts.map(product => {
+                const stockStatus = product.stock < 10 ? 'text-red-600' : 'text-green-600';
+                return `
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">${product.name}</p>
+                            <p class="text-sm text-gray-600">${product.category}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-900">${product.price.toFixed(2)} TND</p>
+                            <p class="text-sm ${stockStatus}">Stock: ${product.stock}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            topProductsList.innerHTML = '<p class="text-gray-500 text-center py-8">No product data</p>';
         }
     }
 
@@ -687,12 +751,7 @@ class AdminPanel {
                         /> TND
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${product.stock}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getStatusColor(product.status)}">
-                            ${this.capitalizeFirst(product.status)}
-                        </span>
+                        ${product.stock || 0}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button onclick="adminPanel.editProduct('${product.id}')" class="text-indigo-600 hover:text-indigo-900">
@@ -765,7 +824,7 @@ class AdminPanel {
                 {
                     method: 'PATCH',
                     headers: {
-                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'X-Appwrite-Project': '69319f7f003127073ff3',
                         'Content-Type': 'application/json'
                     },
                     credentials: 'include',
@@ -819,6 +878,177 @@ Image: ${product.image}
         }
     }
 
+    // Gallery management methods
+    handleGalleryImages(files) {
+        if (!files || files.length === 0) return;
+
+        const galleryPreview = document.getElementById('gallery-preview');
+        const galleryGrid = document.getElementById('gallery-grid');
+
+        if (!this.galleryImages) {
+            this.galleryImages = [];
+        }
+
+        // Add new images
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageData = {
+                    file: file,
+                    preview: e.target.result,
+                    order: this.galleryImages.length,
+                    caption: file.name
+                };
+                this.galleryImages.push(imageData);
+                this.renderGalleryPreview();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        galleryPreview.classList.remove('hidden');
+    }
+
+    renderGalleryPreview() {
+        const galleryGrid = document.getElementById('gallery-grid');
+        if (!galleryGrid) return;
+
+        galleryGrid.innerHTML = '';
+
+        this.galleryImages.forEach((img, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'relative group cursor-move bg-gray-100 rounded-lg overflow-hidden';
+            itemDiv.draggable = true;
+            itemDiv.dataset.index = index;
+
+            itemDiv.innerHTML = `
+                <img src="${img.preview || img.url}" class="w-full h-24 object-cover">
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <button type="button" class="delete-gallery-img bg-red-500 text-white p-2 rounded-full hover:bg-red-600" data-index="${index}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="absolute top-1 left-1 bg-slate-700 text-white text-xs px-2 py-1 rounded">#${index + 1}</div>
+                ${index === 0 ? '<div class="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-1 rounded">Main</div>' : ''}
+            `;
+
+            // Drag and drop events
+            itemDiv.addEventListener('dragstart', (e) => this.handleDragStart(e));
+            itemDiv.addEventListener('dragover', (e) => this.handleDragOver(e));
+            itemDiv.addEventListener('drop', (e) => this.handleDrop(e));
+            itemDiv.addEventListener('dragend', (e) => this.handleDragEnd(e));
+
+            // Delete button
+            const deleteBtn = itemDiv.querySelector('.delete-gallery-img');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.removeGalleryImage(parseInt(e.currentTarget.dataset.index));
+            });
+
+            galleryGrid.appendChild(itemDiv);
+        });
+    }
+
+    handleDragStart(e) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', e.currentTarget.dataset.index);
+        e.currentTarget.classList.add('opacity-50');
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        const toIndex = parseInt(e.currentTarget.dataset.index);
+
+        if (fromIndex !== toIndex) {
+            // Reorder array
+            const [movedItem] = this.galleryImages.splice(fromIndex, 1);
+            this.galleryImages.splice(toIndex, 0, movedItem);
+            
+            // Update orders
+            this.galleryImages.forEach((img, idx) => {
+                img.order = idx;
+            });
+
+            this.renderGalleryPreview();
+        }
+
+        return false;
+    }
+
+    handleDragEnd(e) {
+        e.currentTarget.classList.remove('opacity-50');
+    }
+
+    removeGalleryImage(index) {
+        this.galleryImages.splice(index, 1);
+        // Update orders
+        this.galleryImages.forEach((img, idx) => {
+            img.order = idx;
+        });
+        this.renderGalleryPreview();
+
+        if (this.galleryImages.length === 0) {
+            document.getElementById('gallery-preview').classList.add('hidden');
+        }
+    }
+
+    clearGallery() {
+        this.galleryImages = [];
+        document.getElementById('gallery-preview').classList.add('hidden');
+        document.getElementById('product-images').value = '';
+    }
+
+    async uploadGalleryImages() {
+        if (!this.galleryImages || this.galleryImages.length === 0) {
+            return [];
+        }
+
+        console.log(`📤 Uploading ${this.galleryImages.length} gallery images...`);
+        const uploadedImages = [];
+
+        for (let i = 0; i < this.galleryImages.length; i++) {
+            const img = this.galleryImages[i];
+            
+            // Skip if already uploaded (has fileId)
+            if (img.fileId) {
+                uploadedImages.push({
+                    fileId: img.fileId,
+                    order: i,
+                    caption: img.caption || `Image ${i + 1}`
+                });
+                continue;
+            }
+
+            try {
+                console.log(`   Uploading image ${i + 1}/${this.galleryImages.length}...`);
+                const result = await window.appwriteAuth.uploadImage(img.file);
+                
+                if (result && result.fileId) {
+                    uploadedImages.push({
+                        fileId: result.fileId,
+                        order: i,
+                        caption: img.caption || `Image ${i + 1}`
+                    });
+                    console.log(`   ✅ Image ${i + 1} uploaded: ${result.fileId}`);
+                }
+            } catch (error) {
+                console.error(`   ❌ Failed to upload image ${i + 1}:`, error);
+            }
+        }
+
+        return uploadedImages;
+    }
+
     filterProducts() {
         const searchTerm = document.getElementById('search-products').value.toLowerCase();
         const categoryFilter = document.getElementById('filter-category').value;
@@ -855,13 +1085,16 @@ Image: ${product.image}
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         
+        // Clear gallery
+        this.clearGallery();
+        
         if (productId) {
             title.textContent = 'Edit Product';
             this.populateProductForm(productId);
         } else {
             title.textContent = 'Add New Product';
             form.reset();
-            document.getElementById('image-preview').classList.add('hidden');
+            document.getElementById('gallery-preview')?.classList.add('hidden');
         }
     }
 
@@ -870,6 +1103,7 @@ Image: ${product.image}
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         this.editingProductId = null;
+        this.clearGallery();
     }
 
     populateProductForm(productId) {
@@ -901,26 +1135,28 @@ Image: ${product.image}
         saveBtnLoading.classList.remove('hidden');
 
         try {
+            // Upload gallery images first
+            let galleryData = [];
+            if (this.galleryImages && this.galleryImages.length > 0) {
+                console.log('📤 Uploading gallery images...');
+                galleryData = await this.uploadGalleryImages();
+                console.log('✅ Gallery images uploaded:', galleryData);
+            }
+
             // Get form data
             const productData = {
                 name: document.getElementById('product-name').value,
                 description: document.getElementById('product-description').value,
                 price: parseFloat(document.getElementById('product-price').value),
                 category: document.getElementById('product-category').value,
-                stock: parseInt(document.getElementById('product-stock').value),
-                status: document.getElementById('product-status').value,
-                image: 'product-main.jpg', // Default image
-                imageFileId: window.fileIdMap && window.fileIdMap['product-main.jpg'] 
-                    ? window.fileIdMap['product-main.jpg'] 
-                    : '68fb982a0028272869bc' // Fallback file ID
+                stock: parseInt(document.getElementById('product-stock').value) || 0,
+                // Store gallery as JSON string in galleryImages field
+                galleryImages: JSON.stringify(galleryData),
+                // Main image is the first gallery image
+                image: galleryData.length > 0 ? galleryData[0].fileId : 'product-main.jpg'
             };
 
-            // Handle image upload (for future implementation)
-            const imageFile = document.getElementById('product-image').files[0];
-            if (imageFile) {
-                // TODO: In future implementation, upload image to Appwrite Storage first
-                console.log('Image file selected:', imageFile.name);
-            }
+            console.log('💾 Saving product data:', productData);
 
             let response;
 
@@ -931,7 +1167,7 @@ Image: ${product.image}
                     {
                         method: 'PATCH',
                         headers: {
-                            'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                            'X-Appwrite-Project': '69319f7f003127073ff3',
                             'Content-Type': 'application/json'
                         },
                         credentials: 'include',
@@ -976,7 +1212,7 @@ Image: ${product.image}
                     {
                         method: 'POST',
                         headers: {
-                            'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                            'X-Appwrite-Project': '69319f7f003127073ff3',
                             'Content-Type': 'application/json'
                         },
                         credentials: 'include',
@@ -1194,7 +1430,7 @@ Image: ${product.image}
                 {
                     method: 'PATCH',
                     headers: {
-                        'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+                        'X-Appwrite-Project': '69319f7f003127073ff3',
                         'Content-Type': 'application/json'
                     },
                     credentials: 'include',
@@ -1315,6 +1551,7 @@ Image: ${product.image}
     }
 
     capitalizeFirst(str) {
+        if (!str) return 'N/A';
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
@@ -1500,7 +1737,7 @@ async function loadStorageFiles() {
     
     try {
         const endpoint = 'https://fra.cloud.appwrite.io/v1';
-        const projectId = '68f8c1bc003e3d2c8f5c';
+        const projectId = '69319f7f003127073ff3';
         const bucketId = '691735da003dc83b3baf';
         
         const response = await fetch(`${endpoint}/storage/buckets/${bucketId}/files?project=${projectId}`, {
@@ -1570,7 +1807,7 @@ function renderStorageFiles(files) {
 }
 
 function getFileUrl(fileId) {
-    return `https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/${fileId}/view?project=68f8c1bc003e3d2c8f5c`;
+    return `https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/${fileId}/view?project=69319f7f003127073ff3`;
 }
 
 function formatFileSize(bytes) {

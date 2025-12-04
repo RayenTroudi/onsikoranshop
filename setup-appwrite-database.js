@@ -11,8 +11,8 @@ import { Client, Databases, ID, Permission, Role } from 'node-appwrite';
 
 // Configuration
 const APPWRITE_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = '68f8c1bc003e3d2c8f5c';
-const APPWRITE_API_KEY = 'standard_8dbff16d610fd73d4a8a79ffa4a68d31d113a70c1df94ab88e53fd60283d7009b8f6930f256c6e1188d6f4bea704a2ca8420e0bdf271fff8ec9ba6e949d18c9cfbb0787f35654c63d5e64bbfddffb29919ff740fb1abf176e8d5c413a5e0059cfdbe11337f661cd3dd4eab783dc83327dfbe667736a8a66ba541571c13342877';
+const APPWRITE_PROJECT_ID = '69319f7f003127073ff3';
+const APPWRITE_API_KEY = 'standard_300a6d362e80b075bd341d245c41d59c2df300370478ef44eed5b6ac31c857dd174e114c7df1a85fc43b9f210aab0617424d707e959fc6666387444e4a954e5733644d31ae3837c99449707195cf957aaf1c87a2cc24367f0d99af79ead6bc1c61919b540c9ccbb2b116b4fdd4ff930d8924a00a9013ac514624cbde6c8e69c6';
 
 const DATABASE_ID = 'onsi';
 const COLLECTION_ID = 'video-config';

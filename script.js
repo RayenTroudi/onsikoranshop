@@ -5,7 +5,7 @@ let appwriteAuth = null;
 // Appwrite Storage Configuration
 const APPWRITE_STORAGE = {
 	endpoint: 'https://fra.cloud.appwrite.io/v1',
-	projectId: '68f8c1bc003e3d2c8f5c',
+	projectId: '69319f7f003127073ff3',
 	bucketId: '691735da003dc83b3baf'
 };
 
@@ -84,7 +84,7 @@ async function loadProductFromDatabase() {
 			{
 				method: 'GET',
 				headers: {
-					'X-Appwrite-Project': '68f8c1bc003e3d2c8f5c',
+					'X-Appwrite-Project': '69319f7f003127073ff3',
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include'
@@ -519,7 +519,7 @@ async function saveOrderToAppwrite(orderData) {
 		// Create Appwrite client
 		const client = new Client()
 			.setEndpoint('https://fra.cloud.appwrite.io/v1')
-			.setProject('68f8c1bc003e3d2c8f5c');
+			.setProject('69319f7f003127073ff3');
 		
 		const databases = new Databases(client);
 		
@@ -609,7 +609,7 @@ async function sendOrderNotificationsGmail(orderData) {
 		// Create Appwrite client for functions
 		const client = new Client()
 			.setEndpoint('https://fra.cloud.appwrite.io/v1')
-			.setProject('68f8c1bc003e3d2c8f5c');
+			.setProject('69319f7f003127073ff3');
 		
 		const functions = new Functions(client);
 		
@@ -1577,7 +1577,7 @@ function loadAppwriteViaScriptTag() {
 		
 		const client = new Client()
 			.setEndpoint(window.ENV?.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1')
-			.setProject(window.ENV?.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c');
+			.setProject(window.ENV?.VITE_APPWRITE_PROJECT_ID || '69319f7f003127073ff3');
 		
 		const account = new Account(client);
 		const databases = new Databases(client);
@@ -1793,7 +1793,7 @@ async function loadUserOrders() {
 async function getUserOrders(userEmail) {
 	try {
 		const endpoint = window.ENV?.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
-		const projectId = window.ENV?.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c';
+		const projectId = window.ENV?.VITE_APPWRITE_PROJECT_ID || '69319f7f003127073ff3';
 		
 		const response = await fetch(
 			`${endpoint}/databases/onsi/collections/orders/documents`,

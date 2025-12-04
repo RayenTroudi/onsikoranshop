@@ -3,7 +3,7 @@
 ## Bucket Details
 - **Name**: OnsiBucket
 - **ID**: `691735da003dc83b3baf`
-- **Project**: 68f8c1bc003e3d2c8f5c (onsi)
+- **Project**: 69319f7f003127073ff3 (onsi)
 - **Endpoint**: https://fra.cloud.appwrite.io/v1
 
 ## Required Bucket Permissions
@@ -62,17 +62,17 @@ APPWRITE_API_KEY=<your-api-key>
 
 Files uploaded to this bucket will have URLs in this format:
 ```
-https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/{FILE_ID}/view?project=68f8c1bc003e3d2c8f5c
+https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/{FILE_ID}/view?project=69319f7f003127073ff3
 ```
 
 ### Preview URL (with transformations)
 ```
-https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/{FILE_ID}/preview?project=68f8c1bc003e3d2c8f5c&width=800&quality=90
+https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/{FILE_ID}/preview?project=69319f7f003127073ff3&width=800&quality=90
 ```
 
 ### Download URL
 ```
-https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/{FILE_ID}/download?project=68f8c1bc003e3d2c8f5c
+https://fra.cloud.appwrite.io/v1/storage/buckets/691735da003dc83b3baf/files/{FILE_ID}/download?project=69319f7f003127073ff3
 ```
 
 ## Usage in Code
@@ -90,7 +90,7 @@ import { Client, Storage } from 'node-appwrite';
 const client = new Client();
 client
     .setEndpoint('https://fra.cloud.appwrite.io/v1')
-    .setProject('68f8c1bc003e3d2c8f5c')
+    .setProject('69319f7f003127073ff3')
     .setKey(process.env.APPWRITE_API_KEY);
 
 const storage = new Storage(client);

@@ -9,7 +9,7 @@ import { Client, Databases, ID, Permission, Role, Query } from 'node-appwrite';
 
 // Appwrite Configuration
 const APPWRITE_ENDPOINT = process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = process.env.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c';
+const APPWRITE_PROJECT_ID = process.env.VITE_APPWRITE_PROJECT_ID || '69319f7f003127073ff3';
 const DATABASE_ID = 'onsi';
 const COLLECTION_ID = 'video-config';
 

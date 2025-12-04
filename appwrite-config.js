@@ -49,7 +49,7 @@ import { Client, Account, Databases, Storage, ID, Permission, Role, Query } from
 // Appwrite configuration - using environment variables
 const APPWRITE_CONFIG = {
     endpoint: window.ENV?.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1',
-    projectId: window.ENV?.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c',
+    projectId: window.ENV?.VITE_APPWRITE_PROJECT_ID || '69319f7f003127073ff3',
     databaseId: 'onsi',
     // Collection IDs (we'll create these in Appwrite)
     collections: {
@@ -543,7 +543,7 @@ async function checkOAuthProviders() {
         console.log('🔍 Checking Google OAuth configuration...');
         console.log('ℹ️  Google OAuth will be tested when user clicks login button');
         console.log('📋 Make sure to configure Google provider in Appwrite console:');
-        console.log('🔗 https://fra.cloud.appwrite.io/console/project-68f8c1bc003e3d2c8f5c/auth/providers');
+        console.log('🔗 https://fra.cloud.appwrite.io/console/project-69319f7f003127073ff3/auth/providers');
         return true;
     } catch (error) {
         console.log('⚠️ OAuth provider check failed:', error.message);

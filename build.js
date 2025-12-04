@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 // Simple build script for environment variable replacement
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 console.log('🔨 Building project with environment variables...');
 
@@ -13,7 +17,7 @@ const adminPath = './admin.html';
 // Environment variables with defaults
 const envVars = {
   VITE_APPWRITE_ENDPOINT: process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1',
-  VITE_APPWRITE_PROJECT_ID: process.env.VITE_APPWRITE_PROJECT_ID || '68f8c1bc003e3d2c8f5c',
+  VITE_APPWRITE_PROJECT_ID: process.env.VITE_APPWRITE_PROJECT_ID || '69319f7f003127073ff3',
   VITE_APPWRITE_PROJECT_NAME: process.env.VITE_APPWRITE_PROJECT_NAME || 'onsi',
   VITE_EMAILJS_PUBLIC_KEY: process.env.VITE_EMAILJS_PUBLIC_KEY || 'ryB3eYn0HP-iAfl2E',
   VITE_EMAILJS_SERVICE_ID: process.env.VITE_EMAILJS_SERVICE_ID || 'service_j4hv4we',
