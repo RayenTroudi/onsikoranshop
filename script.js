@@ -688,6 +688,7 @@ async function sendOrderNotificationsGmail(orderData) {
 		// Call Appwrite function to send emails
 		const functionUrl = `${functionEndpoint}/functions/6931cddd003de76af6ea/executions`;
 		console.log('🚀 Calling email function:', functionUrl);
+		console.log('📦 Order data being sent:', JSON.stringify(orderData, null, 2));
 		
 		const response = await fetch(functionUrl, {
 			method: 'POST',
@@ -695,7 +696,10 @@ async function sendOrderNotificationsGmail(orderData) {
 				'Content-Type': 'application/json',
 				'X-Appwrite-Project': projectId
 			},
-			body: JSON.stringify(orderData)
+			body: JSON.stringify({
+				body: JSON.stringify(orderData),
+				async: false
+			})
 		});
 		
 		console.log('📥 Function response status:', response.status);
