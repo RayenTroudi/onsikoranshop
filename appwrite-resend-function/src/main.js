@@ -15,10 +15,32 @@ export default async ({ req, res, log, error }) => {
   }
 
   try {
-    let emailData = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    // Appwrite function receives body as a string, need to parse it
+    log('📧 Request received');
+    log('📧 Body type:', typeof req.body);
+    log('📧 Body length:', req.body?.length || 0);
+    log('📧 Body content:', req.body ? req.body.substring(0, 200) : 'empty');
     
-    log('📧 Received email request');
-    log('📧 Raw body type:', typeof req.body);
+    let emailData;
+    
+    // Handle different body formats
+    if (!req.body || req.body === '') {
+      throw new Error('Request body is empty');
+    }
+    
+    if (typeof req.body === 'string') {
+      try {
+        emailData = JSON.parse(req.body);
+      } catch (parseError) {
+        log('❌ JSON parse error:', parseError.message);
+        log('❌ Body was:', req.body);
+        throw new Error(`Invalid JSON in request body: ${parseError.message}`);
+      }
+    } else {
+      emailData = req.body;
+    }
+    
+    log('📧 Email data parsed successfully');
     log('📧 Email data keys:', Object.keys(emailData).join(', '));
     
     // Parse items if it's a string
@@ -210,10 +232,14 @@ export default async ({ req, res, log, error }) => {
     }, 200);
 
   } catch (err) {
-    error('❌ Error:', err.message);
+    error('❌ Function error:', err.message);
+    error('❌ Error stack:', err.stack);
+    
+    // Return proper JSON error response
     return res.json({
       success: false,
-      error: err.message
+      error: err.message,
+      stack: err.stack
     }, 500);
   }
 };
