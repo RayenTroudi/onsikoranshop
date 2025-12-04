@@ -15,10 +15,25 @@ export default async ({ req, res, log, error }) => {
   }
 
   try {
-    const emailData = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    let emailData = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     
-    log('📧 Received email request for order:', emailData.orderNumber);
-    log('📧 Order data:', JSON.stringify(emailData, null, 2));
+    log('📧 Received email request');
+    log('📧 Raw body type:', typeof req.body);
+    log('📧 Email data keys:', Object.keys(emailData).join(', '));
+    
+    // Parse items if it's a string
+    if (typeof emailData.items === 'string') {
+      try {
+        emailData.items = JSON.parse(emailData.items);
+        log('✅ Parsed items from string to array');
+      } catch (e) {
+        log('❌ Failed to parse items:', e.message);
+        emailData.items = [];
+      }
+    }
+    
+    log('📧 Order number:', emailData.orderNumber);
+    log('📧 Items count:', emailData.items?.length || 0);
 
     const resendApiKey = process.env.RESEND_API_KEY;
     const adminEmail = process.env.ADMIN_EMAIL || 'onsmaitii@gmail.com';
@@ -29,20 +44,26 @@ export default async ({ req, res, log, error }) => {
 
     // Extract customer info
     const customerInfo = emailData.customerInfo || {};
-    const customerName = customerInfo.name || 'Customer';
+    const customerName = customerInfo.name || emailData.customerName || 'Customer';
     const customerEmail = customerInfo.email || emailData.customerEmail;
     const customerPhone = customerInfo.phone || emailData.customerPhone;
     
+    log('📧 Customer email:', customerEmail);
+    log('📧 Customer name:', customerName);
+    
     // Build shipping address
-    const shippingAddress = `${customerInfo.address || ''}<br>
+    const shippingAddress = emailData.shippingAddress || 
+      `${customerInfo.address || ''}<br>
       ${customerInfo.city || ''}, ${customerInfo.postalCode || ''}<br>
       ${customerInfo.governorate || customerInfo.city || ''}<br>
       ${customerInfo.country || ''}`;
 
     // Format items list
-    const itemsList = emailData.items
+    const itemsList = (emailData.items || [])
       .map(item => `• ${item.name || item.nameAr || 'Product'} x ${item.quantity} = ${(item.total || 0).toFixed(2)} TND`)
       .join('\n');
+    
+    log('📧 Items list created, length:', itemsList.length);
 
     const orderDate = new Date(emailData.createdAt).toLocaleDateString('en-US', {
       year: 'numeric',
