@@ -718,9 +718,15 @@ async function resetPassword(email) {
 }
 
 // Save user's cart
+// NOTE: Disabled - savedCart attribute needs to be added to users collection in Appwrite
 async function saveUserCart(cartItems) {
     if (!currentUser) return;
     
+    // TODO: Add 'savedCart' (string) and 'lastCartUpdate' (datetime) attributes to users collection
+    console.log('ℹ️ Cart sync disabled - database schema needs update');
+    return;
+    
+    /* 
     try {
         // Ensure user document exists first
         await createUserDocument(currentUser);
@@ -738,6 +744,7 @@ async function saveUserCart(cartItems) {
     } catch (error) {
         console.error('❌ Error saving cart to database:', error);
     }
+    */
 }
 
 // Create user document in database if it doesn't exist
@@ -762,9 +769,7 @@ async function createUserDocument(user) {
                 {
                     fullName: user.name || user.email.split('@')[0],
                     email: user.email,
-                    role: 'user', // Default role
-                    savedCart: '[]',
-                    lastCartUpdate: new Date().toISOString()
+                    role: 'user' // Default role
                 }
             );
             console.log('✅ User document created successfully');
@@ -804,19 +809,10 @@ async function makeUserAdmin(userEmail) {
     }
 }
 
-// Get user's saved cart
+// Get user's saved cart - DISABLED (savedCart attribute not in database schema)
 async function getUserCart() {
-    if (!currentUser) return [];
-    
-    try {
-        // Ensure user document exists and get cart
-        const userDoc = await createUserDocument(currentUser);
-        const cartData = userDoc.savedCart || '[]';
-        return JSON.parse(cartData);
-    } catch (error) {
-        console.error('❌ Error getting user cart:', error);
-        return [];
-    }
+    // TODO: Add 'savedCart' attribute to users collection in Appwrite
+    return [];
 }
 
 // UI Functions

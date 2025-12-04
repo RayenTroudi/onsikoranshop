@@ -578,19 +578,14 @@ function saveOrderToLocalStorage(orderData) {
 	}
 }
 
-// Send email notifications using Resend
+// Send email notifications via Appwrite function
 async function sendOrderNotificationsGmail(orderData) {
 	try {
-		const resendApiKey = window.ENV?.VITE_RESEND_API_KEY || 're_4mqwvFap_LqaRLWYajRPUiFEE5zu1BUF8';
-		const adminEmail = window.ENV?.VITE_ADMIN_EMAIL || 'onsmaitii@gmail.com';
+		const functionEndpoint = window.ENV?.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+		const projectId = window.ENV?.VITE_APPWRITE_PROJECT_ID || '69319f7f003127073ff3';
 		
-		if (!resendApiKey) {
-			throw new Error('Resend API key not configured');
-		}
-		
-		console.log('📧 Sending order emails via Resend...');
+		console.log('📧 Sending order emails via Appwrite function...');
 		console.log('📧 Customer email:', orderData.customerInfo.email);
-		console.log('📧 Admin email:', adminEmail);
 		
 		// Format items list
 		const itemsList = orderData.items.map(item => 
@@ -690,63 +685,44 @@ async function sendOrderNotificationsGmail(orderData) {
 			</html>
 		`;
 		
-		// Send customer email
-		console.log('📤 Sending customer email to:', orderData.customerInfo.email);
-		const customerEmailResponse = await fetch('https://api.resend.com/emails', {
+		// Call Appwrite function to send emails
+		const functionUrl = `${functionEndpoint}/functions/6931cddd003de76af6ea/executions`;
+		console.log('🚀 Calling email function:', functionUrl);
+		
+		const response = await fetch(functionUrl, {
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${resendApiKey}`,
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-Appwrite-Project': projectId
 			},
-			body: JSON.stringify({
-				from: 'ONSi Koran Shop <noreply@onsi.shop>',
-				to: [orderData.customerInfo.email],
-				subject: `Order Confirmation - ${orderData.orderNumber}`,
-				html: customerEmailHtml
-			})
+			body: JSON.stringify(orderData)
 		});
 		
-		console.log('📥 Customer email response status:', customerEmailResponse.status);
+		console.log('📥 Function response status:', response.status);
 		
-		if (!customerEmailResponse.ok) {
-			const errorText = await customerEmailResponse.text();
-			console.error('❌ Customer email error response:', errorText);
-			let error;
-			try {
-				error = JSON.parse(errorText);
-			} catch (e) {
-				error = { message: errorText };
-			}
-			throw new Error(`Customer email failed (${customerEmailResponse.status}): ${JSON.stringify(error)}`);
+		if (!response.ok) {
+			const errorText = await response.text();
+			console.error('❌ Function error response:', errorText);
+			throw new Error(`Email function failed (${response.status}): ${errorText}`);
 		}
 		
-		const customerResult = await customerEmailResponse.json();
-		console.log('✅ Customer email sent successfully:', customerResult);
+		const result = await response.json();
+		console.log('✅ Function execution result:', result);
 		
-		// Send admin notification email
-		console.log('📤 Sending admin notification to:', adminEmail);
-		const adminEmailResponse = await fetch('https://api.resend.com/emails', {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${resendApiKey}`,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				from: 'ONSi Koran Shop <orders@onsi.shop>',
-				to: [adminEmail],
-				subject: `New Order: ${orderData.orderNumber}`,
-				html: adminEmailHtml
-			})
-		});
+		// Wait for function to complete
+		if (result.status === 'failed') {
+			console.error('❌ Function execution failed:', result.responseBody);
+			throw new Error(`Email sending failed: ${result.responseBody}`);
+		}
 		
-		console.log('📥 Admin email response status:', adminEmailResponse.status);
+		if (result.status === 'waiting' || result.status === 'processing') {
+			console.log('⏳ Email function is processing...');
+			// Function will complete asynchronously
+			return { success: true, message: 'Email function triggered successfully' };
+		}
 		
-		if (!adminEmailResponse.ok) {
-			const errorText = await adminEmailResponse.text();
-			console.warn('⚠️ Admin email error response:', errorText);
-			let error;
-			try {
-				error = JSON.parse(errorText);
+		console.log('✅ Order emails sent successfully!');
+		return { success: true, result };
 			} catch (e) {
 				error = { message: errorText };
 			}

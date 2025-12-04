@@ -121,7 +121,7 @@ export default async ({ req, res, log, error }) => {
     `;
 
     // Send customer email
-    log('📤 Sending customer email to:', emailData.customerEmail);
+    log('Sending customer email to:', emailData.customerInfo.email);
     const customerResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -129,8 +129,8 @@ export default async ({ req, res, log, error }) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'ONSi Koran Shop <onboarding@resend.dev>',
-        to: [emailData.customerEmail],
+        from: 'ONSi Koran Shop <noreply@onsi.shop>',
+        to: [emailData.customerInfo.email],
         subject: `Order Confirmation - ${emailData.orderNumber}`,
         html: customerEmailHtml
       })
@@ -145,8 +145,8 @@ export default async ({ req, res, log, error }) => {
     const customerResult = await customerResponse.json();
     log('✅ Customer email sent:', customerResult.id);
 
-    // Send admin email
-    log('📤 Sending admin email to:', adminEmail);
+    // Send admin notification
+    log('Sending admin notification to:', adminEmail);
     const adminResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -154,7 +154,7 @@ export default async ({ req, res, log, error }) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'ONSi Koran Shop <onboarding@resend.dev>',
+        from: 'ONSi Koran Shop <orders@onsi.shop>',
         to: [adminEmail],
         subject: `New Order: ${emailData.orderNumber}`,
         html: adminEmailHtml
