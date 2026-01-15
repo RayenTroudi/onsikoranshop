@@ -118,6 +118,8 @@
   "cart.empty_description": "Add some divine verses to begin your spiritual journey",
   "cart.continue_shopping": "Continue Shopping",
   "cart.secure": "Secure Payment",
-  "cart.free_shipping": "Free Shipping"
+  "cart.free_shipping": "Free Shipping",
+  "checkout.search_country": "Search for a country...",
+  "checkout.type_to_search": "Type to search..."
 }
 

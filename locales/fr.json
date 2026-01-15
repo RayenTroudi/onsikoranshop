@@ -120,6 +120,8 @@
   "cart.continue_shopping": "Continuer vos achats",
   "cart.secure": "Paiement sécurisé",
   "cart.free_shipping": "Livraison gratuite",
+  "checkout.search_country": "Rechercher un pays...",
+  "checkout.type_to_search": "Tapez pour rechercher...",
 
   "nav.features": "Caractéristiques",
   "nav.gallery": "Galerie",

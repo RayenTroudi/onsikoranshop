@@ -119,6 +119,8 @@
   "cart.empty_description": "أضف بعض الآيات الإلهية لتبدأ رحلتك الروحية",
   "cart.continue_shopping": "متابعة التسوق",
   "cart.secure": "دفع آمن",
-  "cart.free_shipping": "شحن مجاني"
+  "cart.free_shipping": "شحن مجاني",
+  "checkout.search_country": "ابحث عن بلد...",
+  "checkout.type_to_search": "اكتب للبحث..."
 }
 

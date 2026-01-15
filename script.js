@@ -1278,6 +1278,10 @@ function initializeCountrySelector() {
 		}
 	});
 
+	// Set translated placeholders
+	searchInput.placeholder = t('checkout.search_country');
+	filterInput.placeholder = t('checkout.type_to_search');
+
 	// Initial render
 	renderOptions(countries);
 }
@@ -1404,6 +1408,8 @@ const translations = {
 		'cart.continue_shopping': 'Continue Shopping',
 		'cart.secure': 'Secure Payment',
 		'cart.free_shipping': 'Free Shipping',
+		'checkout.search_country': 'Search for a country...',
+		'checkout.type_to_search': 'Type to search...',
 	},
 	ar: {
 		'document.title': 'أونسي | علبة آيات قرآنية',
@@ -1524,6 +1530,8 @@ const translations = {
 		'cart.continue_shopping': 'متابعة التسوق',
 		'cart.secure': 'دفع آمن',
 		'cart.free_shipping': 'شحن مجاني',
+		'checkout.search_country': 'ابحث عن بلد...',
+		'checkout.type_to_search': 'اكتب للبحث...',
 	},
 	fr: {
 		'document.title': 'ONSi | Coffret de Versets Coraniques',
@@ -1634,6 +1642,8 @@ const translations = {
 		'cart.continue_shopping': 'Continuer vos achats',
 		'cart.secure': 'Paiement sécurisé',
 		'cart.free_shipping': 'Livraison gratuite',
+		'checkout.search_country': 'Rechercher un pays...',
+		'checkout.type_to_search': 'Tapez pour rechercher...',
 	}
 
 };
