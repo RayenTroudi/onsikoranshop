@@ -1539,9 +1539,15 @@
 
   <!-- Order Confirmation Modal -->
   <div id="order-confirmation-modal" class="fixed inset-0 hidden z-50">
-    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="absolute inset-0 bg-black/40" onclick="document.getElementById('order-confirmation-modal').classList.add('hidden')"></div>
     <div class="absolute inset-0 grid place-items-center p-4">
-      <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6 text-center">
+      <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6 text-center relative">
+        <!-- Close button -->
+        <button onclick="document.getElementById('order-confirmation-modal').classList.add('hidden')" class="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
         <div class="mb-4">
           <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1600,7 +1606,13 @@
   <div id="auth-modal" class="fixed inset-0 hidden z-50">
     <div class="absolute inset-0 bg-black/40" onclick="safeAppwriteCall('closeAuthModal')"></div>
     <div class="absolute inset-0 grid place-items-center p-4">
-      <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6 space-y-4">
+      <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6 space-y-4 relative">
+        <!-- Close button -->
+        <button onclick="safeAppwriteCall('closeAuthModal')" class="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 z-10">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
         <div class="text-center">
           <h2 id="auth-modal-title" class="text-xl font-semibold" data-i18n="auth.login">Sign In</h2>
           <p class="text-sm text-neutral-600 mt-1" data-i18n="auth.subtitle">Access your account to manage orders</p>
