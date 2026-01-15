@@ -1,6 +1,6 @@
 /**
  * Prerendering Script for SEO
- * Generates static HTML snapshots for both English and Arabic versions
+ * Generates static HTML snapshots for Arabic, English, and French versions
  * Ensures Googlebot can index content without executing JavaScript
  */
 
@@ -13,6 +13,7 @@ const baseHTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
 // Load translations
 const enTranslations = require('./locales/en.json');
 const arTranslations = require('./locales/ar.json');
+const frTranslations = require('./locales/fr.json');
 
 /**
  * Generate prerendered HTML for a specific language
@@ -26,12 +27,25 @@ function generatePrerenderHTML(lang, translations) {
       '<html lang="ar" dir="rtl"',
       '<html lang="en"'
     );
+  } else if (lang === 'fr') {
+    html = html.replace(
+      '<html lang="ar" dir="rtl"',
+      '<html lang="fr"'
+    );
   }
   
   // Update meta tags
   const title = translations['document.title'] || 'ONSi Quranic Verses Box';
   const description = translations['document.description'] || 'Islamic Inspiration Cards';
   const keywords = translations['document.keywords'] || 'quranic verses, islamic cards';
+  
+  // Get language name for meta tag
+  const languageNames = { ar: 'Arabic', en: 'English', fr: 'French' };
+  const languageName = languageNames[lang] || 'Arabic';
+  
+  // Get og:locale value
+  const localeMap = { ar: 'ar_AR', en: 'en_US', fr: 'fr_FR' };
+  const ogLocale = localeMap[lang] || 'ar_AR';
   
   html = html.replace(
     /<title>.*?<\/title>/,
@@ -55,7 +69,7 @@ function generatePrerenderHTML(lang, translations) {
   
   html = html.replace(
     /<meta name="language" content=".*?">/,
-    `<meta name="language" content="${lang === 'ar' ? 'Arabic' : 'English'}">`
+    `<meta name="language" content="${languageName}">`
   );
   
   // Update Open Graph
@@ -71,7 +85,7 @@ function generatePrerenderHTML(lang, translations) {
   
   html = html.replace(
     /<meta property="og:locale" content=".*?">/,
-    `<meta property="og:locale" content="${lang === 'ar' ? 'ar_AR' : 'en_US'}">`
+    `<meta property="og:locale" content="${ogLocale}">`
   );
   
   // Add prerendered content marker
@@ -83,6 +97,13 @@ function generatePrerenderHTML(lang, translations) {
 </head>`
   );
   
+  // Determine URL based on language (Arabic is default)
+  const urlMap = {
+    ar: 'https://onsi.shop/',
+    en: 'https://onsi.shop/?lang=en',
+    fr: 'https://onsi.shop/?lang=fr'
+  };
+  
   // Add JSON-LD for the specific language
   const schema = {
     "@context": "https://schema.org",
@@ -90,7 +111,7 @@ function generatePrerenderHTML(lang, translations) {
     "name": title,
     "description": description,
     "inLanguage": lang,
-    "url": lang === 'en' ? 'https://onsi.shop/?lang=en' : 'https://onsi.shop/',
+    "url": urlMap[lang] || 'https://onsi.shop/',
     "isPartOf": {
       "@type": "WebSite",
       "name": "ONSi",
@@ -109,18 +130,24 @@ function generatePrerenderHTML(lang, translations) {
   return html;
 }
 
+// Generate Arabic prerendered version (default)
+const arHTML = generatePrerenderHTML('ar', arTranslations);
+fs.writeFileSync(path.join(__dirname, 'index.prerendered.ar.html'), arHTML);
+console.log('✅ Generated Arabic prerendered HTML (default)');
+
 // Generate English prerendered version
 const enHTML = generatePrerenderHTML('en', enTranslations);
 fs.writeFileSync(path.join(__dirname, 'index.prerendered.en.html'), enHTML);
 console.log('✅ Generated English prerendered HTML');
 
-// Generate Arabic prerendered version  
-const arHTML = generatePrerenderHTML('ar', arTranslations);
-fs.writeFileSync(path.join(__dirname, 'index.prerendered.ar.html'), arHTML);
-console.log('✅ Generated Arabic prerendered HTML');
+// Generate French prerendered version
+const frHTML = generatePrerenderHTML('fr', frTranslations);
+fs.writeFileSync(path.join(__dirname, 'index.prerendered.fr.html'), frHTML);
+console.log('✅ Generated French prerendered HTML');
 
 console.log('\n📝 Prerendering complete!');
 console.log('📄 Files created:');
+console.log('   - index.prerendered.ar.html (default)');
 console.log('   - index.prerendered.en.html');
-console.log('   - index.prerendered.ar.html');
+console.log('   - index.prerendered.fr.html');
 console.log('\n🚀 Deploy these files for bot serving or use a prerendering service like Prerender.io');

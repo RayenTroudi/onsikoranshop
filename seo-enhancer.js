@@ -10,8 +10,9 @@
         baseUrl: 'https://onsi.shop',
         businessName: 'ONSi Quranic Verses Box',
         keywords: {
+            ar: 'آيات قرآنية, بطاقات إسلامية, اقتباسات قرآن, هدايا إسلامية, بطاقات روحية, آيات قرآنية, إلهام إسلامي, هدايا مسلمين, آيات قرآن, فن إسلامي, بطاقات دينية, تأمل يومي, ديكور إسلامي',
             en: 'quranic verses, islamic cards, quran quotes, islamic gifts, spiritual cards, quranic ayat, islamic inspiration, muslim gifts, quran verses, islamic art, religious cards, daily reflection, islamic decor',
-            ar: 'آيات قرآنية, بطاقات إسلامية, اقتباسات قرآن, هدايا إسلامية, بطاقات روحية, آيات قرآنية, إلهام إسلامي, هدايا مسلمين, آيات قرآن, فن إسلامي, بطاقات دينية, تأمل يومي, ديكور إسلامي'
+            fr: 'versets coraniques, cartes islamiques, citations du coran, cadeaux islamiques, cartes spirituelles, ayat coraniques, inspiration islamique, cadeaux musulmans, art islamique, cartes religieuses, réflexion quotidienne, décoration islamique'
         }
     };
 
@@ -47,7 +48,8 @@
         // Add hreflang tags (Arabic is default)
         const languages = [
             { code: 'ar', url: SEO_CONFIG.baseUrl + '/' },
-            { code: 'en', url: SEO_CONFIG.baseUrl + '/?lang=en' }
+            { code: 'en', url: SEO_CONFIG.baseUrl + '/?lang=en' },
+            { code: 'fr', url: SEO_CONFIG.baseUrl + '/?lang=fr' }
         ];
         
         languages.forEach(lang => {

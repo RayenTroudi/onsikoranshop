@@ -1165,6 +1165,116 @@ const translations = {
 		'cart.continue_shopping': 'متابعة التسوق',
 		'cart.secure': 'دفع آمن',
 		'cart.free_shipping': 'شحن مجاني',
+	},
+	fr: {
+		'document.title': 'ONSi | Coffret de Versets Coraniques',
+		'document.description': 'Découvrez le Coffret de Versets Coraniques ONSi - des cartes d\'inspiration islamique magnifiquement conçues.',
+		'nav.features': 'Caractéristiques',
+		'nav.gallery': 'Galerie',
+		'nav.faq': 'FAQ',
+		'cart.button': 'Panier',
+		'hero.title': 'Coffret de Versets Coraniques',
+		'hero.subtitle': 'Ces cartes entre vos mains ne sont que des murmures de lumière. Rassemblées pour vous rappeler que le soulagement est plus proche que vous ne le pensez.',
+		'hero.description': 'Au nom d\'Allah, le Tout Miséricordieux, le Très Miséricordieux\n\nDans les moments de détresse, quand le cœur est lourd\nde soucis et que la paix s\'estompe,\nla lumière d\'Allah brille à travers Ses paroles :\n\"Ton Seigneur ne t\'a ni abandonné, ni détesté.\"\nAd-Doha 3',
+		'hero.vat': 'TVA incluse',
+		'actions.add_to_cart': 'Ajouter au panier',
+		'features.item1': '51 cartes premium carrées aux coins arrondis',
+		'features.item2': 'Versets arabes avec traduction/réflexion en anglais',
+		'features.item3': 'Coffret cadeau magnétique de luxe en velours',
+		'gallery.title': 'Galerie',
+		'details.title': 'À propos du produit',
+		'details.text': 'Ces cartes sont conçues pour offrir réconfort et réflexion. Chaque carte présente un verset et une élégante bordure florale inspirée des motifs islamiques.',
+		'product.name': 'Coffret de Versets Coraniques',
+		'details.shipping_note': 'Livraison dans le monde entier.',
+		'faq.title': 'FAQ',
+		'faq.q1': 'Que contient le coffret ?',
+		'faq.a1': '51 cartes imprimées dans un coffret magnétique premium.',
+		'faq.q2': 'Délai de livraison',
+		'faq.a2': 'Généralement 5-10 jours ouvrables selon votre région.',
+		'cart.title': 'Votre Panier',
+		'cart.subtotal': 'Sous-total',
+		'cart.empty': 'Votre panier est vide.',
+		'cart.increase': 'Augmenter la quantité',
+		'cart.decrease': 'Diminuer la quantité',
+		'actions.checkout': 'Commander',
+		'actions.remove': 'Supprimer',
+		'checkout.title': 'Commander',
+		'checkout.full_name': 'Nom complet',
+		'checkout.email': 'Email',
+		'checkout.address': 'Adresse de livraison',
+		'checkout.place_order': 'Passer la commande',
+		'actions.cancel': 'Annuler',
+		'checkout.success': 'Merci ! Votre commande a été passée.',
+		'footer.privacy': 'Confidentialité et Conditions',
+		'image.product': 'Coffret de Versets Coraniques ONSi',
+		'image.gallery': 'Image de la galerie du produit',
+		'auth.login': 'Connexion',
+		'auth.sign_in': 'Se connecter',
+		'auth.sign_up': 'S\'inscrire',
+		'auth.logout': 'Déconnexion',
+		'auth.email': 'Email',
+		'auth.password': 'Mot de passe',
+		'auth.full_name': 'Nom complet',
+		'auth.create_account': 'Créer un compte',
+		'auth.forgot_password': 'Mot de passe oublié ?',
+		'auth.or': 'Ou',
+		'auth.no_account': 'Vous n\'avez pas de compte ?',
+		'auth.have_account': 'Vous avez déjà un compte ?',
+		'auth.subtitle': 'Accédez à votre compte pour gérer vos commandes',
+		'auth.password_requirements': 'Au moins 6 caractères',
+		'profile.orders': 'Mes Commandes',
+		'orders.title': 'Mes Commandes',
+		'orders.loading': 'Chargement de vos commandes...',
+		'orders.no_orders': 'Aucune Commande',
+		'orders.no_orders_desc': 'Vous n\'avez pas encore passé de commande.',
+		'orders.error': 'Erreur de Chargement',
+		'orders.error_desc': 'Impossible de charger vos commandes. Veuillez réessayer.',
+		'orders.retry': 'Réessayer',
+		'orders.order_number': 'Commande',
+		'orders.date': 'Date',
+		'orders.status': 'Statut',
+		'orders.total': 'Total',
+		'orders.items': 'Articles',
+		'orders.status.pending': 'En attente',
+		'orders.status.processing': 'En cours',
+		'orders.status.shipped': 'Expédié',
+		'orders.status.delivered': 'Livré',
+		'orders.status.cancelled': 'Annulé',
+		'checkout.order_summary': 'Récapitulatif de commande',
+		'checkout.total': 'Total',
+		'checkout.personal_info': 'Informations personnelles',
+		'checkout.phone': 'Numéro de téléphone',
+		'checkout.shipping_address': 'Adresse de livraison',
+		'checkout.city': 'Ville',
+		'checkout.postal_code': 'Code postal',
+		'checkout.country': 'Pays',
+		'checkout.error': 'Échec du traitement de la commande.',
+		'checkout.empty_cart': 'Votre panier est vide.',
+		'validation.name_required': 'Le nom complet est requis',
+		'validation.email_required': 'L\'adresse email est requise',
+		'validation.email_invalid': 'Veuillez entrer une adresse email valide',
+		'validation.phone_required': 'Le numéro de téléphone est requis',
+		'validation.address_required': 'L\'adresse est requise',
+		'validation.city_required': 'La ville est requise',
+		'validation.postal_required': 'Le code postal est requis',
+		'validation.country_required': 'Veuillez sélectionner un pays',
+		'order.confirmation_title': 'Commande Confirmée !',
+		'order.confirmation_message': 'Merci pour votre commande. Vous recevrez un email de confirmation sous peu.',
+		'order.order_number': 'Numéro de commande',
+		'actions.continue_shopping': 'Continuer vos achats',
+		'badge.handcrafted': 'Fait main',
+		'trust.secure_payment': 'Paiement sécurisé',
+		'trust.made_with_love': 'Fait avec amour',
+		'trust.fast_delivery': 'Livraison rapide',
+		'trust.premium_quality': 'Qualité premium',
+		'product.perfect_gifting': 'Parfait pour offrir',
+		'product.gifting_description': 'Chaque coffret est joliment emballé dans des matériaux premium, prêt à apporter de la joie à vos proches.',
+		'cart.subtitle': 'Vérifiez votre collection sacrée',
+		'cart.empty_title': 'Votre panier est vide',
+		'cart.empty_description': 'Ajoutez quelques versets divins pour commencer votre voyage spirituel',
+		'cart.continue_shopping': 'Continuer vos achats',
+		'cart.secure': 'Paiement sécurisé',
+		'cart.free_shipping': 'Livraison gratuite',
 	}
 
 };
@@ -1291,9 +1401,12 @@ function applyTranslations() {
 	PRODUCT.name = t('product.name');
 	// update visible strings that are rendered dynamically
 	renderCart();
-	// toggle label
+	// toggle label - show current language code
 	const toggle = document.getElementById('lang-toggle');
-	if (toggle) toggle.textContent = state.language === 'ar' ? 'EN' : 'AR';
+	if (toggle) {
+		const langCode = languageData[state.language]?.code || state.language.toUpperCase();
+		toggle.textContent = langCode;
+	}
 }
 
 // Language switcher functionality - will be initialized after DOM is ready
@@ -1301,8 +1414,9 @@ let langToggle, langDropdown, currentFlag, currentLang, langOptions;
 
 // Language data
 const languageData = {
+	ar: { flag: '🇸🇦', code: 'AR', name: 'العربية' },
 	en: { flag: '🇺🇸', code: 'EN', name: 'English' },
-	ar: { flag: '🇸🇦', code: 'AR', name: 'العربية' }
+	fr: { flag: '🇫🇷', code: 'FR', name: 'Français' }
 };
 
 // Update current language display
@@ -1340,6 +1454,13 @@ function updateHreflangTags() {
 	enLink.hreflang = 'en';
 	enLink.href = `${baseUrl}?lang=en`;
 	head.appendChild(enLink);
+	
+	// Add French hreflang
+	const frLink = document.createElement('link');
+	frLink.rel = 'alternate';
+	frLink.hreflang = 'fr';
+	frLink.href = `${baseUrl}?lang=fr`;
+	head.appendChild(frLink);
 	
 	// Add x-default hreflang (Arabic is default)
 	const defaultLink = document.createElement('link');
