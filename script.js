@@ -365,9 +365,15 @@ function closeCart() {
 }
 
 function openCheckout() {
-	// Pre-fill email if user is logged in
+	// Pre-fill email if user is logged in, otherwise clear it for guest checkout
+	const emailInput = document.getElementById('checkout-email');
 	if (state.user && state.user.email) {
-		document.getElementById('checkout-email').value = state.user.email;
+		emailInput.value = state.user.email;
+		// Optionally make email read-only for logged in users
+		// emailInput.readOnly = true;
+	} else {
+		emailInput.value = '';
+		emailInput.readOnly = false;
 	}
 	
 	// Populate checkout summary
@@ -470,16 +476,12 @@ async function processOrder(formData) {
 			timestamp: Date.now()
 		};
 		
-		// Save order to Appwrite Database if user is authenticated
-		if (state.user && window.appwriteAuth) {
-			try {
-				await saveOrderToAppwrite(orderData);
-			} catch (error) {
-				console.error('Failed to save order to Appwrite:', error);
-				// Continue with local processing even if Appwrite fails
-			}
-		} else {
-			// For guest users, save to localStorage as backup
+		// Save order to Appwrite Database for both authenticated and guest users
+		try {
+			await saveOrderToAppwrite(orderData);
+		} catch (error) {
+			console.error('Failed to save order to Appwrite:', error);
+			// Save to localStorage as fallback
 			saveOrderToLocalStorage(orderData);
 		}
 		
@@ -846,17 +848,9 @@ function initializeEventListeners() {
 	if (checkoutBtn) {
 		checkoutBtn.addEventListener('click', () => {
 			if (state.items.length === 0) return;
-	
-	// Check if user is authenticated
-	if (!state.user) {
-		// Open authentication modal if not logged in
-		if (window.appwriteAuth) {
-			window.appwriteAuth.openAuthModal('login');
-		}
-		return;
-	}
-	
-	openCheckout();
+			
+			// Allow both authenticated and guest users to checkout
+			openCheckout();
 		});
 	}
 
