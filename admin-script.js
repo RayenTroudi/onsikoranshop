@@ -142,6 +142,7 @@ class AdminPanel {
                     name: doc.name,
                     description: doc.description,
                     price: doc.price,
+                    priceEur: doc.priceEur || null,
                     category: doc.category,
                     stock: doc.stock,
                     status: doc.status,
@@ -172,6 +173,7 @@ class AdminPanel {
                 name: 'Quranic Verses Box',
                 description: 'A curated set of 51 beautifully designed cards featuring uplifting ayat in Arabic with English reflections. Gift-ready velvet box.',
                 price: null, // Will be set dynamically
+                priceEur: null, // Will be set dynamically
                 category: 'Islamic Cards',
                 stock: 100,
                 status: 'active',
@@ -207,6 +209,7 @@ class AdminPanel {
                 name: newProduct.name,
                 description: newProduct.description,
                 price: newProduct.price,
+                priceEur: newProduct.priceEur || null,
                 category: newProduct.category,
                 stock: newProduct.stock,
                 status: newProduct.status,
@@ -742,13 +745,31 @@ class AdminPanel {
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <input 
-                            type="number" 
-                            step="0.01" 
-                            value="${product.price}" 
-                            onchange="adminPanel.updateProductPrice('${product.id}', this.value)"
-                            class="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        /> TND
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center">
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    value="${product.price || ''}" 
+                                    onchange="adminPanel.updateProductPrice('${product.id}', this.value, 'TND')"
+                                    class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="0.00"
+                                /> 
+                                <span class="ml-1 text-xs text-gray-500">TND</span>
+                            </div>
+                            <span class="text-gray-300">|</span>
+                            <div class="flex items-center">
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    value="${product.priceEur || ''}" 
+                                    onchange="adminPanel.updateProductPrice('${product.id}', this.value, 'EUR')"
+                                    class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="0.00"
+                                /> 
+                                <span class="ml-1 text-xs text-gray-500">EUR</span>
+                            </div>
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${product.stock || 0}
@@ -781,16 +802,28 @@ class AdminPanel {
                             </div>
                             
                             <div class="mt-3 flex items-center justify-between">
-                                <div class="flex items-center space-x-4 text-sm">
-                                    <div>
-                                        <span class="text-gray-500">Price:</span>
+                                <div class="flex flex-col space-y-2 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500 text-xs">TND:</span>
                                         <input 
                                             type="number" 
                                             step="0.01" 
-                                            value="${product.price}" 
-                                            onchange="adminPanel.updateProductPrice('${product.id}', this.value)"
-                                            class="w-20 ml-1 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        /> TND
+                                            value="${product.price || ''}" 
+                                            onchange="adminPanel.updateProductPrice('${product.id}', this.value, 'TND')"
+                                            class="w-20 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500 text-xs">EUR:</span>
+                                        <input 
+                                            type="number" 
+                                            step="0.01" 
+                                            value="${product.priceEur || ''}" 
+                                            onchange="adminPanel.updateProductPrice('${product.id}', this.value, 'EUR')"
+                                            class="w-20 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            placeholder="0.00"
+                                        />
                                     </div>
                                     <div>
                                         <span class="text-gray-500">Stock:</span> 
@@ -809,7 +842,7 @@ class AdminPanel {
         }
     }
 
-    async updateProductPrice(productId, newPrice) {
+    async updateProductPrice(productId, newPrice, currency = 'TND') {
         try {
             const price = parseFloat(newPrice);
             if (isNaN(price) || price < 0) {
@@ -819,6 +852,8 @@ class AdminPanel {
                 return;
             }
 
+            const fieldName = currency === 'EUR' ? 'priceEur' : 'price';
+            
             const response = await fetch(
                 `https://fra.cloud.appwrite.io/v1/databases/onsi/collections/products/documents/${productId}`,
                 {
@@ -830,7 +865,7 @@ class AdminPanel {
                     credentials: 'include',
                     body: JSON.stringify({
                         data: {
-                            price: price
+                            [fieldName]: price
                         }
                     })
                 }
@@ -843,11 +878,15 @@ class AdminPanel {
             // Update local data
             const product = this.products.find(p => p.id === productId);
             if (product) {
-                product.price = price;
+                if (currency === 'EUR') {
+                    product.priceEur = price;
+                } else {
+                    product.price = price;
+                }
             }
             
-            this.showNotification(`Price updated to ${price} TND`, 'success');
-            console.log('✅ Product price updated:', productId, price);
+            this.showNotification(`Price updated to ${price} ${currency}`, 'success');
+            console.log('✅ Product price updated:', productId, price, currency);
             
             // Update dashboard stats
             this.updateDashboardStats();

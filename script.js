@@ -24,15 +24,20 @@ const state = {
 const PRODUCT = {
 	id: 'default',
 	name: 'Quranic Verses Box',
-	price: null, // Will be loaded from environment or database
+	price: null, // TND price
+	priceEur: null // EUR price
 };
 
-// Exchange rate: 1 EUR = ~3.3 TND (update as needed)
+// Exchange rate: 1 EUR = ~3.3 TND (used as fallback when priceEur is not set)
 const EXCHANGE_RATE = 3.3;
 
 // Convert price based on selected currency
 function convertPrice(priceInTND) {
 	if (state.currency === 'EUR') {
+		// Use actual EUR price if available, otherwise convert from TND
+		if (PRODUCT.priceEur !== null && PRODUCT.priceEur !== undefined) {
+			return PRODUCT.priceEur;
+		}
 		return priceInTND / EXCHANGE_RATE;
 	}
 	return priceInTND;
@@ -105,6 +110,7 @@ async function loadProductFromDatabase() {
 			PRODUCT.id = product.$id;
 			PRODUCT.name = product.name;
 			PRODUCT.price = product.price || parseFloat(window.ENV?.VITE_PRODUCT_PRICE) || null;
+			PRODUCT.priceEur = product.priceEur || null;
 			
 			console.log('✅ Product loaded from database:', PRODUCT);
 			console.log('📦 Total products available:', data.documents.length);
