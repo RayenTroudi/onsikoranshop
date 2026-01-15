@@ -21,10 +21,10 @@ function generatePrerenderHTML(lang, translations) {
   let html = baseHTML;
   
   // Update html lang attribute
-  if (lang === 'ar') {
+  if (lang === 'en') {
     html = html.replace(
-      '<html lang="en"',
-      '<html lang="ar" dir="rtl"'
+      '<html lang="ar" dir="rtl"',
+      '<html lang="en"'
     );
   }
   
@@ -90,7 +90,7 @@ function generatePrerenderHTML(lang, translations) {
     "name": title,
     "description": description,
     "inLanguage": lang,
-    "url": lang === 'ar' ? 'https://onsi.shop/?lang=ar' : 'https://onsi.shop/',
+    "url": lang === 'en' ? 'https://onsi.shop/?lang=en' : 'https://onsi.shop/',
     "isPartOf": {
       "@type": "WebSite",
       "name": "ONSi",

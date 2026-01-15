@@ -16,7 +16,7 @@ function getAppwriteFileUrl(fileName) {
 
 const state = {
 	items: [], // {id, name, price, qty}
-	language: localStorage.getItem('lang') || 'en',
+	language: localStorage.getItem('lang') || 'ar',
 	currency: localStorage.getItem('currency') || 'TND', // TND or EUR
 	user: null, // Current authenticated user
 };
@@ -1194,7 +1194,7 @@ async function loadLocale(lang) {
 }
 
 function currentDict() {
-	return loadedLocales[state.language] || translations[state.language] || translations.en;
+	return loadedLocales[state.language] || translations[state.language] || translations.ar;
 }
 
 function t(key) {
@@ -1281,7 +1281,7 @@ function applyTranslations() {
 	const canonical = document.querySelector('link[rel="canonical"]');
 	if (canonical) {
 		const baseUrl = 'https://onsi.shop/';
-		canonical.href = state.language === 'ar' ? `${baseUrl}?lang=ar` : baseUrl;
+		canonical.href = state.language === 'en' ? `${baseUrl}?lang=en` : baseUrl;
 	}
 	
 	// Update hreflang alternate links dynamically
@@ -1327,21 +1327,21 @@ function updateHreflangTags() {
 	// Create head element reference
 	const head = document.head;
 	
+	// Add Arabic hreflang (default)
+	const arLink = document.createElement('link');
+	arLink.rel = 'alternate';
+	arLink.hreflang = 'ar';
+	arLink.href = baseUrl;
+	head.appendChild(arLink);
+	
 	// Add English hreflang
 	const enLink = document.createElement('link');
 	enLink.rel = 'alternate';
 	enLink.hreflang = 'en';
-	enLink.href = baseUrl;
+	enLink.href = `${baseUrl}?lang=en`;
 	head.appendChild(enLink);
 	
-	// Add Arabic hreflang
-	const arLink = document.createElement('link');
-	arLink.rel = 'alternate';
-	arLink.hreflang = 'ar';
-	arLink.href = `${baseUrl}?lang=ar`;
-	head.appendChild(arLink);
-	
-	// Add x-default hreflang
+	// Add x-default hreflang (Arabic is default)
 	const defaultLink = document.createElement('link');
 	defaultLink.rel = 'alternate';
 	defaultLink.hreflang = 'x-default';

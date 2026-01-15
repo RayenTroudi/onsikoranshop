@@ -12,7 +12,7 @@ module.exports = {
         headers: [
           {
             key: 'Content-Language',
-            value: 'en, ar'
+            value: 'ar, en'
           },
           {
             key: 'X-Robots-Tag',

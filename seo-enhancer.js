@@ -44,10 +44,10 @@
         const currentLang = getCurrentLanguage();
         const head = document.head;
         
-        // Add hreflang tags
+        // Add hreflang tags (Arabic is default)
         const languages = [
-            { code: 'en', url: SEO_CONFIG.baseUrl + '/' },
-            { code: 'ar', url: SEO_CONFIG.baseUrl + '/?lang=ar' }
+            { code: 'ar', url: SEO_CONFIG.baseUrl + '/' },
+            { code: 'en', url: SEO_CONFIG.baseUrl + '/?lang=en' }
         ];
         
         languages.forEach(lang => {
@@ -58,7 +58,7 @@
             head.appendChild(link);
         });
         
-        // Add x-default for international users
+        // Add x-default for international users (Arabic is default)
         const xDefault = document.createElement('link');
         xDefault.rel = 'alternate';
         xDefault.hreflang = 'x-default';
