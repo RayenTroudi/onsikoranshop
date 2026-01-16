@@ -70,6 +70,10 @@ export default async ({ req, res, log, error }) => {
     const customerEmail = customerInfo.email || emailData.customerEmail;
     const customerPhone = customerInfo.phone || emailData.customerPhone;
     
+    if (!customerEmail) {
+      throw new Error('Customer email is required but not provided');
+    }
+    
     log('📧 Customer email:', customerEmail);
     log('📧 Customer name:', customerName);
     
@@ -185,33 +189,33 @@ export default async ({ req, res, log, error }) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'ONSi Koran Shop <noreply@onsi.shop>',
-        to: [customerEmail],
+        from: 'noreply@onsi.shop',
+        to: customerEmail,
         subject: `Order Confirmation - ${emailData.orderNumber}`,
-        html: customerEmailHtml
+        html: customerEmailHtml,
+        reply_to: adminEmail
       })
     });
 
     if (!customerResponse.ok) {
       const errorText = await customerResponse.text();
+      log('❌ Customer email response status:', customerResponse.status);
+      log('❌ Customer email response body:', errorText);
       error('❌ Customer email failed:', errorText);
-      throw new Error(`Customer email failed: ${errorText}`);
+      throw new Error(`Customer email failed: ${customerResponse.status} - ${errorText}`);
     }
 
     const customerResult = await customerResponse.json();
-    log('✅ Customer email sent:', customerResult.id);
+    log('✅ Customer email sent:', customerResult);
+    const customerEmailId = customerResult.id || customerResult.email_id || 'unknown';
 
     // Send admin notification
     log('Sending admin notification to:', adminEmail);
     const adminResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: 'ONSi Koran Shop <orders@onsi.shop>',
-        to: [adminEmail],
+        'Authororders@onsi.shop',
+        to: adminEmail,
         subject: `New Order: ${emailData.orderNumber}`,
         html: adminEmailHtml
       })
@@ -219,12 +223,18 @@ export default async ({ req, res, log, error }) => {
 
     if (!adminResponse.ok) {
       const errorText = await adminResponse.text();
+      log('⚠️ Admin email response status:', adminResponse.status);
+      log('⚠️ Admin email response body:', errorText);
       error('⚠️ Admin email failed:', errorText);
     } else {
       const adminResult = await adminResponse.json();
-      log('✅ Admin email sent:', adminResult.id);
+      log('✅ Admin email sent:', adminResult);
     }
 
+    return res.json({
+      success: true,
+      message: 'Emails sent successfully',
+      customerEmailId: customerEmailI
     return res.json({
       success: true,
       message: 'Emails sent successfully',
