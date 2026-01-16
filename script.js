@@ -622,10 +622,22 @@ async function sendOrderNotificationsGmail(orderData) {
 		console.log('📧 Sending order emails via Appwrite function...');
 		console.log('📧 Customer email:', orderData.customerInfo.email);
 		
+		// Ensure items is an array (parse if it's a string)
+		let items = orderData.items;
+		if (typeof items === 'string') {
+			try {
+				items = JSON.parse(items);
+			} catch (e) {
+				console.warn('⚠️ Could not parse items from string:', e);
+				items = [];
+			}
+		}
+		
 		// Format items list
-		const itemsList = orderData.items.map(item => 
-			`• ${item.name || item.nameAr} x ${item.quantity} = ${(item.totalInOrderCurrency || item.total || 0).toFixed(2)} TND`
-		).join('\n');
+		const itemsList = items.map(item => {
+			const itemTotal = item.totalInOrderCurrency || item.total || 0;
+			return `• ${item.name || item.nameAr || 'Product'} x ${item.quantity || 1} = ${Number(itemTotal).toFixed(2)} TND`;
+		}).join('\n');
 		
 		const orderDate = new Date(orderData.createdAt).toLocaleDateString('en-US', {
 			year: 'numeric',
@@ -723,7 +735,14 @@ async function sendOrderNotificationsGmail(orderData) {
 		// Call Appwrite function to send emails
 		const functionUrl = `${functionEndpoint}/functions/6931cddd003de76af6ea/executions`;
 		console.log('🚀 Calling email function:', functionUrl);
-		console.log('📦 Order data being sent:', JSON.stringify(orderData, null, 2));
+		
+		// Prepare order data for email function - ensure items is an array
+		const emailOrderData = {
+			...orderData,
+			items: items // Use the parsed items array, not the stringified version
+		};
+		
+		console.log('📦 Order data being sent:', JSON.stringify(emailOrderData, null, 2));
 		
 		const response = await fetch(functionUrl, {
 			method: 'POST',
@@ -733,7 +752,7 @@ async function sendOrderNotificationsGmail(orderData) {
 				'X-Appwrite-Key': window.ENV?.VITE_APPWRITE_API_KEY || 'standard_300a6d362e80b075bd341d245c41d59c2df300370478ef44eed5b6ac31c857dd174e114c7df1a85fc43b9f210aab0617424d707e959fc6666387444e4a954e5733644d31ae3837c99449707195cf957aaf1c87a2cc24367f0d99af79ead6bc1c61919b540c9ccbb2b116b4fdd4ff930d8924a00a9013ac514624cbde6c8e69c6'
 			},
 			body: JSON.stringify({
-				body: JSON.stringify(orderData),
+				body: JSON.stringify(emailOrderData),
 				async: false
 			})
 		});
