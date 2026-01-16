@@ -214,7 +214,11 @@ export default async ({ req, res, log, error }) => {
     const adminResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authororders@onsi.shop',
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'orders@onsi.shop',
         to: adminEmail,
         subject: `New Order: ${emailData.orderNumber}`,
         html: adminEmailHtml
@@ -231,10 +235,6 @@ export default async ({ req, res, log, error }) => {
       log('✅ Admin email sent:', adminResult);
     }
 
-    return res.json({
-      success: true,
-      message: 'Emails sent successfully',
-      customerEmailId: customerEmailI
     return res.json({
       success: true,
       message: 'Emails sent successfully',
