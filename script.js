@@ -43,13 +43,21 @@ function convertPrice(priceInTND) {
 	return priceInTND;
 }
 
-// Format currency with symbol
+// Format currency with symbol (applies conversion)
 function formatCurrency(value) {
 	const convertedValue = convertPrice(value);
 	if (state.currency === 'EUR') {
 		return `€${convertedValue.toFixed(2)}`;
 	}
 	return `${convertedValue.toFixed(2)} TND`;
+}
+
+// Format currency for already converted amounts (no conversion applied)
+function formatCurrencyAmount(value) {
+	if (state.currency === 'EUR') {
+		return `€${value.toFixed(2)}`;
+	}
+	return `${value.toFixed(2)} TND`;
 }
 
 // Toggle currency
@@ -222,7 +230,11 @@ function clearCart() {
 }
 
 function subtotal() {
-	return state.items.reduce((sum, i) => sum + i.price * i.qty, 0);
+	// Calculate subtotal in the current currency
+	return state.items.reduce((sum, i) => {
+		const convertedPrice = convertPrice(i.price);
+		return sum + (convertedPrice * i.qty);
+	}, 0);
 }
 
 function renderCart() {
@@ -244,11 +256,15 @@ function renderCart() {
 		if (emptyStateEl) {
 			emptyStateEl.classList.add('hidden');
 		}
-		itemsEl.innerHTML = state.items.map(i => `
+		itemsEl.innerHTML = state.items.map(i => {
+			// Convert price once, multiply by qty
+			const convertedPrice = convertPrice(i.price);
+			const lineTotal = convertedPrice * i.qty;
+			return `
 			<div class="cart-item flex items-center justify-between gap-3 border border-neutral-200 rounded-lg p-3">
 				<div>
 					<div class="text-sm font-medium">${i.name}</div>
-					<div class="text-xs text-neutral-500 cart-item-price">${formatCurrency(i.price)}</div>
+					<div class="text-xs text-neutral-500 cart-item-price">${formatCurrencyAmount(lineTotal)}</div>
 				</div>
 				<div class="flex items-center gap-2">
 					<div class="quantity-controls">
@@ -259,11 +275,12 @@ function renderCart() {
 					<button class="remove text-xs text-slate-700 hover:text-red-600 transition-colors ml-2" data-id="${i.id}">${t('actions.remove')}</button>
 				</div>
 			</div>
-		`).join('');
+		`;
+		}).join('');
 	}
 
 	if (subtotalEl) {
-		subtotalEl.textContent = formatCurrency(subtotal());
+		subtotalEl.textContent = formatCurrencyAmount(subtotal());
 	}
 	
 	// Save cart after rendering
@@ -393,18 +410,23 @@ function updateCheckoutSummary() {
 	const totalEl = document.getElementById('checkout-total');
 	
 	// Render items
-	itemsEl.innerHTML = state.items.map(item => `
+	itemsEl.innerHTML = state.items.map(item => {
+		// Convert price first, then multiply by quantity
+		const convertedPrice = convertPrice(item.price);
+		const itemTotal = convertedPrice * item.qty;
+		return `
 		<div class="flex justify-between items-center py-2">
 			<div>
 				<span class="font-medium">${item.name}</span>
 				<span class="text-sm text-neutral-600 ml-2">× ${item.qty}</span>
 			</div>
-			<span class="font-medium">${formatCurrency(item.price * item.qty)}</span>
+			<span class="font-medium">${formatCurrencyAmount(itemTotal)}</span>
 		</div>
-	`).join('');
+	`;
+	}).join('');
 	
-	// Update total
-	totalEl.textContent = formatCurrency(subtotal());
+	// Update total (subtotal already handles currency conversion)
+	totalEl.textContent = formatCurrencyAmount(subtotal());
 }
 
 function validateCheckoutForm(formData) {
@@ -457,19 +479,24 @@ async function processOrder(formData) {
 		// Generate order number
 		const orderNumber = generateOrderNumber();
 		
-		// Prepare order data
+		// Prepare order data with proper currency handling
 		const orderData = {
 			orderNumber,
 			userId: state.user ? state.user.$id : null,
 			customerInfo: formData,
-			items: state.items.map(item => ({
-				id: item.id,
-				name: item.name,
-				price: item.price,
-				quantity: item.qty,
-				total: item.price * item.qty
-			})),
-			subtotal: subtotal(),
+			currency: state.currency, // Store the currency used for the order
+			items: state.items.map(item => {
+				const convertedPrice = convertPrice(item.price);
+				return {
+					id: item.id,
+					name: item.name,
+					price: item.price, // Original TND price for reference
+					priceInOrderCurrency: convertedPrice, // Price in the currency selected at purchase time
+					quantity: item.qty,
+					totalInOrderCurrency: convertedPrice * item.qty // Line total in the order currency
+				};
+			}),
+			subtotal: subtotal(), // This now returns the subtotal in the current currency (TND or EUR)
 			total: subtotal(), // For now, no tax or shipping
 			status: 'pending',
 			createdAt: new Date().toISOString(),
