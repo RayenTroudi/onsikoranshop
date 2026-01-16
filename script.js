@@ -624,7 +624,7 @@ async function sendOrderNotificationsGmail(orderData) {
 		
 		// Format items list
 		const itemsList = orderData.items.map(item => 
-			`• ${item.name || item.nameAr} x ${item.quantity} = ${item.total.toFixed(2)} TND`
+			`• ${item.name || item.nameAr} x ${item.quantity} = ${(item.totalInOrderCurrency || item.total || 0).toFixed(2)} TND`
 		).join('\n');
 		
 		const orderDate = new Date(orderData.createdAt).toLocaleDateString('en-US', {
