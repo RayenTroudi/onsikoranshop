@@ -1,0 +1,182 @@
+name: Appwrite Keepalive
+
+# Triggers
+on:
+  # Run every 6 hours to prevent free-tier inactivity
+  schedule:
+    - cron: '0 */6 * * *'
+  
+  # Allow manual trigger with optional URL override
+  workflow_dispatch:
+    inputs:
+      keepalive_url:
+        description: 'Keepalive endpoint URL (optional, overrides config)'
+        required: false
+        type: string
+
+jobs:
+  keepalive:
+    name: Appwrite Keepalive Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      # ============================================================
+      # STEP 1: RESOLVE KEEPALIVE URL
+      # ============================================================
+      - name: Resolve Keepalive URL
+        id: resolve_url
+        run: |
+          # Priority order for URL resolution
+          URL=""
+          SOURCE=""
+          
+          # 1. workflow_dispatch input (highest priority)
+          if [ -n "${{ github.event.inputs.keepalive_url }}" ]; then
+            URL="${{ github.event.inputs.keepalive_url }}"
+            SOURCE="From workflow_dispatch input"
+          
+          # 2. GitHub Secret: KEEPALIVE_URL
+          elif [ -n "${{ secrets.KEEPALIVE_URL }}" ]; then
+            URL="${{ secrets.KEEPALIVE_URL }}"
+            SOURCE="From GitHub secret KEEPALIVE_URL"
+          
+          # 3. GitHub Variable: KEEPALIVE_URL
+          elif [ -n "${{ vars.KEEPALIVE_URL }}" ]; then
+            URL="${{ vars.KEEPALIVE_URL }}"
+            SOURCE="From GitHub variable KEEPALIVE_URL"
+          
+          # 4. GitHub Secret: NEXTAUTH_URL
+          elif [ -n "${{ secrets.NEXTAUTH_URL }}" ]; then
+            URL="${{ secrets.NEXTAUTH_URL }}"
+            SOURCE="From GitHub secret NEXTAUTH_URL (fallback)"
+          
+          # 5. GitHub Variable: NEXTAUTH_URL
+          elif [ -n "${{ vars.NEXTAUTH_URL }}" ]; then
+            URL="${{ vars.NEXTAUTH_URL }}"
+            SOURCE="From GitHub variable NEXTAUTH_URL (fallback)"
+          fi
+          
+          # Validate URL was resolved
+          if [ -z "$URL" ]; then
+            echo "❌ FAILED: Could not resolve keepalive URL"
+            echo "   Please configure one of:"
+            echo "   - GitHub Secret: KEEPALIVE_URL"
+            echo "   - GitHub Variable: KEEPALIVE_URL"
+            echo "   - GitHub Secret: NEXTAUTH_URL (fallback)"
+            echo "   - GitHub Variable: NEXTAUTH_URL (fallback)"
+            exit 1
+          fi
+          
+          echo "📍 URL Resolution: ${SOURCE}"
+          echo "📍 Base URL: ${URL}"
+          
+          # ============================================================
+          # STEP 2: NORMALIZE URL
+          # ============================================================
+          # If URL already ends with the endpoint, use as-is
+          if [[ "$URL" == */api/cron/appwrite-keepalive ]]; then
+            FINAL_URL="$URL"
+            echo "📍 URL already contains endpoint path"
+          else
+            # Remove trailing slash if present
+            URL="${URL%/}"
+            FINAL_URL="${URL}/api/cron/appwrite-keepalive"
+            echo "📍 Appended /api/cron/appwrite-keepalive to base URL"
+          fi
+          
+          # Warn if using localhost in workflow
+          if [[ "$FINAL_URL" == *"localhost"* ]] || [[ "$FINAL_URL" == *"127.0.0.1"* ]]; then
+            echo "⚠️  WARNING: keepalive URL appears to be localhost. This will fail in GitHub Actions."
+            echo "   Please ensure your URL is publicly accessible."
+          fi
+          
+          echo "ping_url=${FINAL_URL}" >> $GITHUB_OUTPUT
+          
+      # ============================================================
+      # STEP 3: PREPARE AUTHORIZATION HEADER
+      # ============================================================
+      - name: Prepare Authorization Header
+        id: auth
+        run: |
+          if [ -n "${{ secrets.CRON_SECRET }}" ]; then
+            AUTH_HEADER="Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+            echo "auth_header=${AUTH_HEADER}" >> $GITHUB_OUTPUT
+            echo "🔐 CRON_SECRET found - will use Authorization header"
+          else
+            echo "auth_header=" >> $GITHUB_OUTPUT
+            echo "🔓 CRON_SECRET not configured - will call endpoint without Authorization"
+          fi
+
+      # ============================================================
+      # STEP 4: CALL KEEPALIVE ENDPOINT
+      # ============================================================
+      - name: Call Keepalive Endpoint
+        id: keepalive
+        run: |
+          PING_URL="${{ steps.resolve_url.outputs.ping_url }}"
+          AUTH_HEADER="${{ steps.auth.outputs.auth_header }}"
+          
+          echo "═══════════════════════════════════════════════════════════"
+          echo "📡 APPWRITE KEEPALIVE CHECK"
+          echo "═══════════════════════════════════════════════════════════"
+          echo "🔗 Endpoint: ${PING_URL}"
+          
+          if [ -n "$AUTH_HEADER" ]; then
+            echo "🔐 Authentication: Enabled (CRON_SECRET present)"
+            HTTP_CODE=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+              -H "Content-Type: application/json" \
+              -H "${AUTH_HEADER}" \
+              "${PING_URL}")
+          else
+            echo "🔓 Authentication: Disabled"
+            HTTP_CODE=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+              -H "Content-Type: application/json" \
+              "${PING_URL}")
+          fi
+          
+          echo ""
+          echo "📊 HTTP Status: ${HTTP_CODE}"
+          echo ""
+          echo "📋 Response Body:"
+          if [ -f /tmp/response.json ]; then
+            cat /tmp/response.json | jq '.' 2>/dev/null || cat /tmp/response.json
+          else
+            echo "(empty)"
+          fi
+          echo ""
+          
+          # Save for later steps
+          echo "status_code=${HTTP_CODE}" >> $GITHUB_OUTPUT
+          
+          # Check for success (2xx status code)
+          if [[ $HTTP_CODE =~ ^2[0-9]{2}$ ]]; then
+            echo "✅ SUCCESS: Keepalive check completed (HTTP ${HTTP_CODE})"
+            exit 0
+          else
+            echo "❌ FAILED: Keepalive endpoint returned HTTP ${HTTP_CODE}"
+            exit 1
+          fi
+
+      # ============================================================
+      # STEP 5: SUMMARY REPORT
+      # ============================================================
+      - name: Summary Report
+        if: always()
+        run: |
+          echo "═══════════════════════════════════════════════════════════"
+          echo "📊 APPWRITE KEEPALIVE WORKFLOW SUMMARY"
+          echo "═══════════════════════════════════════════════════════════"
+          echo "Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo ""
+          echo "Ping URL: ${{ steps.resolve_url.outputs.ping_url }}"
+          echo "HTTP Status: ${{ steps.keepalive.outputs.status_code }}"
+          echo ""
+          if [ "${{ steps.keepalive.outcome }}" == "success" ]; then
+            echo "✅ Workflow Status: SUCCESS"
+          else
+            echo "❌ Workflow Status: FAILED"
+          fi
+          echo "═══════════════════════════════════════════════════════════"
