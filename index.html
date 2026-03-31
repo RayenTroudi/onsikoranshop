@@ -482,7 +482,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" href="" as="image" id="preload-product">
   <link rel="preload" href="" as="image" id="preload-logo">
   
@@ -623,9 +623,9 @@
   <!-- Enhanced Typography & Arabic Font Support -->
   <style>
     /* Import additional fonts for better Arabic support */
-    @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Arabic:wght@400;500;600&display=swap');
     
-    /* Enhanced Arabic typography */
+    /* Arabic typography */
     .font-arabic {
       font-family: 'Amiri', 'Noto Sans Arabic', serif;
       font-feature-settings: 'liga' on, 'calt' on;
@@ -647,7 +647,7 @@
     
     /* Gradient text utility */
     .gradient-text {
-      background: linear-gradient(135deg, #334155, #64748b);
+      background: linear-gradient(135deg, #e3be4a, #c9a227);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -675,25 +675,46 @@
       position: relative;
       overflow: hidden;
     }
-    
     .btn-refined::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
       transition: left 0.6s ease;
     }
-    
-    .btn-refined:hover::before {
-      left: 100%;
+    .btn-refined:hover::before { left: 100%; }
+
+    /* ── Page entrance — gentle fade up ── */
+    @keyframes hero-rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0);    }
     }
+    .hero-item-1 { animation: hero-rise 0.6s ease both; animation-delay: 0.05s; }
+    .hero-item-2 { animation: hero-rise 0.6s ease both; animation-delay: 0.2s; }
+    .hero-item-3 { animation: hero-rise 0.6s ease both; animation-delay: 0.38s; }
+    .hero-item-4 { animation: hero-rise 0.6s ease both; animation-delay: 0.5s; }
+
+    /* ── Gold ornament ── */
+    .gold-ornament {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .gold-ornament::before,
+    .gold-ornament::after {
+      content: '';
+      flex: 1;
+      max-width: 60px;
+      height: 1px;
+      background: linear-gradient(to var(--dir, right), transparent, rgba(201,162,39,0.7));
+    }
+    .gold-ornament::after { --dir: left; }
   </style>
 </head>
-<body class="min-h-screen bg-neutral-50 text-neutral-900" style="font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';">
-  <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-neutral-200">
+<body class="min-h-screen text-neutral-900" style="font-family: 'DM Sans', system-ui, sans-serif; background-color: #faf8f5;">
+  <header class="sticky top-0 z-30 border-b border-neutral-200">
     <div class="mx-auto max-w-6xl px-3 sm:px-4 py-2 sm:py-3 md:py-4 flex items-center justify-between">
       <a href="#" class="flex items-center flex-shrink-0">
         <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="ONSi Logo" class="h-8 sm:h-10 md:h-14 lg:h-16 w-auto object-contain" id="header-logo">
@@ -779,25 +800,19 @@
   <main>
     <!-- Hero Section - Enhanced Islamic Design -->
     <section class="relative overflow-hidden">
-      <!-- Islamic Geometric Background Pattern -->
-      <div class="absolute inset-0 bg-gradient-to-br from-amber-50/30 via-white to-slate-50/40"></div>
-      
-      <!-- Subtle Islamic geometric pattern -->
-      <div class="absolute inset-0 opacity-[0.03]" style="background-image: 
-        radial-gradient(circle at 25% 25%, rgba(180, 83, 9, 0.1) 2px, transparent 2px),
-        radial-gradient(circle at 75% 75%, rgba(180, 83, 9, 0.1) 2px, transparent 2px),
-        linear-gradient(45deg, transparent 48%, rgba(180, 83, 9, 0.05) 49%, rgba(180, 83, 9, 0.05) 51%, transparent 52%);
-        background-size: 40px 40px, 40px 40px, 20px 20px;"></div>
-      
-      <!-- Decorative Islamic border -->
-      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-200/40 to-transparent"></div>
-      <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-200/40 to-transparent"></div>
+      <!-- Warm white base -->
+      <div class="absolute inset-0" style="background: #faf8f5;"></div>
+      <!-- Barely-there warm vignette -->
+      <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(184,115,10,0.04) 0%, transparent 70%);"></div>
+      <!-- Minimal border lines -->
+      <div class="absolute top-0 left-0 w-full h-px" style="background: #e7e0d8;"></div>
+      <div class="absolute bottom-0 left-0 w-full h-px" style="background: #e7e0d8;"></div>
       
       <div class="relative mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-16 md:py-20">
         <div class="text-center space-y-6 sm:space-y-8">
           
           <!-- Enhanced Islamic Title Section -->
-          <div class="space-y-4 sm:space-y-6">
+          <div class="space-y-4 sm:space-y-6 hero-item-1">
         
             
             <!-- Arabic Bismillah with enhanced styling -->
@@ -835,7 +850,7 @@
           </div>
           
           <!-- Enhanced Storytelling Card -->
-          <div class="max-w-4xl mx-auto px-2">
+          <div class="max-w-4xl mx-auto px-2 hero-item-2">
             <div class="relative group">
               <!-- Enhanced glow effect -->
               <div class="absolute -inset-1 bg-gradient-to-r from-amber-200 via-slate-200 to-amber-200 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-700"></div>
@@ -887,7 +902,7 @@
           </div>
           
           <!-- Video Section -->
-          <div class="max-w-3xl mx-auto pt-8 sm:pt-12 pb-6 sm:pb-8 px-2">
+          <div class="max-w-3xl mx-auto pt-8 sm:pt-12 pb-6 sm:pb-8 px-2 hero-item-3">
             <!-- Video Container with Enhanced Design -->
             <div class="relative group">
               <!-- Subtle glow effect -->
@@ -929,7 +944,7 @@
 
     
     <!-- Product Gallery & Details -->
-    <section class="bg-white py-16">
+    <section class="bg-white py-16 hero-item-4">
       <div class="mx-auto max-w-5xl px-4">
         
         <!-- Gallery Section -->
@@ -939,7 +954,7 @@
           <div class="lg:col-span-3 space-y-8">
             <!-- Section Header -->
             <div class="space-y-3">
-              <h3 class="text-2xl md:text-3xl font-light text-slate-900" data-i18n="gallery.title">
+              <h3 class="text-2xl md:text-3xl font-light text-slate-900" style="font-family:'Cormorant Garamond',Georgia,serif;" data-i18n="gallery.title">
                 Product <span class="font-medium text-slate-700">Gallery</span>
               </h3>
               <p class="text-base text-slate-600 leading-relaxed max-w-xl" data-i18n="hero.subtitle">
@@ -1086,10 +1101,10 @@
   <!-- Enhanced Cart Drawer -->
   <div id="cart" class="cart-overlay fixed inset-0 hidden z-50">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" data-close="overlay"></div>
-    <aside class="cart-drawer absolute top-0 h-full w-full max-w-md bg-white shadow-2xl grid grid-rows-[auto,1fr,auto]" style="right: 0 !important; left: auto !important;">
+    <aside class="cart-drawer absolute top-0 h-full w-full max-w-md shadow-2xl grid grid-rows-[auto,1fr,auto]" style="right: 0 !important; left: auto !important;">
       
       <!-- Cart Header -->
-      <header class="cart-header relative px-6 py-6 bg-white border-b border-slate-200">
+      <header class="cart-header relative px-6 py-6 border-b border-slate-200">
         <div class="relative flex items-center justify-between">
           <!-- English Layout -->
           <div class="ltr:block rtl:hidden">
@@ -1135,7 +1150,7 @@
       </div>
 
       <!-- Cart Footer -->
-      <footer class="cart-footer border-t border-slate-200 bg-slate-50 p-6 space-y-4">
+      <footer class="cart-footer border-t p-6 space-y-4">
         <!-- Subtotal -->
         <div class="flex items-center justify-between py-3 border-b border-slate-200">
           <span class="text-slate-600 font-medium" data-i18n="cart.subtotal">Subtotal</span>
@@ -1710,9 +1725,10 @@
     </div>
   </div>
 
-  <footer class="border-t border-neutral-200 bg-white">
+  <footer class="border-t">
     <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-neutral-600 flex items-center justify-between">
       <span>© <span id="year"></span> ONSi</span>
+      <span style="color: var(--text-soft); font-size: 0.75rem;"><span data-i18n="footer.developed_by">Developed by</span> <a href="https://www.rayentroudi.work/" target="_blank" rel="noopener noreferrer" style="color: var(--text-mid); text-decoration: underline; text-underline-offset: 3px; transition: color 0.15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mid)'">Rayen Troudi</a></span>
       <a href="#" class="hover:text-neutral-900" data-i18n="footer.privacy">Privacy & Terms</a>
     </div>
   </footer>
