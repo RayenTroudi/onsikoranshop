@@ -15,6 +15,10 @@
     {
       "src": "api/replace-video.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/cron/appwrite-keepalive.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -29,6 +33,11 @@
       "src": "/api/replace-video",
       "dest": "/api/replace-video.js",
       "methods": ["POST", "OPTIONS"]
+    },
+    {
+      "src": "/api/cron/appwrite-keepalive",
+      "dest": "/api/cron/appwrite-keepalive.js",
+      "methods": ["GET"]
     },
     {
       "src": "/admin.html",
