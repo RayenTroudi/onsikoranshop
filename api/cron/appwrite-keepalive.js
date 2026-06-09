@@ -13,7 +13,7 @@
  * - If REQUIRE_CRON_SECRET!=true: Always allow (no auth required)
  */
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -233,4 +233,4 @@ module.exports = async (req, res) => {
   });
 
   return res.status(statusCode).json(response);
-};
+}
